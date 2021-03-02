@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import { ERC20 } from "OpenZeppelin/openzeppelin-contracts@3.3.0/contracts/token/ERC20/ERC20.sol";
 import { Ownable } from "OpenZeppelin/openzeppelin-contracts@3.3.0/contracts/access/Ownable.sol";
 
-contract LpToken is ERC20, Ownable {
+contract HaloToken is ERC20, Ownable {
 
     constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) public {
 
