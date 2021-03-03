@@ -16,8 +16,8 @@ contract Rewards is Ownable {
     //using SafeERC20 for IERC20;
     //using SafeERC20 for ExpandedIERC20;
     event Log(uint256 loc, uint256 ts);
-    event Deposit(address indexed user, address indexed lpAddress, uint256 amount);
-    event Withdraw(address indexed user, address indexed lpAddress, uint256 amount);
+    event DepositLPTokens(address indexed user, address indexed lpAddress, uint256 amount);
+    event WithdrawLPTokens(address indexed user, address indexed lpAddress, uint256 amount);
     event DepositMinter(address indexed user, address indexed collateralAddress, uint256 amount);
     event WithdrawMinter(address indexed user, address indexed collateralAddress, uint256 amount);
 
@@ -164,7 +164,7 @@ contract Rewards is Ownable {
         );
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-        emit Deposit(msg.sender, _lpAddress, _amount);
+        emit DepositLPTokens(msg.sender, _lpAddress, _amount);
 
     }
 
@@ -207,7 +207,7 @@ contract Rewards is Ownable {
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
         IERC20(_lpAddress).transfer(address(msg.sender), _amount);
-        emit Withdraw(msg.sender, _lpAddress, _amount);
+        emit WithdrawLPTokens(msg.sender, _lpAddress, _amount);
 
     }
 
