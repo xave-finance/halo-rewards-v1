@@ -20,7 +20,8 @@ contract Rewards is Ownable {
     event WithdrawLPTokens(address indexed user, address indexed lpAddress, uint256 amount);
     event DepositMinter(address indexed user, address indexed collateralAddress, uint256 amount);
     event WithdrawMinter(address indexed user, address indexed collateralAddress, uint256 amount);
-
+    event MinterRewardPoolUpdated(address collateralAddress, uint256 accHaloPerShare, uint256 lastRewardTs);
+    event AmmRewardPoolUpdated(address lpAddress, uint256 accHaloPerShare, uint256 lastRewardTs);
     struct UserInfo {
         uint256 amount; // How many colalteral or LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
@@ -116,6 +117,8 @@ contract Rewards is Ownable {
 
         pool.lastRewardTs = block.timestamp;
 
+        emit AmmRewardPoolUpdated(_lpAddress, pool.accHaloPerShare, pool.lastRewardTs);
+
     }
 
     function updateMinterRewardPool(address _collateralAddress) public {
@@ -140,6 +143,8 @@ contract Rewards is Ownable {
         );
 
         pool.lastRewardTs = block.timestamp;
+
+        emit MinterRewardPoolUpdated(_collateralAddress, pool.accHaloPerShare, pool.lastRewardTs);
 
     }
 
