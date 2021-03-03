@@ -263,7 +263,7 @@ contract Rewards is Ownable {
     ) public view returns (uint256) {
 
         PoolInfo storage pool = minterLpPools[_collateralAddress];
-        UserInfo storage user = ammLpUserInfo[_collateralAddress][_account];
+        UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
         return (user.amount.mul(pool.accHaloPerShare).div(DECIMALS)).sub(user.rewardDebt);
 
     }
