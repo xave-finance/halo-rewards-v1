@@ -238,6 +238,33 @@ contract Rewards is Ownable {
 
     }
 
+    function withdrawPendingAmmLpRewards(address _lpAddress) external {
+
+        PoolInfo storage pool = ammLpPools[_lpAddress];
+        UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
+
+        updateAmmRewardPool(_lpAddress);
+
+        uint256 pending = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
+        
+        safeHaloTransfer(msg.sender, pending);
+
+    }
+
+    function withdrawPendingMinterLpRewards(address _collateralAddress, address _account) public onlyMinter {
+
+        PoolInfo storage pool = minterLpPools[_collateralAddress];
+        UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
+
+        updateMinterRewardPool(_collateralAddress);
+
+        uint256 pending = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
+
+        safeHaloTransfer(_account, pending);
+
+    }
 
     //===========================================//
     //===============view functions==============//
