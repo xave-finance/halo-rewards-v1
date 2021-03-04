@@ -22,6 +22,7 @@ contract Rewards is Ownable {
     event WithdrawMinter(address indexed user, address indexed collateralAddress, uint256 amount);
     event MinterRewardPoolUpdated(address collateralAddress, uint256 accHaloPerShare, uint256 lastRewardTs);
     event AmmRewardPoolUpdated(address lpAddress, uint256 accHaloPerShare, uint256 lastRewardTs);
+
     struct UserInfo {
         uint256 amount; // How many colalteral or LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
@@ -49,12 +50,17 @@ contract Rewards is Ownable {
     uint256 public totalAmmLpAllocs; //total allocation points for all amm lps (the ratio defines percentage of rewards to a particular amm lp)
     uint256 public totalMinterLpAllocs; //total allocation points for all minter lps (the ratio defines percentage of rewards to a particular minter lp)
 
+    uint256 public bonusVestPeriod;
+    uint256 public vestReward;
+
     address public minterContract;
 
     mapping(address => PoolInfo) public ammLpPools;
     mapping(address => PoolInfo) public minterLpPools;
     mapping(address => mapping(address => UserInfo)) public ammLpUserInfo;
     mapping(address => mapping(address => UserInfo)) public minterLpUserInfo;
+    mapping(address => uint256) public unclaimedRewards;
+
     //===========================================//
     //=================constructor===============//
     //===========================================//
