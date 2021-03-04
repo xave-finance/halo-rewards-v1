@@ -149,7 +149,7 @@ contract Rewards is Ownable {
     }
 
     // Deposit LP tokens to earn HALO Rewards.
-    function deposit(address _lpAddress, uint256 _amount) public {
+    function depositAmmLpTokens(address _lpAddress, uint256 _amount) public {
 
         require(ammLpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed");
         PoolInfo storage pool = ammLpPools[_lpAddress];
@@ -197,7 +197,7 @@ contract Rewards is Ownable {
     }
 
     // Withdraw LP tokens.
-    function withdraw(address _lpAddress, uint256 _amount) public {
+    function withdrawAmmLpTokens(address _lpAddress, uint256 _amount) public {
 
         //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
         PoolInfo storage pool = ammLpPools[_lpAddress];
@@ -351,7 +351,7 @@ contract Rewards is Ownable {
 
     }
 
-    function removeLp(address _lpAddress) public onlyOwner {
+    function removeAmmLp(address _lpAddress) public onlyOwner {
 
         require(ammLpPools[_lpAddress].whitelisted == true, "AMM LP Pool not whitelisted");
         updateAmmRewardPool(_lpAddress);
