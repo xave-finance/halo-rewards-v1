@@ -7,14 +7,16 @@ import { IERC20 } from "OpenZeppelin/openzeppelin-contracts@3.3.0/contracts/toke
 import { SafeMath } from "OpenZeppelin/openzeppelin-contracts@3.3.0/contracts/math/SafeMath.sol";
 import { IMinter } from "../interfaces/IMinter.sol";
 
+/// @title Rewards
+/// @notice
+/// @dev
 contract Rewards is Ownable {
+    /// @notice
     uint256 public constant DECIMALS = 10**18;
+    /// @notice
     uint256 public constant BPS = 10**4;
 
     using SafeMath for uint256;
-    //using FixedPoint for FixedPoint.Unsigned;
-    //using SafeERC20 for IERC20;
-    //using SafeERC20 for ExpandedIERC20;
     event Log(uint256 loc, uint256 ts);
     event DepositLPTokens(address indexed user, address indexed lpAddress, uint256 amount);
     event WithdrawLPTokens(address indexed user, address indexed lpAddress, uint256 amount);
@@ -22,6 +24,7 @@ contract Rewards is Ownable {
     event WithdrawMinter(address indexed user, address indexed collateralAddress, uint256 amount);
     event MinterRewardPoolUpdated(address collateralAddress, uint256 accHaloPerShare, uint256 lastRewardTs);
     event AmmRewardPoolUpdated(address lpAddress, uint256 accHaloPerShare, uint256 lastRewardTs);
+    event VestedRewardsReleased(uint256 amount, uint256 timestamp);
 
     struct UserInfo {
         uint256 amount; // How many colalteral or LP tokens the user has provided.
@@ -40,31 +43,62 @@ contract Rewards is Ownable {
         uint256 accHaloPerShare; // Accumulated HALO per share, times 10^18.
     }
 
+    /// @notice
     address public haloTokenAddress;
+    /// @notice
     uint256 public genesisTs;
+    /// @notice
     uint256 public startingRewards;
+    /// @notice
     uint256 public decayBase; //multiply fraction by 10^18, keeps decimals consistent and gives enough entropy for more precision
+    /// @notice
     uint256 public epochLength;
+    /// @notice
     uint256 public minterLpRewardsRatio; //in bps, multiply fraction by 10^4
+    /// @notice
     uint256 public ammLpRewardsRatio; //in bps, multiply fraction by 10^4
+    /// @notice
+    uint256 public vestingRewardsRatio; //in bps, multiply fraction by 10^4
+    /// @notice
     uint256 public totalAmmLpAllocs; //total allocation points for all amm lps (the ratio defines percentage of rewards to a particular amm lp)
+    /// @notice
     uint256 public totalMinterLpAllocs; //total allocation points for all minter lps (the ratio defines percentage of rewards to a particular minter lp)
 
-    uint256 public bonusVestPeriod;
-    uint256 public vestReward;
+    /// @notice
+    uint256 public vestingRewardsDebt;
 
+    /// @notice
     address public minterContract;
 
+    /// @notice
+    address public haloChestContract;
+
+    uint256 public lastHaloVestRewardTs;
+
+    /// @notice
     mapping(address => PoolInfo) public ammLpPools;
+    /// @notice
     mapping(address => PoolInfo) public minterLpPools;
+    /// @notice
     mapping(address => mapping(address => UserInfo)) public ammLpUserInfo;
+    /// @notice
     mapping(address => mapping(address => UserInfo)) public minterLpUserInfo;
-    mapping(address => uint256) public unclaimedRewards;
 
-    //===========================================//
-    //=================constructor===============//
-    //===========================================//
-
+    /// @notice
+    /// @dev
+    /// @param _haloTokenAddress
+    /// @param _startingRewards
+    /// @param _decayBase
+    /// @param _epochLength
+    /// @param _minterLpRewardsRatio
+    /// @param _ammLpRewardsRatio
+    /// @param _vestingRewardsRatio
+    /// @param _minter
+    /// @param _haloChest
+    /// @param _genesisTs
+    /// @param _minterLpPools
+    /// @param _ammLpPools
+    /// @return
     constructor(
         address _haloTokenAddress,
         uint256 _startingRewards,
@@ -72,7 +106,9 @@ contract Rewards is Ownable {
         uint256 _epochLength,
         uint256 _minterLpRewardsRatio, //in bps, multiplied by 10^4
         uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
+        uint256 _vestingRewardsRatio, //in bps, multiplied by 10^4
         address _minter,
+        address _haloChest,
         uint256 _genesisTs,
         Pool[] memory _minterLpPools,
         Pool[] memory _ammLpPools
@@ -83,8 +119,11 @@ contract Rewards is Ownable {
         epochLength = _epochLength;
         minterLpRewardsRatio = _minterLpRewardsRatio;
         ammLpRewardsRatio = _ammLpRewardsRatio;
+        vestingRewardsRatio = _vestingRewardsRatio;
         minterContract = _minter;
+        haloChestContract = _haloChest;
         genesisTs = _genesisTs;
+        lastHaloVestRewardTs = genesisTs;
         for (uint8 i=0; i<_minterLpPools.length; i++) {
             addMinterCollateralType(_minterLpPools[i].poolAddress, _minterLpPools[i].allocPoint);
         }
@@ -94,11 +133,10 @@ contract Rewards is Ownable {
     }
 
 
-    //===========================================//
-    //==============public functions=============//
-    //===========================================//
-
-
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @return
     function updateAmmRewardPool(address _lpAddress) public {
 
         PoolInfo storage pool = ammLpPools[_lpAddress];
@@ -127,6 +165,10 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @return
     function updateMinterRewardPool(address _collateralAddress) public {
 
         PoolInfo storage pool = minterLpPools[_collateralAddress];
@@ -154,7 +196,11 @@ contract Rewards is Ownable {
 
     }
 
-    // Deposit LP tokens to earn HALO Rewards.
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @param _amount
+    /// @return
     function depositAmmLpTokens(address _lpAddress, uint256 _amount) public {
 
         require(ammLpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed");
@@ -179,6 +225,12 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @param _account
+    /// @param _amount
+    /// @return
     function depositMinter(
         address _collateralAddress,
         address _account,
@@ -202,7 +254,11 @@ contract Rewards is Ownable {
 
     }
 
-    // Withdraw LP tokens.
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @param _amount
+    /// @return
     function withdrawAmmLpTokens(address _lpAddress, uint256 _amount) public {
 
         //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
@@ -222,6 +278,12 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @param _account
+    /// @param _amount
+    /// @return
     function withdrawMinter(
         address _collateralAddress,
         address _account,
@@ -244,6 +306,10 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @return
     function withdrawPendingAmmLpRewards(address _lpAddress) external {
 
         PoolInfo storage pool = ammLpPools[_lpAddress];
@@ -253,11 +319,16 @@ contract Rewards is Ownable {
 
         uint256 pending = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-        
+
         safeHaloTransfer(msg.sender, pending);
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @param _account
+    /// @return
     function withdrawPendingMinterLpRewards(address _collateralAddress, address _account) public onlyMinter {
 
         PoolInfo storage pool = minterLpPools[_collateralAddress];
@@ -272,18 +343,26 @@ contract Rewards is Ownable {
 
     }
 
-    //===========================================//
-    //===============view functions==============//
-    //===========================================//
 
+    /// @notice
+    /// @dev
+    /// @return
     function totalAmmLpAllocationPoints() public view returns (uint256) {
         return totalAmmLpAllocs;
     }
 
+    /// @notice
+    /// @dev
+    /// @return
     function totalMinterLpAllocationPoints() public view returns (uint256) {
         return totalMinterLpAllocs;
     }
 
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @param _account
+    /// @return
     function pendingAmmLpUserRewards(
         address _lpAddress,
         address _account
@@ -295,6 +374,11 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @param _account
+    /// @return
     function pendingMinterLpUserRewards(
         address _collateralAddress,
         address _account
@@ -306,28 +390,52 @@ contract Rewards is Ownable {
 
     }
 
-    //utility view functions
+    /// @notice
+    /// @dev
+    /// @return
+    function pendingVestingRewards() public view returns (uint256) {
+
+
+
+    }
+
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @return
     function isValidAmmLp(address _lpAddress) public view returns (bool) {
         return ammLpPools[_lpAddress].whitelisted;
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @return
     function isValidMinterLp(address _collateralAddress) public view returns (bool) {
         return minterLpPools[_collateralAddress].whitelisted;
     }
 
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @return
     function getAmmLpPoolInfo(address _lpAddress) public view returns (PoolInfo memory) {
         return ammLpPools[_lpAddress];
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @return
     function getMinterLpPoolInfo(address _collateralAddress) public view returns (PoolInfo memory) {
         return minterLpPools[_collateralAddress];
     }
 
-    //===========================================//
-    //===============admin functions=============//
-    //===========================================//
-
-    // Update the given pool's HALO allocation point. Can only be called by the owner.
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @param _allocPoint
+    /// @return
     function setAmmLpAlloc(
         address _lpAddress,
         uint256 _allocPoint
@@ -339,6 +447,11 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @param _allocPoint
+    /// @return
     function setMinterLpAlloc(
         address _collateralAddress,
         uint256 _allocPoint
@@ -350,6 +463,11 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @param _allocPoint
+    /// @return
     function addAmmLp(
         address _lpAddress,
         uint256 _allocPoint
@@ -367,6 +485,11 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @param _allocPoint
+    /// @return
     function addMinterCollateralType(
         address _collateralAddress,
         uint256 _allocPoint
@@ -384,6 +507,10 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _lpAddress
+    /// @return
     function removeAmmLp(address _lpAddress) public onlyOwner {
 
         require(ammLpPools[_lpAddress].whitelisted == true, "AMM LP Pool not whitelisted");
@@ -393,6 +520,10 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _collateralAddress
+    /// @return
     function removeMinterCollateralType(address _collateralAddress) public onlyOwner {
 
         require(minterLpPools[_collateralAddress].whitelisted == true, "Collateral type not whitelisted");
@@ -402,32 +533,67 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @return
+    function releaseVestedRewards() public onlyOwner {
+        require(block.timestamp > lastHaloVestRewardTs, "now<lastHaloVestRewardTs");
+        uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
+        uint256 accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
+        uint256 diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
+
+        uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
+        uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
+        uint256 pending = (accHalo.sub(vestingRewardsDebt)).mul(vestingRewardsRatio).div(BPS);
+        vestingRewardsDebt = accHalo.mul(vestingRewardsRatio).div(BPS);
+        safeHaloTransfer(haloChestContract, pending);
+        emit VestedRewardsReleased(pending, block.timestamp);
+    }
+
+    /// @notice
+    /// @dev
+    /// @param _minter
+    /// @return
     function setMinter(address _minter) public onlyOwner {
         minterContract = _minter;
     }
 
+    /// @notice
+    /// @dev
+    /// @param _minter
+    /// @return
+    function setHaloChest(address _haloChest) public onlyOwner {
+        haloChestContract = _haloChest;
+    }
+
+    /// @notice
+    /// @dev
+    /// @return
     function initialize() public onlyOwner {
         require(block.timestamp < genesisTs, "Already initialized");
         genesisTs = block.timestamp;
     }
 
+    /// @notice
+    /// @dev
+    /// @param _genesisTs
+    /// @return
     function setGenesisTs(uint256 _genesisTs) public onlyOwner {
         require(block.timestamp < genesisTs, "Already initialized");
         genesisTs = _genesisTs;
     }
 
-    //modifiers
+    /// @dev
     modifier onlyMinter() {
         require(msg.sender == minterContract, "Only minter contract can call this function");
         _;
     }
 
-
-    //===========================================//
-    //=============internal functions============//
-    //===========================================//
-
-    //Safe halo transfer function, just in case if rounding error causes pool to not have enough HALOs.
+    /// @notice
+    /// @dev
+    /// @param _to
+    /// @param _amount
+    /// @return
     function safeHaloTransfer(address _to, uint256 _amount) internal {
 
         uint256 haloBal = IERC20(haloTokenAddress).balanceOf(address(this));
@@ -439,6 +605,10 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param _from
+    /// @return
     function calcReward(uint256 _from) internal returns (uint256){
         uint256 currentTs = block.timestamp;
         require(_from>=genesisTs, "from<genesisTs"); //TEMP
@@ -472,23 +642,21 @@ contract Rewards is Ownable {
             uint256 aggMonthlyRewards = aggregatedMonthlyRewards(monthlyRewardStart, nMonthsStart, nMonthsEnd);
             uint256 month1EndTs = genesisTs.add((nMonthsStart+1).mul(epochLength));
             uint256 month2EndTs = genesisTs.add((nMonthsEnd).mul(epochLength));
-            emit Log(0, _from);
-            emit Log(1, genesisTs);
-            emit Log(2, nMonthsStart);
-            emit Log(3, nMonthsEnd);
-            emit Log(4, epochLength);
-            emit Log(5, month1EndTs);
             require(month1EndTs>_from, "month1EndTs<_from agg"); //TEMP
             uint256 diffTime1 = ((month1EndTs.sub(_from)).mul(DECIMALS)).div(epochLength);
             require(currentTs>month1EndTs, "currentTs<month1EndTs agg"); //TEMP
             uint256 diffTime2 = ((currentTs.sub(month2EndTs)).mul(DECIMALS)).div(epochLength);
             return ((diffTime1.mul(monthlyRewardStart).div(DECIMALS)).add(diffTime2.mul(monthlyRewardEnd).div(DECIMALS)).add(aggMonthlyRewards)).div(DECIMALS);
         }
-        //uint256 diffMonths = (((currentTs.sub(genesisTs)).mul(DECIMALS)).div(epochLength)).sub(nMonths.mul(DECIMALS));
 
     }
 
-    //broken to separate function to avoid stack too deep error
+    /// @notice
+    /// @dev
+    /// @param monthlyRewardStart
+    /// @param nMonthsStart
+    /// @param nMonthsEnd
+    /// @return
     function aggregatedMonthlyRewards(
         uint256 monthlyRewardStart,
         uint256 nMonthsStart,
@@ -505,11 +673,31 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice
+    /// @dev
+    /// @param m
+    /// @param n
+    /// @return
     function exp(uint256 m, uint256 n) internal returns (uint256) {
         uint256 x = DECIMALS;
         for (uint256 i = 0; i < n; i++) {
             x = x.mul(m).div(DECIMALS);
         }
         return x;
+    }
+
+    /// @notice
+    /// @dev
+    /// @param m
+    /// @param n
+    /// @return
+    function sumExp(uint256 m, uint256 n) internal returns (uint256) {
+        uint256 x = DECIMALS;
+        uint256 s;
+        for (uint256 i = 0; i < n; i++) {
+            x = x.mul(m).div(DECIMALS);
+            s = s.add(x);
+        }
+        return s;
     }
 }
