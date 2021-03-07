@@ -6,3 +6,6 @@ reports/
 .env
 *.db
 contracts/TestContracts
+hardhat/artifacts
+hardhat/cache
+hardhat/node_modules
