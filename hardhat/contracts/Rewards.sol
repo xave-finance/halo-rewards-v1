@@ -528,7 +528,6 @@ contract Rewards is Ownable {
     function removeAmmLp(address _lpAddress) public onlyOwner {
 
         require(ammLpPools[_lpAddress].whitelisted == true, "AMM LP Pool not whitelisted");
-        updateAmmRewardPool(_lpAddress);
         totalAmmLpAllocs = totalAmmLpAllocs.sub(ammLpPools[_lpAddress].allocPoint);
         ammLpPools[_lpAddress].whitelisted = false;
 
