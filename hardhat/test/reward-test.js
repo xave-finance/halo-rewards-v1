@@ -344,6 +344,32 @@ describe("I can view my unclaimed HALO tokens on the Minter dApp", function() {
     })
 })
 
+describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
+    var ownerHaloBal
+    it("Deposit HALO tokens to HaloChest, receive xHALO", async() => {
+        //console.log("\tIf UBE tokens were minted, return the total number of HALO tokens from the minter pool");
+        ownerHaloBal = await haloTokenContract.balanceOf(owner.address);
+        await haloTokenContract.approve(haloChestContract.address, ownerHaloBal);
+        await expect(haloChestContract.enter(
+            ownerHaloBal
+        )).to.not.be.reverted;
+    })
+
+    it("Send pending vested rewards to HaloChest", async() => {
+        const currVestedHalo = await rewardsContract.pendingVestingRewards();
+        await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted;
+    })
+
+    it("Send xHALO to HaloChest to earn extra bonus rewards", async() => {
+        const haloInHaloChest = await haloTokenContract.balanceOf(haloChestContract.address);
+        const ownerXHalo = await haloChestContract.balanceOf(owner.address);
+        await haloChestContract.leave(ownerXHalo);
+        expect(await haloTokenContract.balanceOf(owner.address)).to.equal(haloInHaloChest);
+    })
+
+
+})
+
 describe("As an Admin, I can update AMM LP pool’s allocation points", function() {
     it("AMM LP allocation points before", async() => {
         expect((await rewardsContract.getAmmLpPoolInfo(lpTokenContract.address)).allocPoint.toString()).to.equal('10');
