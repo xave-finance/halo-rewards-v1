@@ -8,8 +8,8 @@ cd hardhat
 npx hardhat test
 ```
 
-(hardhat/docs/s1.png)
+![](hardhat/docs/s1.png)
 
-(hardhat/docs/s2.png)
+![](hardhat/docs/s2.png)
 
-(hardhat/docs/s3.png)
+![](hardhat/docs/s3.png)
