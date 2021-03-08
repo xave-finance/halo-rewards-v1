@@ -9,3 +9,5 @@ contracts/TestContracts
 hardhat/artifacts
 hardhat/cache
 hardhat/node_modules
+.DS_Store
+hardhat/.DS_Store
