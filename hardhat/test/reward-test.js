@@ -341,6 +341,8 @@ describe("I can view my unclaimed HALO tokens on the Minter dApp", function() {
         //console.log(ethers.utils.formatEther(pendingAmmLpUserRewards));
 
         expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+
+        //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
     })
 })
 
@@ -365,9 +367,8 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         const ownerXHalo = await haloChestContract.balanceOf(owner.address);
         await haloChestContract.leave(ownerXHalo);
         expect(await haloTokenContract.balanceOf(owner.address)).to.equal(haloInHaloChest);
+        //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
     })
-
-
 })
 
 describe("As an Admin, I can update AMM LP pool’s allocation points", function() {

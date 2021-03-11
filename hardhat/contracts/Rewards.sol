@@ -38,7 +38,7 @@ contract Rewards is Ownable {
 
 
     struct UserInfo {
-        uint256 amount; // How many colalteral or LP tokens the user has provided.
+        uint256 amount; // How many collateral or LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
     }
 
@@ -377,6 +377,19 @@ contract Rewards is Ownable {
         UserInfo storage user = ammLpUserInfo[_lpAddress][_account];
         return (user.amount.mul(pool.accHaloPerShare).div(DECIMALS)).sub(user.rewardDebt);
 
+    }
+
+    /// @notice lp tokens deposited by user
+    /// @dev view function to check the amount of lp tokens deposited by user
+    /// @param _lpAddress address of the amm lp token
+    /// @param _account address of the user
+    /// @return lp tokens deposited by user
+    function getUserLpTokens(
+        address _lpAddress,
+        address _account
+    ) public view returns (uint256){
+        UserInfo storage user = ammLpUserInfo[_lpAddress][_account];
+        return user.amount;
     }
 
     /// @notice pending minter lp rewards
