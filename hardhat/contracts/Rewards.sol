@@ -96,6 +96,7 @@ contract Rewards is Ownable {
     /// @notice info of minter Lps
     mapping(address => mapping(address => UserInfo)) public minterLpUserInfo;
 
+    mapping(address => uint256) public claimedHalo;
 
     /****************************************
     *           PUBLIC FUNCTIONS           *
@@ -457,6 +458,13 @@ contract Rewards is Ownable {
         return minterLpPools[_collateralAddress];
     }
 
+    /// @notice get total claimed halo by user
+    /// @dev get total claimed halo by user
+    /// @param _account address of the user
+    /// @return total claimed halo by user
+    function getTotalClaimedHaloByUser(address _account) public view returns (uint256){
+        return claimedHalo[_account];
+    }
 
     /****************************************
     *            ADMIN FUNCTIONS            *
@@ -619,11 +627,9 @@ contract Rewards is Ownable {
     function safeHaloTransfer(address _to, uint256 _amount) internal {
 
         uint256 haloBal = IERC20(haloTokenAddress).balanceOf(address(this));
-        if (_amount > haloBal) {
-            IERC20(haloTokenAddress).transfer(_to, haloBal);
-        } else {
-            IERC20(haloTokenAddress).transfer(_to, _amount);
-        }
+        require(_amount <= haloBal, "Not enough HALO tokens in the contract");
+        IERC20(haloTokenAddress).transfer(_to, _amount);
+        claimedHalo[_to] = claimedHalo[_to].add(_amount);
 
     }
 
