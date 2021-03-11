@@ -364,10 +364,57 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
 
     it("Send xHALO to HaloChest to earn extra bonus rewards", async() => {
         const haloInHaloChest = await haloTokenContract.balanceOf(haloChestContract.address);
+
         const ownerXHalo = await haloChestContract.balanceOf(owner.address);
         await haloChestContract.leave(ownerXHalo);
+
         expect(await haloTokenContract.balanceOf(owner.address)).to.equal(haloInHaloChest);
         //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
+    })
+    it("HALO earned by User A > HALO earned by User B > HALO earned by User C", async() => {
+        console.log("Current HALO balance in HaloChest:" +
+        ethers.utils.parseEther((await haloTokenContract.balanceOf(haloChestContract.address)).toString()));
+        console.log("Minting 100 HALO to User A...");
+        await haloTokenContract.mint(addrs[0].address, ethers.utils.parseEther('100'));
+        console.log("Minting 100 HALO to User B...");
+        await haloTokenContract.mint(addrs[1].address, ethers.utils.parseEther('100'));
+        console.log("Minting 100 HALO to User C...");
+        await haloTokenContract.mint(addrs[2].address, ethers.utils.parseEther('100'));
+
+        console.log("100 HALO deposited by User A to HaloChest");
+        await haloTokenContract.connect(addrs[0]).approve(haloChestContract.address, ethers.utils.parseEther('100'));
+        await haloChestContract.connect(addrs[0]).enter(ethers.utils.parseEther('100'));
+
+        sleep(3);
+
+        console.log("Releasing vested bonus tokens to HaloChest from Rewards contract");
+        const currVestedHalo = (await rewardsContract.pendingVestingRewards()).toString();
+        console.log(currVestedHalo);
+        await rewardsContract.releaseVestedRewards();
+
+        console.log("100 HALO deposited by User B to HaloChest");
+        await haloTokenContract.connect(addrs[1]).approve(haloChestContract.address, ethers.utils.parseEther('100'));
+        await haloChestContract.connect(addrs[1]).enter(ethers.utils.parseEther('100'));
+
+        sleep(3);
+
+        console.log("Releasing vested bonus tokens to HaloChest from Rewards contract");
+        await rewardsContract.releaseVestedRewards();
+
+        console.log("100 HALO deposited by User C to HaloChest");
+        await haloTokenContract.connect(addrs[2]).approve(haloChestContract.address, ethers.utils.parseEther('100'));
+        await haloChestContract.connect(addrs[2]).enter(ethers.utils.parseEther('100'));
+        console.log("All users leave HaloChest");
+        
+        await haloChestContract.connect(addrs[0]).leave(await haloChestContract.balanceOf(addrs[0].address));
+        await haloChestContract.connect(addrs[1]).leave(await haloChestContract.balanceOf(addrs[1].address));
+        await haloChestContract.connect(addrs[2]).leave(await haloChestContract.balanceOf(addrs[2].address));
+
+        console.log("Final HALO balances:")
+        console.log("User A: " + ethers.utils.formatEther(await haloTokenContract.balanceOf(addrs[0].address)));
+        console.log("User B: " + ethers.utils.formatEther(await haloTokenContract.balanceOf(addrs[1].address)));
+        console.log("User C: " + ethers.utils.formatEther(await haloTokenContract.balanceOf(addrs[2].address)));
+
     })
 })
 

@@ -153,12 +153,12 @@ contract Rewards is Ownable {
     function updateAmmRewardPool(address _lpAddress) public {
 
         PoolInfo storage pool = ammLpPools[_lpAddress];
-        if (block.timestamp <= pool.lastRewardTs) {
+        if (now <= pool.lastRewardTs) {
             return;
         }
         uint256 lpSupply = IERC20(_lpAddress).balanceOf(address(this));
         if (lpSupply == 0) {
-            pool.lastRewardTs = block.timestamp;
+            pool.lastRewardTs = now;
             return;
         }
 
@@ -169,7 +169,7 @@ contract Rewards is Ownable {
             haloReward.mul(DECIMALS).div(lpSupply)
         );
 
-        pool.lastRewardTs = block.timestamp;
+        pool.lastRewardTs = now;
 
         emit AmmRewardPoolUpdated(_lpAddress, pool.accHaloPerShare, pool.lastRewardTs);
 
@@ -181,13 +181,13 @@ contract Rewards is Ownable {
     function updateMinterRewardPool(address _collateralAddress) public {
 
         PoolInfo storage pool = minterLpPools[_collateralAddress];
-        if (block.timestamp <= pool.lastRewardTs) {
+        if (now <= pool.lastRewardTs) {
             return;
         }
 
         uint256 minterCollateralSupply = IMinter(minterContract).getTotalCollateralByCollateralAddress(_collateralAddress);
         if (minterCollateralSupply == 0) {
-            pool.lastRewardTs = block.timestamp;
+            pool.lastRewardTs = now;
             return;
         }
 
@@ -198,7 +198,7 @@ contract Rewards is Ownable {
             haloReward.mul(DECIMALS).div(minterCollateralSupply)
         );
 
-        pool.lastRewardTs = block.timestamp;
+        pool.lastRewardTs = now;
 
         emit MinterRewardPoolUpdated(_collateralAddress, pool.accHaloPerShare, pool.lastRewardTs);
 
@@ -413,17 +413,13 @@ contract Rewards is Ownable {
     /// @dev view function to check pending rewards for stakers since last withdrawal to vesting contract
     /// @return pending rewards for stakers
     function pendingVestingRewards() public view returns (uint256) {
-
         uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
         uint256 accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
         uint256 diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
-
-        uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
+        uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths+1)).div(DECIMALS);
         uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-        uint256 pending = (accHalo.sub(vestingRewardsDebt)).mul(vestingRewardsRatio).div(BPS);
-
+        uint256 pending = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
         return pending;
-
     }
 
     /// @notice checks if an amm lp address is whitelisted
@@ -511,7 +507,7 @@ contract Rewards is Ownable {
     ) public onlyOwner {
 
         require(ammLpPools[_lpAddress].whitelisted == false, "AMM LP Pool already added");
-        uint256 lastRewardTs = block.timestamp > genesisTs ? block.timestamp : genesisTs;
+        uint256 lastRewardTs = now > genesisTs ? now : genesisTs;
         totalAmmLpAllocs = totalAmmLpAllocs.add(_allocPoint);
 
         //add lp to ammLpPools
@@ -532,7 +528,7 @@ contract Rewards is Ownable {
     ) public onlyOwner {
 
         require(minterLpPools[_collateralAddress].whitelisted == false, "Collateral type already added");
-        uint256 lastRewardTs = block.timestamp > genesisTs ? block.timestamp : genesisTs;
+        uint256 lastRewardTs = now > genesisTs ? now : genesisTs;
         totalMinterLpAllocs = totalMinterLpAllocs.add(_allocPoint);
 
         //add lp to ammLpPools
@@ -569,17 +565,17 @@ contract Rewards is Ownable {
     /// @notice releases pending vested rewards for stakers for extra bonus
     /// @dev releases pending vested rewards for stakers for extra bonus
     function releaseVestedRewards() public onlyOwner {
-        require(block.timestamp > lastHaloVestRewardTs, "now<lastHaloVestRewardTs");
+        require(now > lastHaloVestRewardTs, "now<lastHaloVestRewardTs");
         uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
         uint256 accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
         uint256 diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
-
-        uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
+        require(diffTime < epochLength.mul(DECIMALS), "diffTime > epochLength.mul(DECIMALS)");
+        uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths+1)).div(DECIMALS);
         uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
         uint256 pending = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
         vestingRewardsDebt = accHalo.mul(vestingRewardsRatio).div(BPS);
         safeHaloTransfer(haloChestContract, pending);
-        emit VestedRewardsReleased(pending, block.timestamp);
+        emit VestedRewardsReleased(pending, now);
     }
 
     /// @notice sets the address of the minter contract
@@ -601,7 +597,7 @@ contract Rewards is Ownable {
     /// @dev set genesis timestamp
     /// @param _genesisTs genesis timestamp
     function setGenesisTs(uint256 _genesisTs) public onlyOwner {
-        require(block.timestamp < genesisTs, "Already initialized");
+        require(now < genesisTs, "Already initialized");
         genesisTs = _genesisTs;
     }
 
@@ -638,7 +634,7 @@ contract Rewards is Ownable {
     /// @param _from last timestamp when rewards were updated
     /// @return pending rewards since last update
     /* function calcReward(uint256 _from) internal returns (uint256){
-        uint256 currentTs = block.timestamp;
+        uint256 currentTs = now;
         //require(_from>=genesisTs, "from<genesisTs"); //TEMP
         uint256 nMonthsStart = (_from.sub(genesisTs)).div(epochLength);
         //require(currentTs>=genesisTs, "currentTs<genesisTs"); //TEMP
