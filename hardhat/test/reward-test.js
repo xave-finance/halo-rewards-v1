@@ -363,7 +363,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted;
     })
 
-    it("Earn extra bonus rewards", async() => {
+    it("Claim staked HALO + bonus rewards from HaloChest and burn xHALO", async() => {
         const haloInHaloChest = await haloTokenContract.balanceOf(haloChestContract.address);
 
         const ownerXHalo = await haloChestContract.balanceOf(owner.address);
@@ -372,7 +372,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         expect(await haloTokenContract.balanceOf(owner.address)).to.equal(haloInHaloChest);
         //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
     })
-    
+
     it("HALO earned by User A > HALO earned by User B > HALO earned by User C", async() => {
         console.log("Current HALO balance in HaloChest:" +
         ethers.utils.parseEther((await haloTokenContract.balanceOf(haloChestContract.address)).toString()));
