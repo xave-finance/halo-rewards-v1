@@ -11,6 +11,7 @@ let ubeContract
 let haloTokenContract
 let haloChestContract
 let genesisTs
+let epochLength
 const DECIMALS = 10**18
 const BPS = 10**4
 const INITIAL_MINT = 10**6
@@ -100,7 +101,7 @@ before(async() => {
     const RewardsContract = await ethers.getContractFactory("Rewards");
     const startingRewards = ethers.utils.parseEther('7500000');
     const decayBase = ethers.utils.parseEther('0.813');
-    const epochLength = 60
+    epochLength = 60
     const minterLpRewardsRatio = 0.4*BPS
     const ammLpRewardsRatio = 0.4*BPS
     const vestingRewardsRatio = 0.2*BPS
@@ -362,7 +363,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted;
     })
 
-    it("Send xHALO to HaloChest to earn extra bonus rewards", async() => {
+    it("Earn extra bonus rewards", async() => {
         const haloInHaloChest = await haloTokenContract.balanceOf(haloChestContract.address);
 
         const ownerXHalo = await haloChestContract.balanceOf(owner.address);
@@ -371,6 +372,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         expect(await haloTokenContract.balanceOf(owner.address)).to.equal(haloInHaloChest);
         //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
     })
+    
     it("HALO earned by User A > HALO earned by User B > HALO earned by User C", async() => {
         console.log("Current HALO balance in HaloChest:" +
         ethers.utils.parseEther((await haloTokenContract.balanceOf(haloChestContract.address)).toString()));
@@ -405,7 +407,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         await haloTokenContract.connect(addrs[2]).approve(haloChestContract.address, ethers.utils.parseEther('100'));
         await haloChestContract.connect(addrs[2]).enter(ethers.utils.parseEther('100'));
         console.log("All users leave HaloChest");
-        
+
         await haloChestContract.connect(addrs[0]).leave(await haloChestContract.balanceOf(addrs[0].address));
         await haloChestContract.connect(addrs[1]).leave(await haloChestContract.balanceOf(addrs[1].address));
         await haloChestContract.connect(addrs[2]).leave(await haloChestContract.balanceOf(addrs[2].address));

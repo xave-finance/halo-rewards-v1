@@ -7,6 +7,27 @@ import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { SafeMath } from '@openzeppelin/contracts/math/SafeMath.sol';
 import { IMinter } from "./interfaces/IMinter.sol";
 
+///
+/// User flow:
+/// ========For AMM LPs=========
+/// - User provides liquidity on AMMs like uniswap
+/// - User takes the LP tokens received from uniswap and deposits in this rewards contract to earn rewards in HALO tokens
+/// - User earns rewards per second based on the decay function and the amount of total LP tokens locked in this contract
+/// - User can deposit and withdraw LP tokens any number of times. Each time they do that, the pending HALO rewarsd are
+/// automatically transferred to their account.
+/// - User can then stake these HALO tokens inside the HaloChest contract to earn bonus rewards in HALO tokens.
+/// ============================
+///
+/// =======For Minter LPs=======
+/// - User mints synthetic stablecoins using the minter Dapp
+/// - The minter contract calls the depositMinter function and the user starts earning HALO rewards based on the amount
+///  of collateral they locked inside the minter contract.
+/// - User earns rewards per second based on the decay function and the amount of total collateral locked by all users in the minter contract.
+/// - User can mint and redeem collateral any number of times. Each time they do that, the pending HALO rewarsd are
+/// automatically transferred to their account.
+/// - User can then stake these HALO tokens inside the HaloChest contract to earn bonus rewards in HALO tokens.
+/// ============================
+///
 /// @title Rewards
 /// @notice Rewards for participation in the halo ecosystem.
 /// @dev Rewards for participation in the halo ecosystem.
@@ -147,6 +168,18 @@ contract Rewards is Ownable {
         }
     }
 
+    ///
+    /// Updates accHaloPerShare and last reward update timestamp.
+    /// Calculation:
+    /// For each second, the total amount of rewards is fixed among all the current users who have staked LP tokens in the contract
+    /// So, your share of the per second reward is proportionate to the amount of LP tokens you have staked in the pool.
+    /// Hence, reward per second per collateral unit = reward per second / total collateral
+    /// Since the total collateral remains the same between period when someone deposits or withdraws collateral,
+    /// the per second reward per collateral unit also remains the same.
+    /// So we just keep adding reward per share and keep a rewardDebt variable for each user to keep track of how much
+    /// out of the accumulated reward they have already been paid or are not owed because of when they entered.
+    ///
+    ///
     /// @notice updates amm reward pool state
     /// @dev keeps track of accHaloPerShare as the number of stakers change
     /// @param _lpAddress address of the amm lp token
@@ -175,6 +208,18 @@ contract Rewards is Ownable {
 
     }
 
+    ///
+    /// Updates accHaloPerShare and last reward update timestamp.
+    /// Calculation:
+    /// For each second, the amount of rewards is fixed among all the current users who have staked collateral in the contract
+    /// So, your share of the per second reward is proportionate to your collateral in the pool.
+    /// Hence, reward per second per collateral unit = reward per second / total collateral
+    /// Since the total collateral remains the same between period when someone deposits or withdraws collateral,
+    /// the per second reward per collateral unit also remains the same.
+    /// So we just keep adding reward per share and keep a rewardDebt variable for each user to keep track of how much
+    /// out of the accumulated reward they have already been paid.
+    ///
+    ///
     /// @notice updates minter reward pool state
     /// @dev keeps track of accHaloPerShare as the number of stakers change
     /// @param _collateralAddress address of the minter lp token
@@ -204,6 +249,13 @@ contract Rewards is Ownable {
 
     }
 
+
+    ///
+    /// Deposit LP tokens and update reward debt for user and automatically sends accumulated rewards to the user.
+    /// Reward debt keeps track of how much rewards have already been paid to the user + how much
+    /// reward they are not entitled to that was earned before they entered the pool.
+    ///
+    ///
     /// @notice deposit amm lp tokens to earn rewards
     /// @dev deposit amm lp tokens to earn rewards
     /// @param _lpAddress address of the amm lp token
@@ -676,6 +728,31 @@ contract Rewards is Ownable {
     } */
 
 
+    ///
+    /// Calculates reward since last update timestamp based on the decay function
+    /// Calculation works as follows:
+    /// Rewards since last update = 1. Rewards since the genesis - 2. Rewards since the genesis till last update
+    /// 1. Rewards since the genesis
+    ///     Number of complete months since genesis = (timestamp_current - timestamp_genesis) / month_length
+    ///     Rewards since the genesis = Total rewards till end of last month + reward since end of last month
+    ///     I.  Total rewards till end of last month = ( ∑ month_n * reward_monthN )
+    ///         where reward_monthN = startingRewards * DecayBase ^ n
+    ///     II.  Reward since end of last month = (timediff since end of last month * this month's reward) / (Length of month)
+    ///
+    /// 2. Rewards since the genesis till last update
+    ///     Number of complete months since genesis till last update = (timestamp_last - timestamp_genesis) / month_length
+    ///     Rewards since the genesis till last update = Total rewards till end of last month before last update
+    ///                                                  + reward since end of last month till last update
+    ///     I.  Total rewards till end of last month before last update = ( ∑ month_n * reward_monthN )
+    ///         where reward_monthN = startingRewards * DecayBase ^ n
+    ///     II.  Reward since end of last month till last update = (timediff since end of last month before last update * that month's reward) / (Length of month)
+    ///
+    ///
+    ///
+    /// @notice calculates the pending rewards for last timestamp
+    /// @dev calculates the pending rewards for last timestamp
+    /// @param _from last timestamp when rewards were updated
+    /// @return pending rewards since last update
     function calcReward(uint256 _from) internal view returns (uint256){
 
         uint256 nMonths = (_from.sub(genesisTs)).div(epochLength);
@@ -696,7 +773,7 @@ contract Rewards is Ownable {
 
     }
 
-    function aggregatedMonthlyRewards(
+    /* function aggregatedMonthlyRewards(
         uint256 monthlyRewardStart,
         uint256 nMonthsStart,
         uint256 nMonthsEnd
@@ -710,7 +787,7 @@ contract Rewards is Ownable {
         }
         return aggMonthlyRewards;
 
-    }
+    } */
 
     function exp(uint256 m, uint256 n) internal pure returns (uint256) {
         uint256 x = DECIMALS;
