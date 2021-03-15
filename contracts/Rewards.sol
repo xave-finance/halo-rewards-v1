@@ -201,7 +201,7 @@ contract Rewards is Ownable {
     /// @param _lpAddress
     /// @param _amount
     /// @return
-    function depositAmmLpTokens(address _lpAddress, uint256 _amount) public {
+    function depositPoolTokens(address _lpAddress, uint256 _amount) public {
 
         require(ammLpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed");
         PoolInfo storage pool = ammLpPools[_lpAddress];
@@ -259,7 +259,7 @@ contract Rewards is Ownable {
     /// @param _lpAddress
     /// @param _amount
     /// @return
-    function withdrawAmmLpTokens(address _lpAddress, uint256 _amount) public {
+    function withdrawPoolTokens(address _lpAddress, uint256 _amount) public {
 
         //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
         PoolInfo storage pool = ammLpPools[_lpAddress];
@@ -310,7 +310,7 @@ contract Rewards is Ownable {
     /// @dev
     /// @param _lpAddress
     /// @return
-    function withdrawPendingAmmLpRewards(address _lpAddress) external {
+    function withdrawUnclaimedPoolRewards(address _lpAddress) external {
 
         PoolInfo storage pool = ammLpPools[_lpAddress];
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
@@ -363,7 +363,7 @@ contract Rewards is Ownable {
     /// @param _lpAddress
     /// @param _account
     /// @return
-    function pendingAmmLpUserRewards(
+    function getPendingPoolRewardsByUserByPool(
         address _lpAddress,
         address _account
     ) public view returns (uint256) {

@@ -34,7 +34,7 @@ interface IRewards {
 
     function totalMinterLpAllocationPoints() external view returns (uint256);
 
-    function pendingAmmLpUserRewards(
+    function getPendingPoolRewardsByUserByPool(
         address _lpAddress,
         address _account
     ) external view returns (uint256);

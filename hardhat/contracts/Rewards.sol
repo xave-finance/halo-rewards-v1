@@ -259,7 +259,7 @@ contract Rewards is Ownable {
     /// @dev deposit amm lp tokens to earn rewards
     /// @param _lpAddress address of the amm lp token
     /// @param _amount amount of lp tokens
-    function depositAmmLpTokens(address _lpAddress, uint256 _amount) public {
+    function depositPoolTokens(address _lpAddress, uint256 _amount) public {
 
         require(ammLpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed");
         PoolInfo storage pool = ammLpPools[_lpAddress];
@@ -315,7 +315,7 @@ contract Rewards is Ownable {
     /// @dev withdraw amm lp tokens to earn rewards
     /// @param _lpAddress address of the amm lp token
     /// @param _amount amount of lp tokens
-    function withdrawAmmLpTokens(address _lpAddress, uint256 _amount) public {
+    function withdrawPoolTokens(address _lpAddress, uint256 _amount) public {
 
         //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
         PoolInfo storage pool = ammLpPools[_lpAddress];
@@ -364,7 +364,7 @@ contract Rewards is Ownable {
     /// @notice withdraw pending amm lp rewards
     /// @dev withdraw pending amm lp rewards, checks pending rewards, updates rewardDebt
     /// @param _lpAddress address of the amm lp token
-    function withdrawPendingAmmLpRewards(address _lpAddress) external {
+    function withdrawUnclaimedPoolRewards(address _lpAddress) external {
 
         PoolInfo storage pool = ammLpPools[_lpAddress];
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
@@ -420,7 +420,7 @@ contract Rewards is Ownable {
     /// @param _lpAddress address of the amm lp token
     /// @param _account address of the user
     /// @return pending amm lp rewards for the user
-    function pendingAmmLpUserRewards(
+    function getPendingPoolRewardsByUserByPool(
         address _lpAddress,
         address _account
     ) public view returns (uint256) {
@@ -436,7 +436,7 @@ contract Rewards is Ownable {
     /// @param _lpAddress address of the amm lp token
     /// @param _account address of the user
     /// @return lp tokens deposited by user
-    function getUserLpTokens(
+    function getDepositedPoolTokenBalanceByUser(
         address _lpAddress,
         address _account
     ) public view returns (uint256){
@@ -509,7 +509,7 @@ contract Rewards is Ownable {
     /// @dev get total claimed halo by user
     /// @param _account address of the user
     /// @return total claimed halo by user
-    function getTotalClaimedHaloByUser(address _account) public view returns (uint256){
+    function getTotalRewardsClaimedByUser(address _account) public view returns (uint256){
         return claimedHalo[_account];
     }
 

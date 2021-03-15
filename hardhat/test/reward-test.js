@@ -255,7 +255,7 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
     it("I earn the correct number of HALO tokens per time interval on depositing LPT", async() => {
         //const haloBal = Math.round(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address));
         haloBal = Math.round(parseFloat(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address))));
-        await expect(rewardsContract.depositAmmLpTokens(
+        await expect(rewardsContract.depositPoolTokens(
             lpTokenContract.address,
             ethers.utils.parseEther('100')
         )).to.not.be.reverted;
@@ -268,15 +268,15 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const pendingAmmLpUserRewards = await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address);
+        const getPendingPoolRewardsByUserByPool = await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address);
         //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
     })
 
     it("I stop earning HALO tokens on withdrawing LPT", async() => {
 
-        await expect(rewardsContract.withdrawAmmLpTokens(
+        await expect(rewardsContract.withdrawPoolTokens(
             lpTokenContract.address,
             ethers.utils.parseEther('100')
         )).to.not.be.reverted;
@@ -292,7 +292,7 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
         //const pendingMinterLpUserRewards = await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address);
         //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
         console.log("\tPending rewards for user after withdrawing LPT should be 0");
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address))))).to.equal(0);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal(0);
 
     })
 
@@ -327,7 +327,7 @@ describe("I can view my unclaimed HALO tokens on the Minter dApp", function() {
     })
 
     it("If LP tokens were deposited, display the correct number of HALO tokens rewards", async() => {
-        await expect(rewardsContract.depositAmmLpTokens(
+        await expect(rewardsContract.depositPoolTokens(
             lpTokenContract.address,
             ethers.utils.parseEther('100'),
         )).to.not.be.reverted;
@@ -338,10 +338,10 @@ describe("I can view my unclaimed HALO tokens on the Minter dApp", function() {
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
         updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const pendingAmmLpUserRewards = await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingAmmLpUserRewards));
+        const getPendingPoolRewardsByUserByPool = await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address);
+        //console.log(ethers.utils.formatEther(getPendingPoolRewardsByUserByPool));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
 
         //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
     })
