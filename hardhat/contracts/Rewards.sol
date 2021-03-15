@@ -7,6 +7,27 @@ import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { SafeMath } from '@openzeppelin/contracts/math/SafeMath.sol';
 import { IMinter } from "./interfaces/IMinter.sol";
 
+///
+/// User flow:
+/// ========For AMM LPs=========
+/// - User provides liquidity on AMMs like uniswap
+/// - User takes the LP tokens received from uniswap and deposits in this rewards contract to earn rewards in HALO tokens
+/// - User earns rewards per second based on the decay function and the amount of total LP tokens locked in this contract
+/// - User can deposit and withdraw LP tokens any number of times. Each time they do that, the pending HALO rewarsd are
+/// automatically transferred to their account.
+/// - User can then stake these HALO tokens inside the HaloChest contract to earn bonus rewards in HALO tokens.
+/// ============================
+///
+/// =======For Minter LPs=======
+/// - User mints synthetic stablecoins using the minter Dapp
+/// - The minter contract calls the depositMinter function and the user starts earning HALO rewards based on the amount
+///  of collateral they locked inside the minter contract.
+/// - User earns rewards per second based on the decay function and the amount of total collateral locked by all users in the minter contract.
+/// - User can mint and redeem collateral any number of times. Each time they do that, the pending HALO rewarsd are
+/// automatically transferred to their account.
+/// - User can then stake these HALO tokens inside the HaloChest contract to earn bonus rewards in HALO tokens.
+/// ============================
+///
 /// @title Rewards
 /// @notice Rewards for participation in the halo ecosystem.
 /// @dev Rewards for participation in the halo ecosystem.
@@ -22,7 +43,6 @@ contract Rewards is Ownable {
    *                EVENTS                *
    ****************************************/
 
-    event Log(uint256 loc, uint256 ts);
     event DepositLPTokens(address indexed user, address indexed lpAddress, uint256 amount);
     event WithdrawLPTokens(address indexed user, address indexed lpAddress, uint256 amount);
     event DepositMinter(address indexed user, address indexed collateralAddress, uint256 amount);
@@ -38,7 +58,7 @@ contract Rewards is Ownable {
 
 
     struct UserInfo {
-        uint256 amount; // How many colalteral or LP tokens the user has provided.
+        uint256 amount; // How many collateral or LP tokens the user has provided.
         uint256 rewardDebt; // Reward debt. See explanation below.
     }
 
@@ -96,6 +116,7 @@ contract Rewards is Ownable {
     /// @notice info of minter Lps
     mapping(address => mapping(address => UserInfo)) public minterLpUserInfo;
 
+    mapping(address => uint256) public claimedHalo;
 
     /****************************************
     *           PUBLIC FUNCTIONS           *
@@ -146,18 +167,30 @@ contract Rewards is Ownable {
         }
     }
 
+    ///
+    /// Updates accHaloPerShare and last reward update timestamp.
+    /// Calculation:
+    /// For each second, the total amount of rewards is fixed among all the current users who have staked LP tokens in the contract
+    /// So, your share of the per second reward is proportionate to the amount of LP tokens you have staked in the pool.
+    /// Hence, reward per second per collateral unit = reward per second / total collateral
+    /// Since the total collateral remains the same between period when someone deposits or withdraws collateral,
+    /// the per second reward per collateral unit also remains the same.
+    /// So we just keep adding reward per share and keep a rewardDebt variable for each user to keep track of how much
+    /// out of the accumulated reward they have already been paid or are not owed because of when they entered.
+    ///
+    ///
     /// @notice updates amm reward pool state
     /// @dev keeps track of accHaloPerShare as the number of stakers change
     /// @param _lpAddress address of the amm lp token
     function updateAmmRewardPool(address _lpAddress) public {
 
         PoolInfo storage pool = ammLpPools[_lpAddress];
-        if (block.timestamp <= pool.lastRewardTs) {
+        if (now <= pool.lastRewardTs) {
             return;
         }
         uint256 lpSupply = IERC20(_lpAddress).balanceOf(address(this));
         if (lpSupply == 0) {
-            pool.lastRewardTs = block.timestamp;
+            pool.lastRewardTs = now;
             return;
         }
 
@@ -168,25 +201,37 @@ contract Rewards is Ownable {
             haloReward.mul(DECIMALS).div(lpSupply)
         );
 
-        pool.lastRewardTs = block.timestamp;
+        pool.lastRewardTs = now;
 
         emit AmmRewardPoolUpdated(_lpAddress, pool.accHaloPerShare, pool.lastRewardTs);
 
     }
 
+    ///
+    /// Updates accHaloPerShare and last reward update timestamp.
+    /// Calculation:
+    /// For each second, the amount of rewards is fixed among all the current users who have staked collateral in the contract
+    /// So, your share of the per second reward is proportionate to your collateral in the pool.
+    /// Hence, reward per second per collateral unit = reward per second / total collateral
+    /// Since the total collateral remains the same between period when someone deposits or withdraws collateral,
+    /// the per second reward per collateral unit also remains the same.
+    /// So we just keep adding reward per share and keep a rewardDebt variable for each user to keep track of how much
+    /// out of the accumulated reward they have already been paid.
+    ///
+    ///
     /// @notice updates minter reward pool state
     /// @dev keeps track of accHaloPerShare as the number of stakers change
     /// @param _collateralAddress address of the minter lp token
     function updateMinterRewardPool(address _collateralAddress) public {
 
         PoolInfo storage pool = minterLpPools[_collateralAddress];
-        if (block.timestamp <= pool.lastRewardTs) {
+        if (now <= pool.lastRewardTs) {
             return;
         }
 
         uint256 minterCollateralSupply = IMinter(minterContract).getTotalCollateralByCollateralAddress(_collateralAddress);
         if (minterCollateralSupply == 0) {
-            pool.lastRewardTs = block.timestamp;
+            pool.lastRewardTs = now;
             return;
         }
 
@@ -197,12 +242,19 @@ contract Rewards is Ownable {
             haloReward.mul(DECIMALS).div(minterCollateralSupply)
         );
 
-        pool.lastRewardTs = block.timestamp;
+        pool.lastRewardTs = now;
 
         emit MinterRewardPoolUpdated(_collateralAddress, pool.accHaloPerShare, pool.lastRewardTs);
 
     }
 
+
+    ///
+    /// Deposit LP tokens and update reward debt for user and automatically sends accumulated rewards to the user.
+    /// Reward debt keeps track of how much rewards have already been paid to the user + how much
+    /// reward they are not entitled to that was earned before they entered the pool.
+    ///
+    ///
     /// @notice deposit amm lp tokens to earn rewards
     /// @dev deposit amm lp tokens to earn rewards
     /// @param _lpAddress address of the amm lp token
@@ -379,6 +431,19 @@ contract Rewards is Ownable {
 
     }
 
+    /// @notice lp tokens deposited by user
+    /// @dev view function to check the amount of lp tokens deposited by user
+    /// @param _lpAddress address of the amm lp token
+    /// @param _account address of the user
+    /// @return lp tokens deposited by user
+    function getUserLpTokens(
+        address _lpAddress,
+        address _account
+    ) public view returns (uint256){
+        UserInfo storage user = ammLpUserInfo[_lpAddress][_account];
+        return user.amount;
+    }
+
     /// @notice pending minter lp rewards
     /// @dev view function to check pending minter lp rewards for an account
     /// @param _collateralAddress address of the collateral token
@@ -399,17 +464,13 @@ contract Rewards is Ownable {
     /// @dev view function to check pending rewards for stakers since last withdrawal to vesting contract
     /// @return pending rewards for stakers
     function pendingVestingRewards() public view returns (uint256) {
-
         uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
         uint256 accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
         uint256 diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
-
-        uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
+        uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths+1)).div(DECIMALS);
         uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-        uint256 pending = (accHalo.sub(vestingRewardsDebt)).mul(vestingRewardsRatio).div(BPS);
-
+        uint256 pending = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
         return pending;
-
     }
 
     /// @notice checks if an amm lp address is whitelisted
@@ -444,6 +505,13 @@ contract Rewards is Ownable {
         return minterLpPools[_collateralAddress];
     }
 
+    /// @notice get total claimed halo by user
+    /// @dev get total claimed halo by user
+    /// @param _account address of the user
+    /// @return total claimed halo by user
+    function getTotalClaimedHaloByUser(address _account) public view returns (uint256){
+        return claimedHalo[_account];
+    }
 
     /****************************************
     *            ADMIN FUNCTIONS            *
@@ -490,7 +558,7 @@ contract Rewards is Ownable {
     ) public onlyOwner {
 
         require(ammLpPools[_lpAddress].whitelisted == false, "AMM LP Pool already added");
-        uint256 lastRewardTs = block.timestamp > genesisTs ? block.timestamp : genesisTs;
+        uint256 lastRewardTs = now > genesisTs ? now : genesisTs;
         totalAmmLpAllocs = totalAmmLpAllocs.add(_allocPoint);
 
         //add lp to ammLpPools
@@ -511,7 +579,7 @@ contract Rewards is Ownable {
     ) public onlyOwner {
 
         require(minterLpPools[_collateralAddress].whitelisted == false, "Collateral type already added");
-        uint256 lastRewardTs = block.timestamp > genesisTs ? block.timestamp : genesisTs;
+        uint256 lastRewardTs = now > genesisTs ? now : genesisTs;
         totalMinterLpAllocs = totalMinterLpAllocs.add(_allocPoint);
 
         //add lp to ammLpPools
@@ -548,17 +616,17 @@ contract Rewards is Ownable {
     /// @notice releases pending vested rewards for stakers for extra bonus
     /// @dev releases pending vested rewards for stakers for extra bonus
     function releaseVestedRewards() public onlyOwner {
-        require(block.timestamp > lastHaloVestRewardTs, "now<lastHaloVestRewardTs");
+        require(now > lastHaloVestRewardTs, "now<lastHaloVestRewardTs");
         uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
         uint256 accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
         uint256 diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
-
-        uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
+        require(diffTime < epochLength.mul(DECIMALS), "diffTime > epochLength.mul(DECIMALS)");
+        uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths+1)).div(DECIMALS);
         uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
         uint256 pending = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
         vestingRewardsDebt = accHalo.mul(vestingRewardsRatio).div(BPS);
         safeHaloTransfer(haloChestContract, pending);
-        emit VestedRewardsReleased(pending, block.timestamp);
+        emit VestedRewardsReleased(pending, now);
     }
 
     /// @notice sets the address of the minter contract
@@ -580,7 +648,7 @@ contract Rewards is Ownable {
     /// @dev set genesis timestamp
     /// @param _genesisTs genesis timestamp
     function setGenesisTs(uint256 _genesisTs) public onlyOwner {
-        require(block.timestamp < genesisTs, "Already initialized");
+        require(now < genesisTs, "Already initialized");
         genesisTs = _genesisTs;
     }
 
@@ -606,11 +674,9 @@ contract Rewards is Ownable {
     function safeHaloTransfer(address _to, uint256 _amount) internal {
 
         uint256 haloBal = IERC20(haloTokenAddress).balanceOf(address(this));
-        if (_amount > haloBal) {
-            IERC20(haloTokenAddress).transfer(_to, haloBal);
-        } else {
-            IERC20(haloTokenAddress).transfer(_to, _amount);
-        }
+        require(_amount <= haloBal, "Not enough HALO tokens in the contract");
+        IERC20(haloTokenAddress).transfer(_to, _amount);
+        claimedHalo[_to] = claimedHalo[_to].add(_amount);
 
     }
 
@@ -619,7 +685,7 @@ contract Rewards is Ownable {
     /// @param _from last timestamp when rewards were updated
     /// @return pending rewards since last update
     /* function calcReward(uint256 _from) internal returns (uint256){
-        uint256 currentTs = block.timestamp;
+        uint256 currentTs = now;
         //require(_from>=genesisTs, "from<genesisTs"); //TEMP
         uint256 nMonthsStart = (_from.sub(genesisTs)).div(epochLength);
         //require(currentTs>=genesisTs, "currentTs<genesisTs"); //TEMP
@@ -661,6 +727,29 @@ contract Rewards is Ownable {
     } */
 
 
+    ///
+    /// Calculates reward since last update timestamp based on the decay function
+    /// Calculation works as follows:
+    /// Rewards since last update = 1. Rewards since the genesis - 2. Rewards since the genesis till last update
+    /// 1. Rewards since the genesis
+    ///     Number of complete months since genesis = (timestamp_current - timestamp_genesis) / month_length
+    ///     Rewards since the genesis = Total rewards till end of last month + reward since end of last month
+    ///     I.  Total rewards till end of last month = ( startingRewards * ∑ decayBase ^ n )
+    ///     II.  Reward since end of last month = (timediff since end of last month * this month's reward) / (Length of month)
+    ///
+    /// 2. Rewards since the genesis till last update
+    ///     Number of complete months since genesis till last update = (timestamp_last - timestamp_genesis) / month_length
+    ///     Rewards since the genesis till last update = Total rewards till end of last month before last update
+    ///                                                  + reward since end of last month till last update
+    ///     I.  Total rewards till end of last month before last update = ( startingRewards * ∑ decayBase ^ n )
+    ///     II.  Reward since end of last month till last update = (timediff since end of last month before last update * that month's reward) / (Length of month)
+    ///
+    ///
+    ///
+    /// @notice calculates the pending rewards for last timestamp
+    /// @dev calculates the pending rewards for last timestamp
+    /// @param _from last timestamp when rewards were updated
+    /// @return pending rewards since last update
     function calcReward(uint256 _from) internal view returns (uint256){
 
         uint256 nMonths = (_from.sub(genesisTs)).div(epochLength);
@@ -681,7 +770,7 @@ contract Rewards is Ownable {
 
     }
 
-    function aggregatedMonthlyRewards(
+    /* function aggregatedMonthlyRewards(
         uint256 monthlyRewardStart,
         uint256 nMonthsStart,
         uint256 nMonthsEnd
@@ -695,7 +784,7 @@ contract Rewards is Ownable {
         }
         return aggMonthlyRewards;
 
-    }
+    } */
 
     function exp(uint256 m, uint256 n) internal pure returns (uint256) {
         uint256 x = DECIMALS;
