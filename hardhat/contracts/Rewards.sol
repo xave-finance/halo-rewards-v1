@@ -734,16 +734,14 @@ contract Rewards is Ownable {
     /// 1. Rewards since the genesis
     ///     Number of complete months since genesis = (timestamp_current - timestamp_genesis) / month_length
     ///     Rewards since the genesis = Total rewards till end of last month + reward since end of last month
-    ///     I.  Total rewards till end of last month = ( ∑ month_n * reward_monthN )
-    ///         where reward_monthN = startingRewards * DecayBase ^ n
+    ///     I.  Total rewards till end of last month = ( startingRewards * ∑ decayBase ^ n )
     ///     II.  Reward since end of last month = (timediff since end of last month * this month's reward) / (Length of month)
     ///
     /// 2. Rewards since the genesis till last update
     ///     Number of complete months since genesis till last update = (timestamp_last - timestamp_genesis) / month_length
     ///     Rewards since the genesis till last update = Total rewards till end of last month before last update
     ///                                                  + reward since end of last month till last update
-    ///     I.  Total rewards till end of last month before last update = ( ∑ month_n * reward_monthN )
-    ///         where reward_monthN = startingRewards * DecayBase ^ n
+    ///     I.  Total rewards till end of last month before last update = ( startingRewards * ∑ decayBase ^ n )
     ///     II.  Reward since end of last month till last update = (timediff since end of last month before last update * that month's reward) / (Length of month)
     ///
     ///
