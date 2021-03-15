@@ -43,7 +43,6 @@ contract Rewards is Ownable {
    *                EVENTS                *
    ****************************************/
 
-    event Log(uint256 loc, uint256 ts);
     event DepositLPTokens(address indexed user, address indexed lpAddress, uint256 amount);
     event WithdrawLPTokens(address indexed user, address indexed lpAddress, uint256 amount);
     event DepositMinter(address indexed user, address indexed collateralAddress, uint256 amount);
