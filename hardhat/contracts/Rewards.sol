@@ -13,7 +13,7 @@ import { IMinter } from "./interfaces/IMinter.sol";
 /// - User provides liquidity on AMMs like uniswap
 /// - User takes the LP tokens received from uniswap and deposits in this rewards contract to earn rewards in HALO tokens
 /// - User earns rewards per second based on the decay function and the amount of total LP tokens locked in this contract
-/// - User can deposit and withdraw LP tokens any number of times. Each time they do that, the pending HALO rewarsd are
+/// - User can deposit and withdraw LP tokens any number of times. Each time they do that, the unclaimed HALO rewarsd are
 /// automatically transferred to their account.
 /// - User can then stake these HALO tokens inside the HaloChest contract to earn bonus rewards in HALO tokens.
 /// ============================
@@ -23,7 +23,7 @@ import { IMinter } from "./interfaces/IMinter.sol";
 /// - The minter contract calls the depositMinter function and the user starts earning HALO rewards based on the amount
 ///  of collateral they locked inside the minter contract.
 /// - User earns rewards per second based on the decay function and the amount of total collateral locked by all users in the minter contract.
-/// - User can mint and redeem collateral any number of times. Each time they do that, the pending HALO rewarsd are
+/// - User can mint and redeem collateral any number of times. Each time they do that, the unclaimed HALO rewarsd are
 /// automatically transferred to their account.
 /// - User can then stake these HALO tokens inside the HaloChest contract to earn bonus rewards in HALO tokens.
 /// ============================
@@ -259,18 +259,18 @@ contract Rewards is Ownable {
     /// @dev deposit amm lp tokens to earn rewards
     /// @param _lpAddress address of the amm lp token
     /// @param _amount amount of lp tokens
-    function depositAmmLpTokens(address _lpAddress, uint256 _amount) public {
+    function depositPoolTokens(address _lpAddress, uint256 _amount) public {
 
         require(ammLpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed");
         PoolInfo storage pool = ammLpPools[_lpAddress];
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
         updateAmmRewardPool(_lpAddress);
         if (user.amount > 0) {
-            uint256 pending =
+            uint256 unclaimed =
                 user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                     user.rewardDebt
                 );
-            safeHaloTransfer(msg.sender, pending);
+            safeHaloTransfer(msg.sender, unclaimed);
         }
         IERC20(_lpAddress).transferFrom(
             address(msg.sender),
@@ -299,11 +299,11 @@ contract Rewards is Ownable {
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
         updateMinterRewardPool(_collateralAddress);
         if (user.amount > 0) {
-            uint256 pending =
+            uint256 unclaimed =
                 user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                     user.rewardDebt
                 );
-            safeHaloTransfer(_account, pending);
+            safeHaloTransfer(_account, unclaimed);
         }
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
@@ -315,18 +315,18 @@ contract Rewards is Ownable {
     /// @dev withdraw amm lp tokens to earn rewards
     /// @param _lpAddress address of the amm lp token
     /// @param _amount amount of lp tokens
-    function withdrawAmmLpTokens(address _lpAddress, uint256 _amount) public {
+    function withdrawPoolTokens(address _lpAddress, uint256 _amount) public {
 
         //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
         PoolInfo storage pool = ammLpPools[_lpAddress];
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
         require(user.amount >= _amount, "Error: Not enough balance");
         updateAmmRewardPool(_lpAddress);
-        uint256 pending =
+        uint256 unclaimed =
             user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                 user.rewardDebt
             );
-        safeHaloTransfer(msg.sender, pending);
+        safeHaloTransfer(msg.sender, unclaimed);
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
         IERC20(_lpAddress).transfer(address(msg.sender), _amount);
@@ -350,49 +350,49 @@ contract Rewards is Ownable {
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
         require(user.amount >= _amount, "Error: Not enough balance");
         updateMinterRewardPool(_collateralAddress);
-        uint256 pending =
+        uint256 unclaimed =
             user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                 user.rewardDebt
             );
-        safeHaloTransfer(_account, pending);
+        safeHaloTransfer(_account, unclaimed);
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
         emit WithdrawMinter(_account, _collateralAddress, _amount);
 
     }
 
-    /// @notice withdraw pending amm lp rewards
-    /// @dev withdraw pending amm lp rewards, checks pending rewards, updates rewardDebt
+    /// @notice withdraw unclaimed amm lp rewards
+    /// @dev withdraw unclaimed amm lp rewards, checks unclaimed rewards, updates rewardDebt
     /// @param _lpAddress address of the amm lp token
-    function withdrawPendingAmmLpRewards(address _lpAddress) external {
+    function withdrawUnclaimedPoolRewards(address _lpAddress) external {
 
         PoolInfo storage pool = ammLpPools[_lpAddress];
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
 
         updateAmmRewardPool(_lpAddress);
 
-        uint256 pending = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+        uint256 unclaimed = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
 
-        safeHaloTransfer(msg.sender, pending);
+        safeHaloTransfer(msg.sender, unclaimed);
 
     }
 
-    /// @notice withdraw pending minter lp rewards
-    /// @dev withdraw pending minter lp rewards, checks pending rewards, updates rewardDebt
+    /// @notice withdraw unclaimed minter lp rewards
+    /// @dev withdraw unclaimed minter lp rewards, checks unclaimed rewards, updates rewardDebt
     /// @param _collateralAddress address of the collateral token
     /// @param _account address of the user
-    function withdrawPendingMinterLpRewards(address _collateralAddress, address _account) public onlyMinter {
+    function withdrawUnclaimedMinterLpRewards(address _collateralAddress, address _account) public onlyMinter {
 
         PoolInfo storage pool = minterLpPools[_collateralAddress];
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
         updateMinterRewardPool(_collateralAddress);
 
-        uint256 pending = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+        uint256 unclaimed = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
 
-        safeHaloTransfer(_account, pending);
+        safeHaloTransfer(_account, unclaimed);
 
     }
 
@@ -401,26 +401,26 @@ contract Rewards is Ownable {
     *             VIEW FUNCTIONS            *
     ****************************************/
 
-    /// @notice total amm lp alloc points
-    /// @dev total amm lp alloc points
-    /// @return total amm lp alloc points
-    function totalAmmLpAllocationPoints() public view returns (uint256) {
+    /// @notice total pool  alloc points
+    /// @dev total pool alloc points
+    /// @return total pool alloc points
+    function getTotalPoolAllocationPoints() public view returns (uint256) {
         return totalAmmLpAllocs;
     }
 
     /// @notice total minter lp alloc points
     /// @dev total minter lp alloc points
     /// @return total minter lp alloc points
-    function totalMinterLpAllocationPoints() public view returns (uint256) {
+    function getTotalMinterLpAllocationPoints() public view returns (uint256) {
         return totalMinterLpAllocs;
     }
 
-    /// @notice pending amm lp rewards
-    /// @dev view function to check pending amm lp rewards for an account
-    /// @param _lpAddress address of the amm lp token
+    /// @notice unclaimed pool rewards
+    /// @dev view function to check unclaimed pool rewards for an account
+    /// @param _lpAddress address of the pool token
     /// @param _account address of the user
-    /// @return pending amm lp rewards for the user
-    function pendingAmmLpUserRewards(
+    /// @return unclaimed pool rewards for the user
+    function getUnclaimedPoolRewardsByUserByPool(
         address _lpAddress,
         address _account
     ) public view returns (uint256) {
@@ -436,7 +436,7 @@ contract Rewards is Ownable {
     /// @param _lpAddress address of the amm lp token
     /// @param _account address of the user
     /// @return lp tokens deposited by user
-    function getUserLpTokens(
+    function getDepositedPoolTokenBalanceByUser(
         address _lpAddress,
         address _account
     ) public view returns (uint256){
@@ -444,12 +444,12 @@ contract Rewards is Ownable {
         return user.amount;
     }
 
-    /// @notice pending minter lp rewards
-    /// @dev view function to check pending minter lp rewards for an account
+    /// @notice unclaimed minter lp rewards
+    /// @dev view function to check unclaimed minter lp rewards for an account
     /// @param _collateralAddress address of the collateral token
     /// @param _account address of the user
-    /// @return pending minter lp rewards for the user
-    function pendingMinterLpUserRewards(
+    /// @return unclaimed minter lp rewards for the user
+    function getUnclaimedMinterLpRewardsByUser(
         address _collateralAddress,
         address _account
     ) public view returns (uint256) {
@@ -460,17 +460,17 @@ contract Rewards is Ownable {
 
     }
 
-    /// @notice pending rewards for stakers
-    /// @dev view function to check pending rewards for stakers since last withdrawal to vesting contract
-    /// @return pending rewards for stakers
-    function pendingVestingRewards() public view returns (uint256) {
+    /// @notice unclaimed rewards for stakers
+    /// @dev view function to check unclaimed rewards for stakers since last withdrawal to vesting contract
+    /// @return unclaimed rewards for stakers
+    function getUnclaimedVestingRewards() public view returns (uint256) {
         uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
         uint256 accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
         uint256 diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
         uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths+1)).div(DECIMALS);
         uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-        uint256 pending = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
-        return pending;
+        uint256 unclaimed = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
+        return unclaimed;
     }
 
     /// @notice checks if an amm lp address is whitelisted
@@ -509,7 +509,7 @@ contract Rewards is Ownable {
     /// @dev get total claimed halo by user
     /// @param _account address of the user
     /// @return total claimed halo by user
-    function getTotalClaimedHaloByUser(address _account) public view returns (uint256){
+    function getTotalRewardsClaimedByUser(address _account) public view returns (uint256){
         return claimedHalo[_account];
     }
 
@@ -522,7 +522,7 @@ contract Rewards is Ownable {
     /// @dev set alloc points for amm lp
     /// @param _lpAddress address of the lp token
     /// @param _allocPoint alloc points
-    function setAmmLpAlloc(
+    function setAmmLpAllocationPoints(
         address _lpAddress,
         uint256 _allocPoint
     ) public onlyOwner {
@@ -537,7 +537,7 @@ contract Rewards is Ownable {
     /// @dev set alloc points for minter lp
     /// @param _collateralAddress address of the collateral
     /// @param _allocPoint alloc points
-    function setMinterLpAlloc(
+    function setMinterLpAllocationPoints(
         address _collateralAddress,
         uint256 _allocPoint
     ) public onlyOwner {
@@ -613,8 +613,8 @@ contract Rewards is Ownable {
 
     }
 
-    /// @notice releases pending vested rewards for stakers for extra bonus
-    /// @dev releases pending vested rewards for stakers for extra bonus
+    /// @notice releases unclaimed vested rewards for stakers for extra bonus
+    /// @dev releases unclaimed vested rewards for stakers for extra bonus
     function releaseVestedRewards() public onlyOwner {
         require(now > lastHaloVestRewardTs, "now<lastHaloVestRewardTs");
         uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
@@ -623,10 +623,10 @@ contract Rewards is Ownable {
         require(diffTime < epochLength.mul(DECIMALS), "diffTime > epochLength.mul(DECIMALS)");
         uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths+1)).div(DECIMALS);
         uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-        uint256 pending = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
+        uint256 unclaimed = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
         vestingRewardsDebt = accHalo.mul(vestingRewardsRatio).div(BPS);
-        safeHaloTransfer(haloChestContract, pending);
-        emit VestedRewardsReleased(pending, now);
+        safeHaloTransfer(haloChestContract, unclaimed);
+        emit VestedRewardsReleased(unclaimed, now);
     }
 
     /// @notice sets the address of the minter contract
@@ -680,53 +680,6 @@ contract Rewards is Ownable {
 
     }
 
-    /// @notice calculates the pending rewards for last timestamp
-    /// @dev calculates the pending rewards for last timestamp
-    /// @param _from last timestamp when rewards were updated
-    /// @return pending rewards since last update
-    /* function calcReward(uint256 _from) internal returns (uint256){
-        uint256 currentTs = now;
-        //require(_from>=genesisTs, "from<genesisTs"); //TEMP
-        uint256 nMonthsStart = (_from.sub(genesisTs)).div(epochLength);
-        //require(currentTs>=genesisTs, "currentTs<genesisTs"); //TEMP
-        uint256 nMonthsEnd = (currentTs.sub(genesisTs)).div(epochLength);
-
-        //require(nMonthsEnd >= nMonthsStart, "Error: wrong timestamp");
-
-        if (nMonthsEnd == nMonthsStart) {
-            //require(currentTs>=_from, "currentTs<from"); //TEMP
-            uint256 diffTime = ((currentTs.sub(_from)).mul(DECIMALS)).div(epochLength);
-            uint256 monthlyReward = startingRewards.mul(exp(decayBase, nMonthsStart));
-            return diffTime.mul(monthlyReward).div(DECIMALS).div(DECIMALS);
-        }
-
-        else if (nMonthsEnd - nMonthsStart == 1) {
-            uint256 monthlyReward1 = startingRewards.mul(exp(decayBase, nMonthsStart));
-            uint256 monthlyReward2 = monthlyReward1.mul(decayBase).div(DECIMALS);
-            uint256 month1EndTs = genesisTs.add(nMonthsEnd.mul(epochLength));
-            //require(month1EndTs>_from, "month1EndTs<_from"); //TEMP
-            uint256 diffTime1 = ((month1EndTs.sub(_from)).mul(DECIMALS)).div(epochLength);
-            //require(currentTs>month1EndTs, "currentTs<month1EndTs"); //TEMP
-            uint256 diffTime2 = ((currentTs.sub(month1EndTs)).mul(DECIMALS)).div(epochLength);
-            return (diffTime1.mul(monthlyReward1).div(DECIMALS)).add(diffTime2.mul(monthlyReward2).div(DECIMALS)).div(DECIMALS);
-        }
-
-        else {
-            uint256 monthlyRewardStart = startingRewards.mul(exp(decayBase, nMonthsStart));
-            uint256 monthlyRewardEnd = startingRewards.mul(exp(decayBase, nMonthsEnd));
-            uint256 aggMonthlyRewards = aggregatedMonthlyRewards(monthlyRewardStart, nMonthsStart, nMonthsEnd);
-            uint256 month1EndTs = genesisTs.add((nMonthsStart+1).mul(epochLength));
-            uint256 month2EndTs = genesisTs.add((nMonthsEnd).mul(epochLength));
-            //require(month1EndTs>_from, "month1EndTs<_from agg"); //TEMP
-            uint256 diffTime1 = ((month1EndTs.sub(_from)).mul(DECIMALS)).div(epochLength);
-            //require(currentTs>month1EndTs, "currentTs<month1EndTs agg"); //TEMP
-            uint256 diffTime2 = ((currentTs.sub(month2EndTs)).mul(DECIMALS)).div(epochLength);
-            return ((diffTime1.mul(monthlyRewardStart).div(DECIMALS)).add(diffTime2.mul(monthlyRewardEnd).div(DECIMALS)).add(aggMonthlyRewards)).div(DECIMALS);
-        }
-
-    } */
-
-
     ///
     /// Calculates reward since last update timestamp based on the decay function
     /// Calculation works as follows:
@@ -746,10 +699,10 @@ contract Rewards is Ownable {
     ///
     ///
     ///
-    /// @notice calculates the pending rewards for last timestamp
-    /// @dev calculates the pending rewards for last timestamp
+    /// @notice calculates the unclaimed rewards for last timestamp
+    /// @dev calculates the unclaimed rewards for last timestamp
     /// @param _from last timestamp when rewards were updated
-    /// @return pending rewards since last update
+    /// @return unclaimed rewards since last update
     function calcReward(uint256 _from) internal view returns (uint256){
 
         uint256 nMonths = (_from.sub(genesisTs)).div(epochLength);
@@ -769,22 +722,6 @@ contract Rewards is Ownable {
         return tillNow.sub(tillFrom);
 
     }
-
-    /* function aggregatedMonthlyRewards(
-        uint256 monthlyRewardStart,
-        uint256 nMonthsStart,
-        uint256 nMonthsEnd
-    ) internal view returns (uint256) {
-
-        uint256 aggMonthlyRewards;
-        uint256 monthlyReward = monthlyRewardStart;
-        for (uint256 i = nMonthsStart+1; i < nMonthsEnd; i++) {
-            monthlyReward = monthlyReward.mul(decayBase).div(DECIMALS);
-            aggMonthlyRewards = aggMonthlyRewards.add(monthlyReward);
-        }
-        return aggMonthlyRewards;
-
-    } */
 
     function exp(uint256 m, uint256 n) internal pure returns (uint256) {
         uint256 x = DECIMALS;

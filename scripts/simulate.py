@@ -48,7 +48,7 @@ def main():
     #
     # sleep(randint(30,60))
     # update(rewards, ammLpToken_address, collateralERC20_address)
-    # print(rewards.pendingAmmLpUserRewards(ammLpToken_address, accounts[0]))
+    # print(rewards.getPendingPoolRewardsByUserByPool(ammLpToken_address, accounts[0]))
     # print(rewards.getAmmLpPoolInfo(ammLpToken_address))
 
 
@@ -61,7 +61,7 @@ def main():
     # print(deposit_tx.traceback())
     sleep(randint(30,60))
     update(rewards, ammLpToken_address, collateralERC20_address)
-    print(rewards.pendingAmmLpUserRewards(ammLpToken_address, accounts[0]))
+    print(rewards.getPendingPoolRewardsByUserByPool(ammLpToken_address, accounts[0]))
     print(rewards.getAmmLpPoolInfo(ammLpToken_address))
     print(rewards.getMinterLpPoolInfo(collateralERC20_address))
 
