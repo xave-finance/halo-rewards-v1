@@ -183,8 +183,8 @@ describe("Check Contract Deployments", function() {
         expect(await haloChestContract.name()).to.equal("HaloChest");
     })
     it("Rewards Contract should be deployed", async() => {
-        expect(await rewardsContract.getTotalPoolRewardsAllocationPoints()).to.equal(10);
-        expect(await rewardsContract.totalMinterLpAllocationPoints()).to.equal(10);
+        expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10);
+        expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(10);
         expect(await rewardsContract.isValidAmmLp(lpTokenContract.address)).to.equal(true);
         expect(await rewardsContract.isValidAmmLp(collateralERC20Contract.address)).to.equal(false);
         expect(await rewardsContract.isValidMinterLp(collateralERC20Contract.address)).to.equal(true);
@@ -425,7 +425,7 @@ describe("As an Admin, I can update AMM LP pool’s allocation points", function
         expect((await rewardsContract.getAmmLpPoolInfo(lpTokenContract.address)).allocPoint.toString()).to.equal('10');
     })
     it("Total LP allocation points before", async() => {
-        expect(await rewardsContract.totalAmmLpAllocationPoints()).to.equal(10);
+        expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10);
     })
     it("If caller is not contract owner, it should fail", async() => {
         await expect(rewardsContract.connect(addr1).setAmmLpAlloc(lpTokenContract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
@@ -437,7 +437,7 @@ describe("As an Admin, I can update AMM LP pool’s allocation points", function
         expect((await rewardsContract.getAmmLpPoolInfo(lpTokenContract.address)).allocPoint.toString()).to.equal('5');
     })
     it("expectedAllocPoints = (totalAllocPoints - currentAllocPoints) + newAllocPoints = 10 - 10 + 5", async() => {
-        expect(await rewardsContract.totalAmmLpAllocationPoints()).to.equal(5);
+        expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(5);
     })
 })
 
@@ -446,7 +446,7 @@ describe("As an Admin, I can update minter lp collateral allocation points", fun
         expect((await rewardsContract.getMinterLpPoolInfo(collateralERC20Contract.address)).allocPoint.toString()).to.equal('10');
     })
     it("Total Minter LP allocation points before", async() => {
-        expect(await rewardsContract.totalMinterLpAllocationPoints()).to.equal(10);
+        expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(10);
     })
     it("If caller is not contract owner, it should fail", async() => {
         await expect(rewardsContract.connect(addr1).setMinterLpAlloc(collateralERC20Contract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
@@ -458,7 +458,7 @@ describe("As an Admin, I can update minter lp collateral allocation points", fun
         expect((await rewardsContract.getMinterLpPoolInfo(collateralERC20Contract.address)).allocPoint.toString()).to.equal('5');
     })
     it("expectedAllocPoints = (totalAllocPoints - currentAllocPoints) + newAllocPoints = 10 - 10 + 5", async() => {
-        expect(await rewardsContract.totalMinterLpAllocationPoints()).to.equal(5);
+        expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(5);
     })
 })
 
