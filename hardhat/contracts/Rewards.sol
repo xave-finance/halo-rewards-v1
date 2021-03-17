@@ -680,53 +680,6 @@ contract Rewards is Ownable {
 
     }
 
-    /// @notice calculates the unclaimed rewards for last timestamp
-    /// @dev calculates the unclaimed rewards for last timestamp
-    /// @param _from last timestamp when rewards were updated
-    /// @return unclaimed rewards since last update
-    /* function calcReward(uint256 _from) internal returns (uint256){
-        uint256 currentTs = now;
-        //require(_from>=genesisTs, "from<genesisTs"); //TEMP
-        uint256 nMonthsStart = (_from.sub(genesisTs)).div(epochLength);
-        //require(currentTs>=genesisTs, "currentTs<genesisTs"); //TEMP
-        uint256 nMonthsEnd = (currentTs.sub(genesisTs)).div(epochLength);
-
-        //require(nMonthsEnd >= nMonthsStart, "Error: wrong timestamp");
-
-        if (nMonthsEnd == nMonthsStart) {
-            //require(currentTs>=_from, "currentTs<from"); //TEMP
-            uint256 diffTime = ((currentTs.sub(_from)).mul(DECIMALS)).div(epochLength);
-            uint256 monthlyReward = startingRewards.mul(exp(decayBase, nMonthsStart));
-            return diffTime.mul(monthlyReward).div(DECIMALS).div(DECIMALS);
-        }
-
-        else if (nMonthsEnd - nMonthsStart == 1) {
-            uint256 monthlyReward1 = startingRewards.mul(exp(decayBase, nMonthsStart));
-            uint256 monthlyReward2 = monthlyReward1.mul(decayBase).div(DECIMALS);
-            uint256 month1EndTs = genesisTs.add(nMonthsEnd.mul(epochLength));
-            //require(month1EndTs>_from, "month1EndTs<_from"); //TEMP
-            uint256 diffTime1 = ((month1EndTs.sub(_from)).mul(DECIMALS)).div(epochLength);
-            //require(currentTs>month1EndTs, "currentTs<month1EndTs"); //TEMP
-            uint256 diffTime2 = ((currentTs.sub(month1EndTs)).mul(DECIMALS)).div(epochLength);
-            return (diffTime1.mul(monthlyReward1).div(DECIMALS)).add(diffTime2.mul(monthlyReward2).div(DECIMALS)).div(DECIMALS);
-        }
-
-        else {
-            uint256 monthlyRewardStart = startingRewards.mul(exp(decayBase, nMonthsStart));
-            uint256 monthlyRewardEnd = startingRewards.mul(exp(decayBase, nMonthsEnd));
-            uint256 aggMonthlyRewards = aggregatedMonthlyRewards(monthlyRewardStart, nMonthsStart, nMonthsEnd);
-            uint256 month1EndTs = genesisTs.add((nMonthsStart+1).mul(epochLength));
-            uint256 month2EndTs = genesisTs.add((nMonthsEnd).mul(epochLength));
-            //require(month1EndTs>_from, "month1EndTs<_from agg"); //TEMP
-            uint256 diffTime1 = ((month1EndTs.sub(_from)).mul(DECIMALS)).div(epochLength);
-            //require(currentTs>month1EndTs, "currentTs<month1EndTs agg"); //TEMP
-            uint256 diffTime2 = ((currentTs.sub(month2EndTs)).mul(DECIMALS)).div(epochLength);
-            return ((diffTime1.mul(monthlyRewardStart).div(DECIMALS)).add(diffTime2.mul(monthlyRewardEnd).div(DECIMALS)).add(aggMonthlyRewards)).div(DECIMALS);
-        }
-
-    } */
-
-
     ///
     /// Calculates reward since last update timestamp based on the decay function
     /// Calculation works as follows:
@@ -769,22 +722,6 @@ contract Rewards is Ownable {
         return tillNow.sub(tillFrom);
 
     }
-
-    /* function aggregatedMonthlyRewards(
-        uint256 monthlyRewardStart,
-        uint256 nMonthsStart,
-        uint256 nMonthsEnd
-    ) internal view returns (uint256) {
-
-        uint256 aggMonthlyRewards;
-        uint256 monthlyReward = monthlyRewardStart;
-        for (uint256 i = nMonthsStart+1; i < nMonthsEnd; i++) {
-            monthlyReward = monthlyReward.mul(decayBase).div(DECIMALS);
-            aggMonthlyRewards = aggMonthlyRewards.add(monthlyReward);
-        }
-        return aggMonthlyRewards;
-
-    } */
 
     function exp(uint256 m, uint256 n) internal pure returns (uint256) {
         uint256 x = DECIMALS;
