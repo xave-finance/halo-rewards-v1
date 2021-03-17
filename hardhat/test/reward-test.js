@@ -509,9 +509,7 @@ describe("As an Admin, I can remove whitelisted collateral type", function() {
 describe('AMM dApp should be able to query some info from the Rewards contract', () => {
     it('getWhitelistedAMMPoolAddresses() should return all AMM LP addresses', async () => {
         const addresses = await rewardsContract.getWhitelistedAMMPoolAddresses()
-        console.log('addresses:', addresses)
         const expectedAddresses = [lpTokenContract.address]
-        console.log('expected addresses:', expectedAddresses)
         expect(addresses).to.have.all.members(expectedAddresses)
     })
 
@@ -519,9 +517,7 @@ describe('AMM dApp should be able to query some info from the Rewards contract',
         await rewardsContract.addAmmLp(lpTokenContract2.address, 10)
 
         const addresses = await rewardsContract.getWhitelistedAMMPoolAddresses()
-        console.log('addresses:', addresses)
         const expectedAddresses = [lpTokenContract.address, lpTokenContract2.address]
-        console.log('expected addresses:', expectedAddresses)
         expect(addresses).to.have.all.members(expectedAddresses)
     })
 
@@ -529,9 +525,7 @@ describe('AMM dApp should be able to query some info from the Rewards contract',
         await rewardsContract.removeAmmLp(lpTokenContract.address)
 
         const addresses = await rewardsContract.getWhitelistedAMMPoolAddresses()
-        console.log('addresses:', addresses)
         const expectedAddresses = [lpTokenContract2.address]
-        console.log('expected addresses:', expectedAddresses)
         expect(addresses).to.have.all.members(expectedAddresses)
     })
 })
