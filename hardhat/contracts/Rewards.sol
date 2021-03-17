@@ -124,9 +124,9 @@ contract Rewards is Ownable {
     ****************************************/
 
     // @notice stores the AMM LP pool addresses
-    mapping(uint256 => address) internal ammLpPoolsAddresses;
+    mapping(uint8 => address) internal ammLpPoolsAddresses;
     // @notice keeps tracks of the count of AMM LP pools
-    uint256 internal ammLpPoolsCount;
+    uint8 internal ammLpPoolsCount;
 
 
     /****************************************
@@ -525,14 +525,29 @@ contract Rewards is Ownable {
         return claimedHalo[_account];
     }
 
-    /// @notice get all AMM LM pool addresses
-    /// @dev get all AMM LM pool addresses
+    /// @notice get all whitelisted AMM LM pool addresses
+    /// @dev get all whitelisted AMM LM pool addresses
     /// @return AMM LP addresses as array
-    function getAllAMMPoolAddresses() public view returns(address[] memory) {
-        address[] memory addresses = new address[](ammLpPoolsCount);
-        for (uint i = 0; i < ammLpPoolsCount; i++) {
-            addresses[i] = ammLpPoolsAddresses[i];
+    function getWhitelistedAMMPoolAddresses() public view returns(address[] memory) {
+        // First, determine how many whitelisted LP addresses are there
+        uint8 whitelistedCount = 0;
+        for (uint8 i = 0; i < ammLpPoolsCount; i++) {
+            address poolAddress = ammLpPoolsAddresses[i];
+            if (ammLpPools[poolAddress].whitelisted == true) {
+                whitelistedCount += 1;
+            }
         }
+
+        // Then we can use this number to intialize the address array we are going to return
+        address[] memory addresses = new address[](whitelistedCount);
+        uint8 index = 0;
+        for (uint8 i = 0; i < ammLpPoolsCount; i++) {
+            address poolAddress = ammLpPoolsAddresses[i];
+            if (ammLpPools[poolAddress].whitelisted == true) {
+                addresses[index++] = poolAddress;
+            }
+        }
+
         return addresses;
     }
 
@@ -591,7 +606,7 @@ contract Rewards is Ownable {
         ammLpPools[_lpAddress].lastRewardTs = lastRewardTs;
         ammLpPools[_lpAddress].accHaloPerShare = 0;
 
-        // track the lp pool addresses internally
+        // track the lp pool addresses addition internally
         ammLpPoolsAddresses[ammLpPoolsCount] = _lpAddress;
         ammLpPoolsCount += 1;
     }
