@@ -118,6 +118,17 @@ contract Rewards is Ownable {
 
     mapping(address => uint256) public claimedHalo;
 
+
+    /****************************************
+    *          PRIVATE VARIABLES            *
+    ****************************************/
+
+    // @notice stores the AMM LP pool addresses
+    mapping(uint256 => address) internal ammLpPoolsAddresses;
+    // @notice keeps tracks of the count of AMM LP pools
+    uint256 internal ammLpPoolsCount;
+
+
     /****************************************
     *           PUBLIC FUNCTIONS           *
     ****************************************/
@@ -159,6 +170,7 @@ contract Rewards is Ownable {
         minterContract = _minter;
         genesisTs = _genesisTs;
         lastHaloVestRewardTs = genesisTs;
+        ammLpPoolsCount = 0;
         for (uint8 i=0; i<_minterLpPools.length; i++) {
             addMinterCollateralType(_minterLpPools[i].poolAddress, _minterLpPools[i].allocPoint);
         }
@@ -513,6 +525,18 @@ contract Rewards is Ownable {
         return claimedHalo[_account];
     }
 
+    /// @notice get all AMM LM pool addresses
+    /// @dev get all AMM LM pool addresses
+    /// @return AMM LP addresses as array
+    function getAllAMMPoolAddresses() public view returns(address[] memory) {
+        address[] memory addresses = new address[](ammLpPoolsCount);
+        for (uint i = 0; i < ammLpPoolsCount; i++) {
+            addresses[i] = ammLpPoolsAddresses[i];
+        }
+        return addresses;
+    }
+
+
     /****************************************
     *            ADMIN FUNCTIONS            *
     ****************************************/
@@ -567,6 +591,9 @@ contract Rewards is Ownable {
         ammLpPools[_lpAddress].lastRewardTs = lastRewardTs;
         ammLpPools[_lpAddress].accHaloPerShare = 0;
 
+        // track the lp pool addresses internally
+        ammLpPoolsAddresses[ammLpPoolsCount] = _lpAddress;
+        ammLpPoolsCount += 1;
     }
 
     /// @notice add a minter lp pool
