@@ -2,6 +2,7 @@ const hre = require('hardhat')
 const ethers = hre.ethers
 
 const BPS = 10 ** 4
+const INITIAL_MINT = 10 ** 6
 
 const main = async () => {
   /**
@@ -30,17 +31,12 @@ const main = async () => {
   const collateralERC20Contract = await CollateralERC20.deploy('Dai', 'DAI')
   await collateralERC20Contract.deployed()
 
-  const LpToken = await ethers.getContractFactory('LpToken')
-  lpTokenContract = await LpToken.deploy('LpToken', 'LPT')
-  await lpTokenContract.deployed()
-
   const Minter = await ethers.getContractFactory('Minter')
   minterContract = await Minter.deploy()
   await minterContract.deployed()
   console.log(
-    'Collateral token, LP token & minter deployed at: ',
+    'Collateral token & minter deployed at: ',
     collateralERC20Contract.address,
-    lpTokenContract.address,
     minterContract.address
   )
 
@@ -55,7 +51,12 @@ const main = async () => {
   const vestingRewardsRatio = 0.2 * BPS
   const genesisTs = Math.floor(Date.now() / 1000)
   const minterLpPools = [[collateralERC20Contract.address, 10]]
-  const ammLpPools = [[lpTokenContract.address, 10]]
+
+  // Hardcode kovan balancer pools
+  const ammLpPools = [
+    ['0x37f80ac90235ce0d3911952d0ce49071a0ffdb1e', 10],
+    ['0x65850ecd767e7ef71e4b78a348bb605343bd87c3', 10],
+  ]
 
   const Rewards = await ethers.getContractFactory('Rewards')
   const rewardsContract = await Rewards.deploy(
@@ -73,6 +74,13 @@ const main = async () => {
   )
   await rewardsContract.deployed()
   console.log('rewardsContract deployed at: ', rewardsContract.address)
+
+  // Mint initial Halo tokens
+  await haloTokenContract.mint(
+    rewardsContract.address,
+    ethers.utils.parseEther((40 * INITIAL_MINT).toString())
+  )
+  console.log('Minted initial HALO for Rewards contract')
 }
 
 main()
