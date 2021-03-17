@@ -600,15 +600,17 @@ contract Rewards is Ownable {
         uint256 lastRewardTs = now > genesisTs ? now : genesisTs;
         totalAmmLpAllocs = totalAmmLpAllocs.add(_allocPoint);
 
+        // track the lp pool addresses addition internally
+        if (ammLpPools[_lpAddress].allocPoint == 0) { // means this address is not added yet to ammLpPoolsAddresses
+            ammLpPoolsAddresses[ammLpPoolsCount] = _lpAddress;
+            ammLpPoolsCount += 1;
+        }
+
         //add lp to ammLpPools
         ammLpPools[_lpAddress].whitelisted = true;
         ammLpPools[_lpAddress].allocPoint = _allocPoint;
         ammLpPools[_lpAddress].lastRewardTs = lastRewardTs;
         ammLpPools[_lpAddress].accHaloPerShare = 0;
-
-        // track the lp pool addresses addition internally
-        ammLpPoolsAddresses[ammLpPoolsCount] = _lpAddress;
-        ammLpPoolsCount += 1;
     }
 
     /// @notice add a minter lp pool
