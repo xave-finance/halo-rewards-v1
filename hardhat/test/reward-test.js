@@ -191,8 +191,8 @@ describe("Check Contract Deployments", function() {
         expect(await haloChestContract.name()).to.equal("HaloChest");
     })
     it("Rewards Contract should be deployed", async() => {
-        expect(await rewardsContract.totalAmmLpAllocationPoints()).to.equal(10);
-        expect(await rewardsContract.totalMinterLpAllocationPoints()).to.equal(10);
+        expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10);
+        expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(10);
         expect(await rewardsContract.isValidAmmLp(lpTokenContract.address)).to.equal(true);
         expect(await rewardsContract.isValidAmmLp(collateralERC20Contract.address)).to.equal(false);
         expect(await rewardsContract.isValidMinterLp(collateralERC20Contract.address)).to.equal(true);
@@ -220,10 +220,10 @@ describe("When I deposit collateral tokens (DAI) on the Minter dApp, I start to 
         await rewardsContract.updateMinterRewardPool(collateralERC20Contract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const pendingMinterLpUserRewards = await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
+        const getUnclaimedMinterLpRewardsByUser = await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
     })
 
     it("I stop earning HALO tokens on withdrawing DAI", async() => {
@@ -242,10 +242,10 @@ describe("When I deposit collateral tokens (DAI) on the Minter dApp, I start to 
         await rewardsContract.updateMinterRewardPool(collateralERC20Contract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        //const pendingMinterLpUserRewards = await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
-        console.log("\tPending rewards for user after withdrawing DAI should be 0");
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address))))).to.equal(0);
+        //const unclaimedMinterLpUserRewards = await rewardsContract.unclaimedMinterLpUserRewards(collateralERC20Contract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
+        console.log("\tUnclaimed rewards for user after withdrawing DAI should be 0");
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address))))).to.equal(0);
 
     })
 
@@ -263,7 +263,7 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
     it("I earn the correct number of HALO tokens per time interval on depositing LPT", async() => {
         //const haloBal = Math.round(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address));
         haloBal = Math.round(parseFloat(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address))));
-        await expect(rewardsContract.depositAmmLpTokens(
+        await expect(rewardsContract.depositPoolTokens(
             lpTokenContract.address,
             ethers.utils.parseEther('100')
         )).to.not.be.reverted;
@@ -276,15 +276,15 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const pendingAmmLpUserRewards = await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
+        const getUnclaimedPoolRewardsByUserByPool = await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
     })
 
     it("I stop earning HALO tokens on withdrawing LPT", async() => {
 
-        await expect(rewardsContract.withdrawAmmLpTokens(
+        await expect(rewardsContract.withdrawPoolTokens(
             lpTokenContract.address,
             ethers.utils.parseEther('100')
         )).to.not.be.reverted;
@@ -297,10 +297,10 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        //const pendingMinterLpUserRewards = await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
-        console.log("\tPending rewards for user after withdrawing LPT should be 0");
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address))))).to.equal(0);
+        //const unclaimedMinterLpUserRewards = await rewardsContract.unclaimedMinterLpUserRewards(collateralERC20Contract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
+        console.log("\tUnclaimed rewards for user after withdrawing LPT should be 0");
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal(0);
 
     })
 
@@ -327,15 +327,15 @@ describe("I can view my unclaimed HALO tokens on the Minter dApp", function() {
         await rewardsContract.updateMinterRewardPool(collateralERC20Contract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const pendingMinterLpUserRewards = await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
+        const getUnclaimedMinterLpRewardsByUser = await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
 
     })
 
     it("If LP tokens were deposited, display the correct number of HALO tokens rewards", async() => {
-        await expect(rewardsContract.depositAmmLpTokens(
+        await expect(rewardsContract.depositPoolTokens(
             lpTokenContract.address,
             ethers.utils.parseEther('100'),
         )).to.not.be.reverted;
@@ -346,10 +346,10 @@ describe("I can view my unclaimed HALO tokens on the Minter dApp", function() {
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
         updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const pendingAmmLpUserRewards = await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingAmmLpUserRewards));
+        const getUnclaimedPoolRewardsByUserByPool = await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address);
+        //console.log(ethers.utils.formatEther(getUnclaimedPoolRewardsByUserByPool));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingAmmLpUserRewards(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
 
         //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
     })
@@ -366,8 +366,8 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         )).to.not.be.reverted;
     })
 
-    it("Send pending vested rewards to HaloChest", async() => {
-        const currVestedHalo = await rewardsContract.pendingVestingRewards();
+    it("Send unclaimed vested rewards to HaloChest", async() => {
+        const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards();
         await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted;
     })
 
@@ -398,7 +398,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         sleep(3);
 
         console.log("Releasing vested bonus tokens to HaloChest from Rewards contract");
-        const currVestedHalo = (await rewardsContract.pendingVestingRewards()).toString();
+        const currVestedHalo = (await rewardsContract.getUnclaimedVestingRewards()).toString();
         console.log(currVestedHalo);
         await rewardsContract.releaseVestedRewards();
 
@@ -433,19 +433,19 @@ describe("As an Admin, I can update AMM LP pool’s allocation points", function
         expect((await rewardsContract.getAmmLpPoolInfo(lpTokenContract.address)).allocPoint.toString()).to.equal('10');
     })
     it("Total LP allocation points before", async() => {
-        expect(await rewardsContract.totalAmmLpAllocationPoints()).to.equal(10);
+        expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10);
     })
     it("If caller is not contract owner, it should fail", async() => {
-        await expect(rewardsContract.connect(addr1).setAmmLpAlloc(lpTokenContract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(rewardsContract.connect(addr1).setAmmLpAllocationPoints(lpTokenContract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
     })
     it("If caller is contract owner, it should not fail; If AMM LP pool is whitelisted it should not fail; Set Amm LP pool allocs", async() => {
-        await expect(rewardsContract.connect(owner).setAmmLpAlloc(lpTokenContract.address, 5)).to.not.be.reverted;
+        await expect(rewardsContract.connect(owner).setAmmLpAllocationPoints(lpTokenContract.address, 5)).to.not.be.reverted;
     })
     it("AMM LP allocation points before", async() => {
         expect((await rewardsContract.getAmmLpPoolInfo(lpTokenContract.address)).allocPoint.toString()).to.equal('5');
     })
     it("expectedAllocPoints = (totalAllocPoints - currentAllocPoints) + newAllocPoints = 10 - 10 + 5", async() => {
-        expect(await rewardsContract.totalAmmLpAllocationPoints()).to.equal(5);
+        expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(5);
     })
 })
 
@@ -454,19 +454,19 @@ describe("As an Admin, I can update minter lp collateral allocation points", fun
         expect((await rewardsContract.getMinterLpPoolInfo(collateralERC20Contract.address)).allocPoint.toString()).to.equal('10');
     })
     it("Total Minter LP allocation points before", async() => {
-        expect(await rewardsContract.totalMinterLpAllocationPoints()).to.equal(10);
+        expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(10);
     })
     it("If caller is not contract owner, it should fail", async() => {
-        await expect(rewardsContract.connect(addr1).setMinterLpAlloc(collateralERC20Contract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(rewardsContract.connect(addr1).setMinterLpAllocationPoints(collateralERC20Contract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
     })
     it("If caller is contract owner, it should not fail; If collateral type is whitelisted it should not fail; Set Minter Lp pool allocs", async() => {
-        await expect(rewardsContract.connect(owner).setMinterLpAlloc(collateralERC20Contract.address, 5)).to.not.be.reverted;
+        await expect(rewardsContract.connect(owner).setMinterLpAllocationPoints(collateralERC20Contract.address, 5)).to.not.be.reverted;
     })
     it("DAI LP allocation points before", async() => {
         expect((await rewardsContract.getMinterLpPoolInfo(collateralERC20Contract.address)).allocPoint.toString()).to.equal('5');
     })
     it("expectedAllocPoints = (totalAllocPoints - currentAllocPoints) + newAllocPoints = 10 - 10 + 5", async() => {
-        expect(await rewardsContract.totalMinterLpAllocationPoints()).to.equal(5);
+        expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(5);
     })
 })
 

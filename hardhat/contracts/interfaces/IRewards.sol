@@ -30,16 +30,16 @@ interface IRewards {
     //===============view functions==============//
     //===========================================//
 
-    function totalAmmLpAllocationPoints() external view returns (uint256);
+    function getTotalPoolAllocationPoints() external view returns (uint256);
 
-    function totalMinterLpAllocationPoints() external view returns (uint256);
+    function getTotalMinterLpAllocationPoints() external view returns (uint256);
 
-    function pendingAmmLpUserRewards(
+    function getPendingPoolRewardsByUserByPool(
         address _lpAddress,
         address _account
     ) external view returns (uint256);
 
-    function pendingMinterLpUserRewards(
+    function getUnclaimedMinterLpRewardsByUser(
         address _collateralAddress,
         address _account
     ) external view returns (uint256);
@@ -49,12 +49,12 @@ interface IRewards {
 
     function isValidMinterLp(address _collateralAddress) external view returns (bool);
 
-    function setAmmLpAlloc(
+    function setAmmLpAllocationPoints(
         address _lpAddress,
         uint256 _allocPoint
     ) external;
 
-    function setMinterLpAlloc(
+    function setMinterLpAllocationPoints(
         address _collateralAddress,
         uint256 _allocPoint
     ) external;
