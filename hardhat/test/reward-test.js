@@ -212,10 +212,10 @@ describe("When I deposit collateral tokens (DAI) on the Minter dApp, I start to 
         await rewardsContract.updateMinterRewardPool(collateralERC20Contract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const pendingMinterLpUserRewards = await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
+        const getUnclaimedMinterLpRewardsByUser = await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
     })
 
     it("I stop earning HALO tokens on withdrawing DAI", async() => {
@@ -234,10 +234,10 @@ describe("When I deposit collateral tokens (DAI) on the Minter dApp, I start to 
         await rewardsContract.updateMinterRewardPool(collateralERC20Contract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        //const pendingMinterLpUserRewards = await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
-        console.log("\tPending rewards for user after withdrawing DAI should be 0");
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address))))).to.equal(0);
+        //const unclaimedMinterLpUserRewards = await rewardsContract.unclaimedMinterLpUserRewards(collateralERC20Contract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
+        console.log("\tUnclaimed rewards for user after withdrawing DAI should be 0");
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address))))).to.equal(0);
 
     })
 
@@ -268,10 +268,10 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const getPendingPoolRewardsByUserByPool = await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
+        const getUnclaimedPoolRewardsByUserByPool = await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
     })
 
     it("I stop earning HALO tokens on withdrawing LPT", async() => {
@@ -289,10 +289,10 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        //const pendingMinterLpUserRewards = await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
-        console.log("\tPending rewards for user after withdrawing LPT should be 0");
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal(0);
+        //const unclaimedMinterLpUserRewards = await rewardsContract.unclaimedMinterLpUserRewards(collateralERC20Contract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
+        console.log("\tUnclaimed rewards for user after withdrawing LPT should be 0");
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal(0);
 
     })
 
@@ -319,10 +319,10 @@ describe("I can view my unclaimed HALO tokens on the Minter dApp", function() {
         await rewardsContract.updateMinterRewardPool(collateralERC20Contract.address);
         var updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const pendingMinterLpUserRewards = await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address);
-        //console.log(ethers.utils.formatEther(pendingMinterLpUserRewards));
+        const getUnclaimedMinterLpRewardsByUser = await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address);
+        //console.log(ethers.utils.formatEther(unclaimedMinterLpUserRewards));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.pendingMinterLpUserRewards(collateralERC20Contract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedMinterLpRewardsByUser(collateralERC20Contract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
 
     })
 
@@ -338,10 +338,10 @@ describe("I can view my unclaimed HALO tokens on the Minter dApp", function() {
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
         updateTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        const getPendingPoolRewardsByUserByPool = await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address);
-        //console.log(ethers.utils.formatEther(getPendingPoolRewardsByUserByPool));
+        const getUnclaimedPoolRewardsByUserByPool = await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address);
+        //console.log(ethers.utils.formatEther(getUnclaimedPoolRewardsByUserByPool));
 
-        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getPendingPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
+        expect(Math.round(parseFloat(ethers.utils.formatEther(await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address))))).to.equal((updateTxTs-depositTxTs)*50000);
 
         //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
     })
@@ -358,8 +358,8 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         )).to.not.be.reverted;
     })
 
-    it("Send pending vested rewards to HaloChest", async() => {
-        const currVestedHalo = await rewardsContract.pendingVestingRewards();
+    it("Send unclaimed vested rewards to HaloChest", async() => {
+        const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards();
         await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted;
     })
 
@@ -390,7 +390,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         sleep(3);
 
         console.log("Releasing vested bonus tokens to HaloChest from Rewards contract");
-        const currVestedHalo = (await rewardsContract.pendingVestingRewards()).toString();
+        const currVestedHalo = (await rewardsContract.getUnclaimedVestingRewards()).toString();
         console.log(currVestedHalo);
         await rewardsContract.releaseVestedRewards();
 

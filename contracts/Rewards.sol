@@ -208,11 +208,11 @@ contract Rewards is Ownable {
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
         updateAmmRewardPool(_lpAddress);
         if (user.amount > 0) {
-            uint256 pending =
+            uint256 unclaimed =
                 user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                     user.rewardDebt
                 );
-            safeHaloTransfer(msg.sender, pending);
+            safeHaloTransfer(msg.sender, unclaimed);
         }
         IERC20(_lpAddress).transferFrom(
             address(msg.sender),
@@ -242,11 +242,11 @@ contract Rewards is Ownable {
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
         updateMinterRewardPool(_collateralAddress);
         if (user.amount > 0) {
-            uint256 pending =
+            uint256 unclaimed =
                 user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                     user.rewardDebt
                 );
-            safeHaloTransfer(_account, pending);
+            safeHaloTransfer(_account, unclaimed);
         }
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
@@ -266,11 +266,11 @@ contract Rewards is Ownable {
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
         require(user.amount >= _amount, "Error: Not enough balance");
         updateAmmRewardPool(_lpAddress);
-        uint256 pending =
+        uint256 unclaimed =
             user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                 user.rewardDebt
             );
-        safeHaloTransfer(msg.sender, pending);
+        safeHaloTransfer(msg.sender, unclaimed);
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
         IERC20(_lpAddress).transfer(address(msg.sender), _amount);
@@ -295,11 +295,11 @@ contract Rewards is Ownable {
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
         require(user.amount >= _amount, "Error: Not enough balance");
         updateMinterRewardPool(_collateralAddress);
-        uint256 pending =
+        uint256 unclaimed =
             user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                 user.rewardDebt
             );
-        safeHaloTransfer(_account, pending);
+        safeHaloTransfer(_account, unclaimed);
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
         emit WithdrawMinter(_account, _collateralAddress, _amount);
@@ -317,10 +317,10 @@ contract Rewards is Ownable {
 
         updateAmmRewardPool(_lpAddress);
 
-        uint256 pending = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+        uint256 unclaimed = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
 
-        safeHaloTransfer(msg.sender, pending);
+        safeHaloTransfer(msg.sender, unclaimed);
 
     }
 
@@ -329,17 +329,17 @@ contract Rewards is Ownable {
     /// @param _collateralAddress
     /// @param _account
     /// @return
-    function withdrawPendingMinterLpRewards(address _collateralAddress, address _account) public onlyMinter {
+    function withdrawUnclaimedMinterLpRewards(address _collateralAddress, address _account) public onlyMinter {
 
         PoolInfo storage pool = minterLpPools[_collateralAddress];
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
         updateMinterRewardPool(_collateralAddress);
 
-        uint256 pending = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+        uint256 unclaimed = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
 
-        safeHaloTransfer(_account, pending);
+        safeHaloTransfer(_account, unclaimed);
 
     }
 
@@ -363,7 +363,7 @@ contract Rewards is Ownable {
     /// @param _lpAddress
     /// @param _account
     /// @return
-    function getPendingPoolRewardsByUserByPool(
+    function getUnclaimedPoolRewardsByUserByPool(
         address _lpAddress,
         address _account
     ) public view returns (uint256) {
@@ -379,7 +379,7 @@ contract Rewards is Ownable {
     /// @param _collateralAddress
     /// @param _account
     /// @return
-    function pendingMinterLpUserRewards(
+    function getUnclaimedMinterLpRewardsByUser(
         address _collateralAddress,
         address _account
     ) public view returns (uint256) {
@@ -393,7 +393,7 @@ contract Rewards is Ownable {
     /// @notice
     /// @dev
     /// @return
-    function pendingVestingRewards() public view returns (uint256) {
+    function unclaimedVestingRewards() public view returns (uint256) {
 
 
 
@@ -544,10 +544,10 @@ contract Rewards is Ownable {
 
         uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
         uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-        uint256 pending = (accHalo.sub(vestingRewardsDebt)).mul(vestingRewardsRatio).div(BPS);
+        uint256 unclaimed = (accHalo.sub(vestingRewardsDebt)).mul(vestingRewardsRatio).div(BPS);
         vestingRewardsDebt = accHalo.mul(vestingRewardsRatio).div(BPS);
-        safeHaloTransfer(haloChestContract, pending);
-        emit VestedRewardsReleased(pending, block.timestamp);
+        safeHaloTransfer(haloChestContract, unclaimed);
+        emit VestedRewardsReleased(unclaimed, block.timestamp);
     }
 
     /// @notice

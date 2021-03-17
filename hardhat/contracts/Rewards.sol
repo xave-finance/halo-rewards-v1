@@ -13,7 +13,7 @@ import { IMinter } from "./interfaces/IMinter.sol";
 /// - User provides liquidity on AMMs like uniswap
 /// - User takes the LP tokens received from uniswap and deposits in this rewards contract to earn rewards in HALO tokens
 /// - User earns rewards per second based on the decay function and the amount of total LP tokens locked in this contract
-/// - User can deposit and withdraw LP tokens any number of times. Each time they do that, the pending HALO rewarsd are
+/// - User can deposit and withdraw LP tokens any number of times. Each time they do that, the unclaimed HALO rewarsd are
 /// automatically transferred to their account.
 /// - User can then stake these HALO tokens inside the HaloChest contract to earn bonus rewards in HALO tokens.
 /// ============================
@@ -23,7 +23,7 @@ import { IMinter } from "./interfaces/IMinter.sol";
 /// - The minter contract calls the depositMinter function and the user starts earning HALO rewards based on the amount
 ///  of collateral they locked inside the minter contract.
 /// - User earns rewards per second based on the decay function and the amount of total collateral locked by all users in the minter contract.
-/// - User can mint and redeem collateral any number of times. Each time they do that, the pending HALO rewarsd are
+/// - User can mint and redeem collateral any number of times. Each time they do that, the unclaimed HALO rewarsd are
 /// automatically transferred to their account.
 /// - User can then stake these HALO tokens inside the HaloChest contract to earn bonus rewards in HALO tokens.
 /// ============================
@@ -266,11 +266,11 @@ contract Rewards is Ownable {
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
         updateAmmRewardPool(_lpAddress);
         if (user.amount > 0) {
-            uint256 pending =
+            uint256 unclaimed =
                 user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                     user.rewardDebt
                 );
-            safeHaloTransfer(msg.sender, pending);
+            safeHaloTransfer(msg.sender, unclaimed);
         }
         IERC20(_lpAddress).transferFrom(
             address(msg.sender),
@@ -299,11 +299,11 @@ contract Rewards is Ownable {
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
         updateMinterRewardPool(_collateralAddress);
         if (user.amount > 0) {
-            uint256 pending =
+            uint256 unclaimed =
                 user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                     user.rewardDebt
                 );
-            safeHaloTransfer(_account, pending);
+            safeHaloTransfer(_account, unclaimed);
         }
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
@@ -322,11 +322,11 @@ contract Rewards is Ownable {
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
         require(user.amount >= _amount, "Error: Not enough balance");
         updateAmmRewardPool(_lpAddress);
-        uint256 pending =
+        uint256 unclaimed =
             user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                 user.rewardDebt
             );
-        safeHaloTransfer(msg.sender, pending);
+        safeHaloTransfer(msg.sender, unclaimed);
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
         IERC20(_lpAddress).transfer(address(msg.sender), _amount);
@@ -350,19 +350,19 @@ contract Rewards is Ownable {
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
         require(user.amount >= _amount, "Error: Not enough balance");
         updateMinterRewardPool(_collateralAddress);
-        uint256 pending =
+        uint256 unclaimed =
             user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
                 user.rewardDebt
             );
-        safeHaloTransfer(_account, pending);
+        safeHaloTransfer(_account, unclaimed);
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
         emit WithdrawMinter(_account, _collateralAddress, _amount);
 
     }
 
-    /// @notice withdraw pending amm lp rewards
-    /// @dev withdraw pending amm lp rewards, checks pending rewards, updates rewardDebt
+    /// @notice withdraw unclaimed amm lp rewards
+    /// @dev withdraw unclaimed amm lp rewards, checks unclaimed rewards, updates rewardDebt
     /// @param _lpAddress address of the amm lp token
     function withdrawUnclaimedPoolRewards(address _lpAddress) external {
 
@@ -371,28 +371,28 @@ contract Rewards is Ownable {
 
         updateAmmRewardPool(_lpAddress);
 
-        uint256 pending = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+        uint256 unclaimed = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
 
-        safeHaloTransfer(msg.sender, pending);
+        safeHaloTransfer(msg.sender, unclaimed);
 
     }
 
-    /// @notice withdraw pending minter lp rewards
-    /// @dev withdraw pending minter lp rewards, checks pending rewards, updates rewardDebt
+    /// @notice withdraw unclaimed minter lp rewards
+    /// @dev withdraw unclaimed minter lp rewards, checks unclaimed rewards, updates rewardDebt
     /// @param _collateralAddress address of the collateral token
     /// @param _account address of the user
-    function withdrawPendingMinterLpRewards(address _collateralAddress, address _account) public onlyMinter {
+    function withdrawUnclaimedMinterLpRewards(address _collateralAddress, address _account) public onlyMinter {
 
         PoolInfo storage pool = minterLpPools[_collateralAddress];
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
         updateMinterRewardPool(_collateralAddress);
 
-        uint256 pending = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+        uint256 unclaimed = user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
 
-        safeHaloTransfer(_account, pending);
+        safeHaloTransfer(_account, unclaimed);
 
     }
 
@@ -415,12 +415,12 @@ contract Rewards is Ownable {
         return totalMinterLpAllocs;
     }
 
-    /// @notice pending amm lp rewards
-    /// @dev view function to check pending amm lp rewards for an account
+    /// @notice unclaimed amm lp rewards
+    /// @dev view function to check unclaimed amm lp rewards for an account
     /// @param _lpAddress address of the amm lp token
     /// @param _account address of the user
-    /// @return pending amm lp rewards for the user
-    function getPendingPoolRewardsByUserByPool(
+    /// @return unclaimed amm lp rewards for the user
+    function getUnclaimedPoolRewardsByUserByPool(
         address _lpAddress,
         address _account
     ) public view returns (uint256) {
@@ -444,12 +444,12 @@ contract Rewards is Ownable {
         return user.amount;
     }
 
-    /// @notice pending minter lp rewards
-    /// @dev view function to check pending minter lp rewards for an account
+    /// @notice unclaimed minter lp rewards
+    /// @dev view function to check unclaimed minter lp rewards for an account
     /// @param _collateralAddress address of the collateral token
     /// @param _account address of the user
-    /// @return pending minter lp rewards for the user
-    function pendingMinterLpUserRewards(
+    /// @return unclaimed minter lp rewards for the user
+    function getUnclaimedMinterLpRewardsByUser(
         address _collateralAddress,
         address _account
     ) public view returns (uint256) {
@@ -460,17 +460,17 @@ contract Rewards is Ownable {
 
     }
 
-    /// @notice pending rewards for stakers
-    /// @dev view function to check pending rewards for stakers since last withdrawal to vesting contract
-    /// @return pending rewards for stakers
-    function pendingVestingRewards() public view returns (uint256) {
+    /// @notice unclaimed rewards for stakers
+    /// @dev view function to check unclaimed rewards for stakers since last withdrawal to vesting contract
+    /// @return unclaimed rewards for stakers
+    function getUnclaimedVestingRewards() public view returns (uint256) {
         uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
         uint256 accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
         uint256 diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
         uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths+1)).div(DECIMALS);
         uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-        uint256 pending = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
-        return pending;
+        uint256 unclaimed = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
+        return unclaimed;
     }
 
     /// @notice checks if an amm lp address is whitelisted
@@ -613,8 +613,8 @@ contract Rewards is Ownable {
 
     }
 
-    /// @notice releases pending vested rewards for stakers for extra bonus
-    /// @dev releases pending vested rewards for stakers for extra bonus
+    /// @notice releases unclaimed vested rewards for stakers for extra bonus
+    /// @dev releases unclaimed vested rewards for stakers for extra bonus
     function releaseVestedRewards() public onlyOwner {
         require(now > lastHaloVestRewardTs, "now<lastHaloVestRewardTs");
         uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
@@ -623,10 +623,10 @@ contract Rewards is Ownable {
         require(diffTime < epochLength.mul(DECIMALS), "diffTime > epochLength.mul(DECIMALS)");
         uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths+1)).div(DECIMALS);
         uint256 accHalo = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-        uint256 pending = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
+        uint256 unclaimed = (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
         vestingRewardsDebt = accHalo.mul(vestingRewardsRatio).div(BPS);
-        safeHaloTransfer(haloChestContract, pending);
-        emit VestedRewardsReleased(pending, now);
+        safeHaloTransfer(haloChestContract, unclaimed);
+        emit VestedRewardsReleased(unclaimed, now);
     }
 
     /// @notice sets the address of the minter contract
@@ -680,10 +680,10 @@ contract Rewards is Ownable {
 
     }
 
-    /// @notice calculates the pending rewards for last timestamp
-    /// @dev calculates the pending rewards for last timestamp
+    /// @notice calculates the unclaimed rewards for last timestamp
+    /// @dev calculates the unclaimed rewards for last timestamp
     /// @param _from last timestamp when rewards were updated
-    /// @return pending rewards since last update
+    /// @return unclaimed rewards since last update
     /* function calcReward(uint256 _from) internal returns (uint256){
         uint256 currentTs = now;
         //require(_from>=genesisTs, "from<genesisTs"); //TEMP
@@ -746,10 +746,10 @@ contract Rewards is Ownable {
     ///
     ///
     ///
-    /// @notice calculates the pending rewards for last timestamp
-    /// @dev calculates the pending rewards for last timestamp
+    /// @notice calculates the unclaimed rewards for last timestamp
+    /// @dev calculates the unclaimed rewards for last timestamp
     /// @param _from last timestamp when rewards were updated
-    /// @return pending rewards since last update
+    /// @return unclaimed rewards since last update
     function calcReward(uint256 _from) internal view returns (uint256){
 
         uint256 nMonths = (_from.sub(genesisTs)).div(epochLength);
