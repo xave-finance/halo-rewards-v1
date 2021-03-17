@@ -5,8 +5,11 @@
 #### Table Of Contents
 
 [Required software](#required-software)
+
 [Coding style guidelines](#coding-style-guidelines)
+
 [Coding standards](#coding-standards-and-best-practices)
+
 [Recommended developer tools & configuration](#recommended-developer-tools--configuration) 
 * [Code quality](#code-quality) 
 * [Prettier](#Prettier) 
