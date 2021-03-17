@@ -522,7 +522,7 @@ contract Rewards is Ownable {
     /// @dev set alloc points for amm lp
     /// @param _lpAddress address of the lp token
     /// @param _allocPoint alloc points
-    function setAmmLpAlloc(
+    function setAmmLpAllocationPoints(
         address _lpAddress,
         uint256 _allocPoint
     ) public onlyOwner {
@@ -537,7 +537,7 @@ contract Rewards is Ownable {
     /// @dev set alloc points for minter lp
     /// @param _collateralAddress address of the collateral
     /// @param _allocPoint alloc points
-    function setMinterLpAlloc(
+    function setMinterLpAllocationPoints(
         address _collateralAddress,
         uint256 _allocPoint
     ) public onlyOwner {

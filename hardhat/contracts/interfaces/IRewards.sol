@@ -49,12 +49,12 @@ interface IRewards {
 
     function isValidMinterLp(address _collateralAddress) external view returns (bool);
 
-    function setAmmLpAlloc(
+    function setAmmLpAllocationPoints(
         address _lpAddress,
         uint256 _allocPoint
     ) external;
 
-    function setMinterLpAlloc(
+    function setMinterLpAllocationPoints(
         address _collateralAddress,
         uint256 _allocPoint
     ) external;

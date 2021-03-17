@@ -428,10 +428,10 @@ describe("As an Admin, I can update AMM LP pool’s allocation points", function
         expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10);
     })
     it("If caller is not contract owner, it should fail", async() => {
-        await expect(rewardsContract.connect(addr1).setAmmLpAlloc(lpTokenContract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(rewardsContract.connect(addr1).setAmmLpAllocationPoints(lpTokenContract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
     })
     it("If caller is contract owner, it should not fail; If AMM LP pool is whitelisted it should not fail; Set Amm LP pool allocs", async() => {
-        await expect(rewardsContract.connect(owner).setAmmLpAlloc(lpTokenContract.address, 5)).to.not.be.reverted;
+        await expect(rewardsContract.connect(owner).setAmmLpAllocationPoints(lpTokenContract.address, 5)).to.not.be.reverted;
     })
     it("AMM LP allocation points before", async() => {
         expect((await rewardsContract.getAmmLpPoolInfo(lpTokenContract.address)).allocPoint.toString()).to.equal('5');
@@ -449,10 +449,10 @@ describe("As an Admin, I can update minter lp collateral allocation points", fun
         expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(10);
     })
     it("If caller is not contract owner, it should fail", async() => {
-        await expect(rewardsContract.connect(addr1).setMinterLpAlloc(collateralERC20Contract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
+        await expect(rewardsContract.connect(addr1).setMinterLpAllocationPoints(collateralERC20Contract.address, 5)).to.be.revertedWith('Ownable: caller is not the owner');
     })
     it("If caller is contract owner, it should not fail; If collateral type is whitelisted it should not fail; Set Minter Lp pool allocs", async() => {
-        await expect(rewardsContract.connect(owner).setMinterLpAlloc(collateralERC20Contract.address, 5)).to.not.be.reverted;
+        await expect(rewardsContract.connect(owner).setMinterLpAllocationPoints(collateralERC20Contract.address, 5)).to.not.be.reverted;
     })
     it("DAI LP allocation points before", async() => {
         expect((await rewardsContract.getMinterLpPoolInfo(collateralERC20Contract.address)).allocPoint.toString()).to.equal('5');
