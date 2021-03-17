@@ -401,25 +401,25 @@ contract Rewards is Ownable {
     *             VIEW FUNCTIONS            *
     ****************************************/
 
-    /// @notice total amm lp alloc points
-    /// @dev total amm lp alloc points
-    /// @return total amm lp alloc points
-    function totalAmmLpAllocationPoints() public view returns (uint256) {
+    /// @notice total pool  alloc points
+    /// @dev total pool alloc points
+    /// @return total pool alloc points
+    function getTotalPoolAllocationPoints() public view returns (uint256) {
         return totalAmmLpAllocs;
     }
 
     /// @notice total minter lp alloc points
     /// @dev total minter lp alloc points
     /// @return total minter lp alloc points
-    function totalMinterLpAllocationPoints() public view returns (uint256) {
+    function getTotalMinterLpAllocationPoints() public view returns (uint256) {
         return totalMinterLpAllocs;
     }
 
-    /// @notice unclaimed amm lp rewards
-    /// @dev view function to check unclaimed amm lp rewards for an account
-    /// @param _lpAddress address of the amm lp token
+    /// @notice unclaimed pool rewards
+    /// @dev view function to check unclaimed pool rewards for an account
+    /// @param _lpAddress address of the pool token
     /// @param _account address of the user
-    /// @return unclaimed amm lp rewards for the user
+    /// @return unclaimed pool rewards for the user
     function getUnclaimedPoolRewardsByUserByPool(
         address _lpAddress,
         address _account

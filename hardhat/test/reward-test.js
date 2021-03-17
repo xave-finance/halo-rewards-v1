@@ -183,7 +183,7 @@ describe("Check Contract Deployments", function() {
         expect(await haloChestContract.name()).to.equal("HaloChest");
     })
     it("Rewards Contract should be deployed", async() => {
-        expect(await rewardsContract.totalAmmLpAllocationPoints()).to.equal(10);
+        expect(await rewardsContract.getTotalPoolRewardsAllocationPoints()).to.equal(10);
         expect(await rewardsContract.totalMinterLpAllocationPoints()).to.equal(10);
         expect(await rewardsContract.isValidAmmLp(lpTokenContract.address)).to.equal(true);
         expect(await rewardsContract.isValidAmmLp(collateralERC20Contract.address)).to.equal(false);
