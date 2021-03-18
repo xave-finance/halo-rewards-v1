@@ -123,10 +123,8 @@ contract Rewards is Ownable {
     *          PRIVATE VARIABLES            *
     ****************************************/
 
-    // @notice stores the AMM LP pool addresses
-    mapping(uint8 => address) internal ammLpPoolsAddresses;
-    // @notice keeps tracks of the count of AMM LP pools
-    uint8 internal ammLpPoolsCount;
+    // @notice stores the AMM LP pool addresses internally
+    address[] internal ammLpPoolsAddresses;
 
 
     /****************************************
@@ -170,7 +168,6 @@ contract Rewards is Ownable {
         minterContract = _minter;
         genesisTs = _genesisTs;
         lastHaloVestRewardTs = genesisTs;
-        ammLpPoolsCount = 0;
         for (uint8 i=0; i<_minterLpPools.length; i++) {
             addMinterCollateralType(_minterLpPools[i].poolAddress, _minterLpPools[i].allocPoint);
         }
@@ -529,26 +526,7 @@ contract Rewards is Ownable {
     /// @dev get all whitelisted AMM LM pool addresses
     /// @return AMM LP addresses as array
     function getWhitelistedAMMPoolAddresses() public view returns(address[] memory) {
-        // First, determine how many whitelisted LP addresses are there
-        uint8 whitelistedCount = 0;
-        for (uint8 i = 0; i < ammLpPoolsCount; i++) {
-            address poolAddress = ammLpPoolsAddresses[i];
-            if (ammLpPools[poolAddress].whitelisted == true) {
-                whitelistedCount += 1;
-            }
-        }
-
-        // Then we can use this number to intialize the address array we are going to return
-        address[] memory addresses = new address[](whitelistedCount);
-        uint8 index = 0;
-        for (uint8 i = 0; i < ammLpPoolsCount; i++) {
-            address poolAddress = ammLpPoolsAddresses[i];
-            if (ammLpPools[poolAddress].whitelisted == true) {
-                addresses[index++] = poolAddress;
-            }
-        }
-
-        return addresses;
+        return ammLpPoolsAddresses;
     }
 
 
@@ -600,17 +578,14 @@ contract Rewards is Ownable {
         uint256 lastRewardTs = now > genesisTs ? now : genesisTs;
         totalAmmLpAllocs = totalAmmLpAllocs.add(_allocPoint);
 
-        // track the lp pool addresses addition internally
-        if (ammLpPools[_lpAddress].allocPoint == 0) { // means this address is not added yet to ammLpPoolsAddresses
-            ammLpPoolsAddresses[ammLpPoolsCount] = _lpAddress;
-            ammLpPoolsCount += 1;
-        }
-
         //add lp to ammLpPools
         ammLpPools[_lpAddress].whitelisted = true;
         ammLpPools[_lpAddress].allocPoint = _allocPoint;
         ammLpPools[_lpAddress].lastRewardTs = lastRewardTs;
         ammLpPools[_lpAddress].accHaloPerShare = 0;
+
+        // track the lp pool addresses addition internally
+        addToAmmLpPoolsAddresses(_lpAddress);
     }
 
     /// @notice add a minter lp pool
@@ -631,7 +606,6 @@ contract Rewards is Ownable {
         minterLpPools[_collateralAddress].allocPoint = _allocPoint;
         minterLpPools[_collateralAddress].lastRewardTs = lastRewardTs;
         minterLpPools[_collateralAddress].accHaloPerShare = 0;
-
     }
 
     /// @notice remove an amm lp pool
@@ -643,6 +617,8 @@ contract Rewards is Ownable {
         totalAmmLpAllocs = totalAmmLpAllocs.sub(ammLpPools[_lpAddress].allocPoint);
         ammLpPools[_lpAddress].whitelisted = false;
 
+        // track the lp pool addresses removal internally
+        removeFromAmmLpPoolsAddresses(_lpAddress);
     }
 
     /// @notice remove a minter lp pool
@@ -783,5 +759,31 @@ contract Rewards is Ownable {
             s = s.add(x);
         }
         return s;
+    }
+
+    function addToAmmLpPoolsAddresses(address _lpAddress) internal {
+        bool exists = false;
+        for (uint8 i = 0; i < ammLpPoolsAddresses.length; i++) {
+            if (ammLpPoolsAddresses[i] == _lpAddress) {
+                exists = true;
+                break;
+            }
+        }
+
+        if (!exists) {
+            ammLpPoolsAddresses.push(_lpAddress);
+        }
+    }
+
+    function removeFromAmmLpPoolsAddresses(address _lpAddress) internal {
+        for (uint8 i = 0; i < ammLpPoolsAddresses.length; i++) {
+            if (ammLpPoolsAddresses[i] == _lpAddress) {
+                if (i + 1 < ammLpPoolsAddresses.length) {
+                    ammLpPoolsAddresses[i] =  ammLpPoolsAddresses[ammLpPoolsAddresses.length - 1];
+                }
+                ammLpPoolsAddresses.pop();
+                break;
+            }
+        }
     }
 }
