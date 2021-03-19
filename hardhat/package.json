@@ -10,5 +10,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.1"
+  },
+  "scripts": {
+    "deploy:kovan": "npx hardhat run scripts/deploy.js --network \"kovan\""
   }
 }
