@@ -118,6 +118,15 @@ contract Rewards is Ownable {
 
     mapping(address => uint256) public claimedHalo;
 
+
+    /****************************************
+    *          PRIVATE VARIABLES            *
+    ****************************************/
+
+    // @notice stores the AMM LP pool addresses internally
+    address[] internal ammLpPoolsAddresses;
+
+
     /****************************************
     *           PUBLIC FUNCTIONS           *
     ****************************************/
@@ -513,6 +522,14 @@ contract Rewards is Ownable {
         return claimedHalo[_account];
     }
 
+    /// @notice get all whitelisted AMM LM pool addresses
+    /// @dev get all whitelisted AMM LM pool addresses
+    /// @return AMM LP addresses as array
+    function getWhitelistedAMMPoolAddresses() public view returns(address[] memory) {
+        return ammLpPoolsAddresses;
+    }
+
+
     /****************************************
     *            ADMIN FUNCTIONS            *
     ****************************************/
@@ -567,6 +584,8 @@ contract Rewards is Ownable {
         ammLpPools[_lpAddress].lastRewardTs = lastRewardTs;
         ammLpPools[_lpAddress].accHaloPerShare = 0;
 
+        // track the lp pool addresses addition internally
+        addToAmmLpPoolsAddresses(_lpAddress);
     }
 
     /// @notice add a minter lp pool
@@ -587,7 +606,6 @@ contract Rewards is Ownable {
         minterLpPools[_collateralAddress].allocPoint = _allocPoint;
         minterLpPools[_collateralAddress].lastRewardTs = lastRewardTs;
         minterLpPools[_collateralAddress].accHaloPerShare = 0;
-
     }
 
     /// @notice remove an amm lp pool
@@ -599,6 +617,8 @@ contract Rewards is Ownable {
         totalAmmLpAllocs = totalAmmLpAllocs.sub(ammLpPools[_lpAddress].allocPoint);
         ammLpPools[_lpAddress].whitelisted = false;
 
+        // track the lp pool addresses removal internally
+        removeFromAmmLpPoolsAddresses(_lpAddress);
     }
 
     /// @notice remove a minter lp pool
@@ -739,5 +759,31 @@ contract Rewards is Ownable {
             s = s.add(x);
         }
         return s;
+    }
+
+    function addToAmmLpPoolsAddresses(address _lpAddress) internal {
+        bool exists = false;
+        for (uint8 i = 0; i < ammLpPoolsAddresses.length; i++) {
+            if (ammLpPoolsAddresses[i] == _lpAddress) {
+                exists = true;
+                break;
+            }
+        }
+
+        if (!exists) {
+            ammLpPoolsAddresses.push(_lpAddress);
+        }
+    }
+
+    function removeFromAmmLpPoolsAddresses(address _lpAddress) internal {
+        for (uint8 i = 0; i < ammLpPoolsAddresses.length; i++) {
+            if (ammLpPoolsAddresses[i] == _lpAddress) {
+                if (i + 1 < ammLpPoolsAddresses.length) {
+                    ammLpPoolsAddresses[i] =  ammLpPoolsAddresses[ammLpPoolsAddresses.length - 1];
+                }
+                ammLpPoolsAddresses.pop();
+                break;
+            }
+        }
     }
 }
