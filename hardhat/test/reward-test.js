@@ -6,6 +6,7 @@ let contractCreatorAccount
 let rewardsContract
 let collateralERC20Contract
 let lpTokenContract
+let lpTokenContract2
 let minterContract
 let ubeContract
 let haloTokenContract
@@ -63,10 +64,13 @@ before(async() => {
 
     const LpToken = await ethers.getContractFactory("LpToken");
     lpTokenContract = await LpToken.deploy("LpToken", "LPT");
+    lpTokenContract2 = await LpToken.deploy("LpToken 2", "LPT");
     await lpTokenContract.deployed();
+    await lpTokenContract2.deployed();
     console.log("lptoken deployed");
 
     await lpTokenContract.mint(owner.address, ethers.utils.parseEther(INITIAL_MINT.toString()));
+    await lpTokenContract2.mint(owner.address, ethers.utils.parseEther(INITIAL_MINT.toString()));
     console.log(INITIAL_MINT.toString() + " LPT minted to " + owner.address);
     console.log();
 
@@ -169,6 +173,10 @@ describe("Check Contract Deployments", function() {
     it("Lptoken should be deployed", async() => {
         expect(await lpTokenContract.symbol()).to.equal("LPT");
         expect(await lpTokenContract.name()).to.equal("LpToken");
+    })
+    it("Lptoken2 should be deployed", async() => {
+        expect(await lpTokenContract2.symbol()).to.equal("LPT");
+        expect(await lpTokenContract2.name()).to.equal("LpToken 2");
     })
     it("UBE should be deployed", async() => {
         expect(await ubeContract.symbol()).to.equal("UBE");
@@ -495,5 +503,30 @@ describe("As an Admin, I can remove whitelisted collateral type", function() {
     })
     it("Should not be valid collateral type", async() => {
         expect(await rewardsContract.isValidMinterLp(collateralERC20Contract.address)).to.equal(false);
+    })
+})
+
+describe('AMM dApp should be able to query some info from the Rewards contract', () => {
+    it('getWhitelistedAMMPoolAddresses() should return all AMM LP addresses', async () => {
+        const addresses = await rewardsContract.getWhitelistedAMMPoolAddresses()
+        const expectedAddresses = [] // we removed all addreses in line 473 so this is blank initially
+        expect(addresses).to.have.all.members(expectedAddresses)
+    })
+
+    it('getWhitelistedAMMPoolAddresses() should return updated AMM LP addresses after adding a new address', async () => {
+        await rewardsContract.addAmmLp(lpTokenContract.address, 10)
+        await rewardsContract.addAmmLp(lpTokenContract2.address, 10)
+
+        const addresses = await rewardsContract.getWhitelistedAMMPoolAddresses()
+        const expectedAddresses = [lpTokenContract.address, lpTokenContract2.address]
+        expect(addresses).to.have.all.members(expectedAddresses)
+    })
+
+    it('getWhitelistedAMMPoolAddresses() should return updated AMM LP addresses after removing an address', async () => {
+        await rewardsContract.removeAmmLp(lpTokenContract.address)
+
+        const addresses = await rewardsContract.getWhitelistedAMMPoolAddresses()
+        const expectedAddresses = [lpTokenContract2.address]
+        expect(addresses).to.have.all.members(expectedAddresses)
     })
 })
