@@ -10,6 +10,13 @@ npm i
 npx hardhat test
 ```
 
+### Using dev scripts
+
+`npm/yarn run test` : for running test scripts usind hardhat
+`npm/yarn run deploy:kovan` : deploy Rewards contract and all its dependencies
+`npm/yarn run deploy:halo-kovan`: use to mint dummy HALO to your wallet. you can change the receiver, HALO token address and number of tokens to mint in ether units
+`npm/yarn run deploy:onlyrewards-kovan` : use to deploy only the rewards contract. change the constructor parameters when necessary
+
 ### Output
 
 ```
