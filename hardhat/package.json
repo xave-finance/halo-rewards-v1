@@ -1,5 +1,11 @@
 {
   "name": "hardhat-project",
+  "scripts": {
+    "test": "npx hardhat test",
+    "deploy:kovan": "npx hardhat run scripts/deploy.js --network \"kovan\"",
+    "deploy:halo-kovan": "npx hardhat run scripts/deployHalo.js --network \"kovan\"",
+    "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployOnlyRewardsContract.js --network \"kovan\""
+  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
@@ -9,9 +15,7 @@
     "hardhat": "^2.1.1"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^3.4.1"
-  },
-  "scripts": {
-    "deploy:kovan": "npx hardhat run scripts/deploy.js --network \"kovan\""
+    "@openzeppelin/contracts": "^3.4.1",
+    "dotenv": "^8.2.0"
   }
 }
