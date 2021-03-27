@@ -2,7 +2,7 @@
 ## Description of Changes
 <!-- Enter description of changes here. -->
 
-[Link to Jira Ticket](https://soowhq.atlassian.net/browse/SOOW-)
+[Link to Jira Ticket](https://halodao.atlassian.net/browse/HDF-)
 
 
 ### Developer Checklist:
@@ -16,6 +16,5 @@
 
 ### Reviewers Checklist:
 * [ ] Code is readable and understandable; any unclear parts have explanations 
-* [ ] Code style confirms to eslint/flow rules
 * [ ] UI/UX changes match the corresponding figma/other design resources, if applicable
 * [ ] I have successfully ran tests locally
