@@ -68,15 +68,12 @@ contract Rewards is Ownable {
         uint256 accHaloPerShare,
         uint256 lastRewardTs
     );
-    event AmmLPRewardPoolRatioUpdatedEvent(
+    event AmmLPRewardUpdatedEvent(
         address lpAddress,
         uint256 accHaloPerShare,
         uint256 lastRewardTs
     );
-    event VestedRewardsPoolRatioReleasedEvent(
-        uint256 amount,
-        uint256 timestamp
-    );
+    event VestedRewardsReleasedEvent(uint256 amount, uint256 timestamp);
 
     /****************************************
      *                VARIABLES              *
@@ -241,7 +238,7 @@ contract Rewards is Ownable {
 
         pool.lastRewardTs = now;
 
-        emit AmmLPRewardPoolRatioUpdatedEvent(
+        emit AmmLPRewardUpdatedEvent(
             _lpAddress,
             pool.accHaloPerShare,
             pool.lastRewardTs
@@ -312,26 +309,58 @@ contract Rewards is Ownable {
     function depositPoolTokens(address _lpAddress, uint256 _amount) public {
         require(
             ammLpPools[_lpAddress].whitelisted == true,
-            "Error: Amm Lp not allowed"
+            "Error: AMM Pool Address not allowed"
         );
+
         PoolInfo storage pool = ammLpPools[_lpAddress];
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
+
         updateAmmRewardPool(_lpAddress);
+
         if (user.amount > 0) {
-            uint256 unclaimed =
-                user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
-                    user.rewardDebt
-                );
-            safeHaloTransfer(msg.sender, unclaimed);
+            withdrawUnclaimedRewards(user, pool, msg.sender);
         }
+
         IERC20(_lpAddress).transferFrom(
             address(msg.sender),
             address(this),
             _amount
         );
-        user.amount = user.amount.add(_amount);
-        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
+
+        addAmountUpdateRewardDebtForUserForPoolTokens(
+            _lpAddress,
+            msg.sender,
+            _amount
+        );
+
         emit DepositAMMLPTokensEvent(msg.sender, _lpAddress, _amount);
+    }
+
+    /// @notice withdraw amm lp tokens to earn rewards
+    /// @dev withdraw amm lp tokens to earn rewards
+    /// @param _lpAddress address of the amm lp token
+    /// @param _amount amount of lp tokens
+    function withdrawPoolTokens(address _lpAddress, uint256 _amount) public {
+        //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lp
+
+        PoolInfo storage pool = ammLpPools[_lpAddress];
+        UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
+
+        require(user.amount >= _amount, "Error: Not enough balance");
+
+        updateAmmRewardPool(_lpAddress);
+
+        withdrawUnclaimedRewards(user, pool, msg.sender);
+
+        subtractAmountUpdateRewardDebtForUserForPoolTokens(
+            _lpAddress,
+            msg.sender,
+            _amount
+        );
+
+        IERC20(_lpAddress).transfer(address(msg.sender), _amount);
+
+        emit WithdrawAMMLPTokensEvent(msg.sender, _lpAddress, _amount);
     }
 
     /// @notice deposit collateral to minter to earn rewards, called by minter contract
@@ -348,44 +377,27 @@ contract Rewards is Ownable {
             minterLpPools[_collateralAddress].whitelisted == true,
             "Error: Collateral type not allowed"
         );
+
         PoolInfo storage pool = minterLpPools[_collateralAddress];
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
+
         updateMinterRewardPool(_collateralAddress);
+
         if (user.amount > 0) {
-            uint256 unclaimed =
-                user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
-                    user.rewardDebt
-                );
-            safeHaloTransfer(_account, unclaimed);
+            withdrawUnclaimedRewards(user, pool, _account);
         }
-        user.amount = user.amount.add(_amount);
-        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
+
+        addAmountUpdateRewardDebtAndForMinter(
+            _collateralAddress,
+            _account,
+            _amount
+        );
+
         emit DepositMinterCollateralByAddress(
             _account,
             _collateralAddress,
             _amount
         );
-    }
-
-    /// @notice withdraw amm lp tokens to earn rewards
-    /// @dev withdraw amm lp tokens to earn rewards
-    /// @param _lpAddress address of the amm lp token
-    /// @param _amount amount of lp tokens
-    function withdrawPoolTokens(address _lpAddress, uint256 _amount) public {
-        //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
-        PoolInfo storage pool = ammLpPools[_lpAddress];
-        UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
-        require(user.amount >= _amount, "Error: Not enough balance");
-        updateAmmRewardPool(_lpAddress);
-        uint256 unclaimed =
-            user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
-                user.rewardDebt
-            );
-        safeHaloTransfer(msg.sender, unclaimed);
-        user.amount = user.amount.sub(_amount);
-        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-        IERC20(_lpAddress).transfer(address(msg.sender), _amount);
-        emit WithdrawAMMLPTokensEvent(msg.sender, _lpAddress, _amount);
     }
 
     /// @notice withdraw collateral from minter, called by minter contract
@@ -399,17 +411,22 @@ contract Rewards is Ownable {
         uint256 _amount
     ) public onlyMinter {
         //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
+
         PoolInfo storage pool = minterLpPools[_collateralAddress];
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
+
         require(user.amount >= _amount, "Error: Not enough balance");
+
         updateMinterRewardPool(_collateralAddress);
-        uint256 unclaimed =
-            user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
-                user.rewardDebt
-            );
-        safeHaloTransfer(_account, unclaimed);
-        user.amount = user.amount.sub(_amount);
-        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
+
+        withdrawUnclaimedRewards(user, pool, _account);
+
+        subtractAmountUpdateRewardDebtAndForMinter(
+            _collateralAddress,
+            _account,
+            _amount
+        );
+
         emit WithdrawMinterCollateralByAddress(
             _account,
             _collateralAddress,
@@ -425,14 +442,8 @@ contract Rewards is Ownable {
         UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
 
         updateAmmRewardPool(_lpAddress);
-
-        uint256 unclaimed =
-            user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
-                user.rewardDebt
-            );
+        withdrawUnclaimedRewards(user, pool, msg.sender);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-
-        safeHaloTransfer(msg.sender, unclaimed);
     }
 
     /// @notice withdraw unclaimed minter lp rewards
@@ -447,14 +458,8 @@ contract Rewards is Ownable {
         UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
         updateMinterRewardPool(_collateralAddress);
-
-        uint256 unclaimed =
-            user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
-                user.rewardDebt
-            );
+        withdrawUnclaimedRewards(user, pool, _account);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-
-        safeHaloTransfer(_account, unclaimed);
     }
 
     /****************************************
@@ -752,7 +757,7 @@ contract Rewards is Ownable {
             (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
         vestingRewardsDebt = accHalo.mul(vestingRewardsRatio).div(BPS);
         safeHaloTransfer(haloChestContract, unclaimed);
-        emit VestedRewardsPoolRatioReleasedEvent(unclaimed, now);
+        emit VestedRewardsReleasedEvent(unclaimed, now);
     }
 
     /// @notice sets the address of the minter contract
@@ -794,6 +799,91 @@ contract Rewards is Ownable {
     /****************************************
      *          INTERNAL FUNCTIONS          *
      ****************************************/
+
+    /// @notice Adds to LP token balance of user + updates reward debt of user
+    /// @dev tracks either LP token amount or collateral ERC20 amount deposited by user + reward debt of user
+    /// @param _poolAddress contract address of pool
+    /// @param _account address of the user
+    /// @param _amount LP token or collateral ERC20 balance
+    function addAmountUpdateRewardDebtForUserForPoolTokens(
+        address _poolAddress,
+        address _account,
+        uint256 _amount
+    ) internal {
+        PoolInfo storage pool = ammLpPools[_poolAddress];
+        UserInfo storage user = ammLpUserInfo[_poolAddress][_account];
+
+        user.amount = user.amount.add(_amount);
+        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
+    }
+
+    /// @notice Subtracts from LP token balance of user + updates reward debt of user
+    /// @dev tracks either LP token amount or collateral ERC20 amount deposited by user + reward debt of user
+    /// @param _poolAddress contract address of pool
+    /// @param _account address of the user
+    /// @param _amount LP token or collateral ERC20 balance
+    function subtractAmountUpdateRewardDebtForUserForPoolTokens(
+        address _poolAddress,
+        address _account,
+        uint256 _amount
+    ) internal {
+        PoolInfo storage pool = ammLpPools[_poolAddress];
+        UserInfo storage user = ammLpUserInfo[_poolAddress][_account];
+
+        user.amount = user.amount.sub(_amount);
+        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
+    }
+
+    /// @notice Adds to collateral ERC20 balance of user + updates reward debt of user
+    /// @dev tracks either LP token amount or collateral ERC20 amount deposited by user + reward debt of user
+    /// @param _collateralAddress contract address of pool
+    /// @param _account address of the user
+    /// @param _amount LP token or collateral ERC20 balance
+    function addAmountUpdateRewardDebtAndForMinter(
+        address _collateralAddress,
+        address _account,
+        uint256 _amount
+    ) internal {
+        PoolInfo storage pool = minterLpPools[_collateralAddress];
+        UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
+
+        user.amount = user.amount.add(_amount);
+        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
+    }
+
+    /// @notice Subtracts from collateral ERC20 balance of user + updates reward debt of user
+    /// @dev tracks either LP token amount or collateral ERC20 amount deposited by user + reward debt of user
+    /// @param _collateralAddress contract address of pool
+    /// @param _account address of the user
+    /// @param _amount LP token or collateral ERC20 balance
+    function subtractAmountUpdateRewardDebtAndForMinter(
+        address _collateralAddress,
+        address _account,
+        uint256 _amount
+    ) internal {
+        PoolInfo storage pool = minterLpPools[_collateralAddress];
+        UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
+
+        user.amount = user.amount.sub(_amount);
+        user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
+    }
+
+    /// @notice withdraw unclaimed rewards
+    /// @dev withdraw unclaimed rewards
+    /// @param user instance of the UserInfo struct
+    /// @param pool instance of the PoolInfo struct
+    /// @param account user address
+    function withdrawUnclaimedRewards(
+        UserInfo storage user,
+        PoolInfo storage pool,
+        address account
+    ) internal {
+        uint256 unclaimed =
+            user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(
+                user.rewardDebt
+            );
+        safeHaloTransfer(account, unclaimed);
+    }
 
     /// @notice transfer halo to users
     /// @dev transfer halo to users
