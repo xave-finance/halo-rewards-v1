@@ -43,37 +43,40 @@ contract Rewards is Ownable {
      *                EVENTS                *
      ****************************************/
 
-    event DepositLPTokens(
+    event DepositAMMLPTokensEvent(
         address indexed user,
         address indexed lpAddress,
         uint256 amount
     );
-    event WithdrawLPTokens(
+    event WithdrawAMMLPTokensEvent(
         address indexed user,
         address indexed lpAddress,
         uint256 amount
     );
-    event DepositMinter(
+    event DepositMinterCollateralByAddress(
         address indexed user,
         address indexed collateralAddress,
         uint256 amount
     );
-    event WithdrawMinter(
+    event WithdrawMinterCollateralByAddress(
         address indexed user,
         address indexed collateralAddress,
         uint256 amount
     );
-    event MinterRewardPoolUpdated(
+    event MinterRewardPoolRatioUpdatedEvent(
         address collateralAddress,
         uint256 accHaloPerShare,
         uint256 lastRewardTs
     );
-    event AmmRewardPoolUpdated(
+    event AmmLPRewardPoolRatioUpdatedEvent(
         address lpAddress,
         uint256 accHaloPerShare,
         uint256 lastRewardTs
     );
-    event VestedRewardsReleased(uint256 amount, uint256 timestamp);
+    event VestedRewardsPoolRatioReleasedEvent(
+        uint256 amount,
+        uint256 timestamp
+    );
 
     /****************************************
      *                VARIABLES              *
@@ -238,7 +241,7 @@ contract Rewards is Ownable {
 
         pool.lastRewardTs = now;
 
-        emit AmmRewardPoolUpdated(
+        emit AmmLPRewardPoolRatioUpdatedEvent(
             _lpAddress,
             pool.accHaloPerShare,
             pool.lastRewardTs
@@ -289,7 +292,7 @@ contract Rewards is Ownable {
 
         pool.lastRewardTs = now;
 
-        emit MinterRewardPoolUpdated(
+        emit MinterRewardPoolRatioUpdatedEvent(
             _collateralAddress,
             pool.accHaloPerShare,
             pool.lastRewardTs
@@ -328,7 +331,7 @@ contract Rewards is Ownable {
         );
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-        emit DepositLPTokens(msg.sender, _lpAddress, _amount);
+        emit DepositAMMLPTokensEvent(msg.sender, _lpAddress, _amount);
     }
 
     /// @notice deposit collateral to minter to earn rewards, called by minter contract
@@ -357,7 +360,11 @@ contract Rewards is Ownable {
         }
         user.amount = user.amount.add(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-        emit DepositMinter(_account, _collateralAddress, _amount);
+        emit DepositMinterCollateralByAddress(
+            _account,
+            _collateralAddress,
+            _amount
+        );
     }
 
     /// @notice withdraw amm lp tokens to earn rewards
@@ -378,7 +385,7 @@ contract Rewards is Ownable {
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
         IERC20(_lpAddress).transfer(address(msg.sender), _amount);
-        emit WithdrawLPTokens(msg.sender, _lpAddress, _amount);
+        emit WithdrawAMMLPTokensEvent(msg.sender, _lpAddress, _amount);
     }
 
     /// @notice withdraw collateral from minter, called by minter contract
@@ -403,7 +410,11 @@ contract Rewards is Ownable {
         safeHaloTransfer(_account, unclaimed);
         user.amount = user.amount.sub(_amount);
         user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-        emit WithdrawMinter(_account, _collateralAddress, _amount);
+        emit WithdrawMinterCollateralByAddress(
+            _account,
+            _collateralAddress,
+            _amount
+        );
     }
 
     /// @notice withdraw unclaimed amm lp rewards
@@ -741,7 +752,7 @@ contract Rewards is Ownable {
             (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
         vestingRewardsDebt = accHalo.mul(vestingRewardsRatio).div(BPS);
         safeHaloTransfer(haloChestContract, unclaimed);
-        emit VestedRewardsReleased(unclaimed, now);
+        emit VestedRewardsPoolRatioReleasedEvent(unclaimed, now);
     }
 
     /// @notice sets the address of the minter contract
