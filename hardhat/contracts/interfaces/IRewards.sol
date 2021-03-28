@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
 interface IRewards {
-
     function updateAmmRewardPool(address _lpAddress) external;
 
     function updateMinterRewardPool(address _collateralAddress) external;
@@ -47,22 +46,20 @@ interface IRewards {
     //utility view functions
     function isValidAmmLp(address _lpAddress) external view returns (bool);
 
-    function isValidMinterLp(address _collateralAddress) external view returns (bool);
+    function isValidMinterLp(address _collateralAddress)
+        external
+        view
+        returns (bool);
 
-    function setAmmLpAllocationPoints(
-        address _lpAddress,
-        uint256 _allocPoint
-    ) external;
+    function setAmmLpAllocationPoints(address _lpAddress, uint256 _allocPoint)
+        external;
 
     function setMinterLpAllocationPoints(
         address _collateralAddress,
         uint256 _allocPoint
     ) external;
 
-    function addAmmLp(
-        address _lpAddress,
-        uint256 _allocPoint
-    ) external;
+    function addAmmLp(address _lpAddress, uint256 _allocPoint) external;
 
     function addMinterCollateralType(
         address _collateralAddress,

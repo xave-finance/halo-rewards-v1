@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.12;
 
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { ERC20 } from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import { SafeMath } from '@openzeppelin/contracts/math/SafeMath.sol';
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
-contract HaloChest is ERC20("HaloChest", "xHALO"){
+contract HaloChest is ERC20("HaloChest", "xHALO") {
     using SafeMath for uint256;
     IERC20 public halo;
 
@@ -41,7 +41,8 @@ contract HaloChest is ERC20("HaloChest", "xHALO"){
         // Gets the amount of xHalo in existence
         uint256 totalShares = totalSupply();
         // Calculates the amount of Halo the xHalo is worth
-        uint256 xHaloAmount = _share.mul(halo.balanceOf(address(this))).div(totalShares);
+        uint256 xHaloAmount =
+            _share.mul(halo.balanceOf(address(this))).div(totalShares);
         _burn(msg.sender, _share);
         halo.transfer(msg.sender, xHaloAmount);
     }

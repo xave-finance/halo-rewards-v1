@@ -106,6 +106,7 @@ before(async() => {
     const startingRewards = ethers.utils.parseEther('7500000');
     const decayBase = ethers.utils.parseEther('0.813');
     epochLength = 60
+    console.log('BPS = ', BPS)
     const minterLpRewardsRatio = 0.4*BPS
     const ammLpRewardsRatio = 0.4*BPS
     const vestingRewardsRatio = 0.2*BPS

@@ -14,17 +14,21 @@ task("accounts", "Prints the list of accounts", async () => {
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
+const INFURA_PROJECT_ID = process.env.INFURA_PROJECT_ID || ''
+const MNEMONIC_SEED = process.env.MNEMONIC_SEED || ''
+
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 
 module.exports = {
-  solidity: "0.6.0",
+  solidity: '0.6.12',
+
   networks: {
     kovan: {
-      url: `https://kovan.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+      url: `https://kovan.infura.io/v3/${INFURA_PROJECT_ID}`,
       accounts: {
-        mnemonic: process.env.MNEMONIC_SEED,
+        mnemonic: MNEMONIC_SEED,
       },
     },
   },
