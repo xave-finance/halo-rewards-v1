@@ -91,7 +91,7 @@ The main steps are as follows:
     git checkout -b <branchname>
     ```
     Follow our naming convention for branch
-```feature/BGM-XXX-description```
+```feature/HDF-XXX-description```
 3. Make Changes.
     ```sh
     git add <file1> <file2> ...
