@@ -265,7 +265,7 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
 
     it("I earn the correct number of HALO tokens per time interval on depositing LPT", async() => {
         
-        haloBal = Math.round(parseFloat(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address))));
+        haloBal = parseFloat(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)))
 
         // deposit LP tokens to Rewards contract
         await expect(rewardsContract.depositPoolTokens(
