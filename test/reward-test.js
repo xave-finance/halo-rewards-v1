@@ -302,7 +302,7 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
         console.log("\tUpdate Amm Lp pool Rewards")
 
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
-        let updateTxTs = (await ethers.provider.getBlock()).timestamp;
+        (await ethers.provider.getBlock()).timestamp;
 
         console.log("\tUnclaimed rewards for user after withdrawing LPT should be 0");
 
@@ -333,7 +333,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
     })
 
     it("Send unclaimed vested rewards to HaloChest", async() => {
-        const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards();
+        await rewardsContract.getUnclaimedVestingRewards();
         await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted;
     })
 
