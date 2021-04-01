@@ -6,6 +6,8 @@
 
 [Link to Jira Ticket](https://halodao.atlassian.net/browse/HDF-68)
 
+## How To Test
+
 ### Developer Checklist:
 
 - [x] I have followed the guidelines in our Contributing document

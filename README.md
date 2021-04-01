@@ -3,7 +3,6 @@
 ### Running Tests
 
 ```
-cd hardhat
 
 npm i
 
