@@ -24,7 +24,6 @@ const basisPoints = 10**4
 const INITIAL_MINT = 10**6
 
 const sleepTime = 5
-const sleep = (delay) => new Promise((resolve) => { console.log("\tSleeping for " + delay + " secs..."); setTimeout(resolve, delay * 1000) });
 
 before(async () => {
 
@@ -198,7 +197,7 @@ describe("When I deposit collateral ERC20 on the Minter dApp, I start to earn HA
 
         depositTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        await sleep(sleepTime);
+        await mathUtil.sleep(sleepTime);
         console.log('\t Done sleeping. Updating Minter Rewards')
 
         // this function needs to be called so that rewards state is updated and then becomes claimable
@@ -226,7 +225,7 @@ describe("When I deposit collateral ERC20 on the Minter dApp, I start to earn HA
 
         withdrawalTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        await sleep(sleepTime);
+        await mathUtil.sleep(sleepTime);
         console.log('\t Done sleeping. Updating Minter Rewards')
 
         await rewardsContract.updateMinterRewardPool(collateralERC20Contract.address);
@@ -276,7 +275,7 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
         // get deposit timestamp
         depositTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        await sleep(sleepTime);
+        await mathUtil.sleep(sleepTime);
         console.log('\t Done sleeping. Updating AMM LP pool Rewards')
 
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
@@ -299,7 +298,7 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
 
         withdrawalTxTs = (await ethers.provider.getBlock()).timestamp;
 
-        await sleep(5);
+        await mathUtil.sleep(sleepTime);
         console.log("\tUpdate Amm Lp pool Rewards")
 
         await rewardsContract.updateAmmRewardPool(lpTokenContract.address);
@@ -347,7 +346,9 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         expect(await haloTokenContract.balanceOf(owner.address)).to.equal(haloInHaloChest);
     })
 
-    it("HALO earned by User A > HALO earned by User B > HALO earned by User C", async() => {
+    it("HALO earned by User A > HALO earned by User B > HALO earned by User C", async () => {
+        const newSleepTime = 3;
+
         console.log("Current HALO balance in HaloChest:" +
         ethers.utils.parseEther((await haloTokenContract.balanceOf(haloChestContract.address)).toString()));
         console.log("Minting 100 HALO to User A...");
@@ -361,7 +362,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         await haloTokenContract.connect(addrs[0]).approve(haloChestContract.address, ethers.utils.parseEther('100'));
         await haloChestContract.connect(addrs[0]).enter(ethers.utils.parseEther('100'));
 
-        sleep(3);
+        mathUtil.sleep(newSleepTime);
 
         console.log("Releasing vested bonus tokens to HaloChest from Rewards contract");
         const currVestedHalo = (await rewardsContract.getUnclaimedVestingRewards()).toString();
@@ -372,7 +373,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
         await haloTokenContract.connect(addrs[1]).approve(haloChestContract.address, ethers.utils.parseEther('100'));
         await haloChestContract.connect(addrs[1]).enter(ethers.utils.parseEther('100'));
 
-        sleep(3);
+        mathUtil.sleep(newSleepTime);
 
         console.log("Releasing vested bonus tokens to HaloChest from Rewards contract");
         await rewardsContract.releaseVestedRewards();

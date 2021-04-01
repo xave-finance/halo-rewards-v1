@@ -2,12 +2,17 @@ const { ethers } = require('hardhat');
 
 const DECIMAL_PRECISION = 2;
 
-function roundTo2Decimals(numberToFormat){
+const roundTo2Decimals = (numberToFormat) => {
     return parseFloat(numberToFormat).toFixed(DECIMAL_PRECISION);
 }
 
-function formatEtherRoundTo2Decimals(numberToFormat){
+const formatEtherRoundTo2Decimals = (numberToFormat) => {
     return parseFloat(ethers.utils.formatEther(numberToFormat)).toFixed(DECIMAL_PRECISION);
 }
 
-module.exports = { roundTo2Decimals, formatEtherRoundTo2Decimals }
+const sleep = (delay) => new Promise((resolve) => {
+    console.log("\tSleeping for " + delay + " secs...");
+    setTimeout(resolve, delay * 1000)
+});
+
+module.exports = { roundTo2Decimals, formatEtherRoundTo2Decimals, sleep }
