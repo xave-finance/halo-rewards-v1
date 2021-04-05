@@ -9,7 +9,6 @@ npm install --save-dev hardhat
 ### Running Tests
 
 ```
-cd hardhat
 
 npm i
 

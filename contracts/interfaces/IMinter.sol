@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.6.0;
+pragma solidity ^0.6.12;
 pragma experimental ABIEncoderV2;
 
-
 interface IMinter {
-
     function depositByCollateralAddress(
         uint256 _collateralAmount,
         uint256 _numTokens,
@@ -16,12 +14,13 @@ interface IMinter {
         address _collateralAddress
     ) external;
 
-    function getTotalCollateralByCollateralAddress(
-        address _collateralAddress
-    ) external view returns(uint256);
+    function getTotalCollateralByCollateralAddress(address _collateralAddress)
+        external
+        view
+        returns (uint256);
 
     function getUserCollateralByCollateralAddress(
         address _user,
         address _collateralAddress
-    ) external view returns(uint256);
+    ) external view returns (uint256);
 }
