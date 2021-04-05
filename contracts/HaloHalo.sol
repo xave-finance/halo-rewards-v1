@@ -6,14 +6,22 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
-contract HaloChest is ERC20("HaloChest", "HALOHALO") {
+contract HaloHalo is ERC20("HaloHalo", "HALOHALO") {
     using SafeMath for uint256;
     IERC20 public halo;
+    uint256 public constant DECIMALS = 10**18;
 
     // Define the Halo token contract
     constructor(IERC20 _halo) public {
         halo = _halo;
     }
+
+    struct HaloHaloPrice {
+        uint256 lastHaloHaloUpdateTimestamp;
+        uint256 lastHaloHaloPrice;
+    }
+
+    HaloHaloPrice public latestHaloHaloPrice;
 
     // Stake HALOs for HALOHALOs.
     // Locks Halo and mints HALOHALO
@@ -45,5 +53,15 @@ contract HaloChest is ERC20("HaloChest", "HALOHALO") {
             _share.mul(halo.balanceOf(address(this))).div(totalShares);
         _burn(msg.sender, _share);
         halo.transfer(msg.sender, haloHaloAmount);
+    }
+
+    function updateHaloHaloPrice() public {
+        uint256 totalShares = totalSupply();
+        require(totalShares > 0, "No HALO supply");
+        uint256 haloHaloPrice = halo.balanceOf(address(this)).div(totalShares);
+        // unixtimestamp
+        latestHaloHaloPrice.lastHaloHaloUpdateTimestamp = now;
+        // ratio in wei
+        latestHaloHaloPrice.lastHaloHaloPrice = haloHaloPrice * DECIMALS;
     }
 }
