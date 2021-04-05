@@ -4,7 +4,7 @@
 
 <!-- Enter description of changes here. -->
 
-[Link to Jira Ticket](https://halodao.atlassian.net/browse/HDF-68)
+[Link to Jira Ticket](https://halodao.atlassian.net/browse/HDF-)
 
 ## How To Test
 
@@ -22,3 +22,4 @@
 - [ ] Code is readable and understandable; any unclear parts have explanations
 - [ ] UI/UX changes match the corresponding figma/other design resources, if applicable
 - [ ] I have successfully ran tests locally
+

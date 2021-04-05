@@ -1,4 +1,10 @@
 ### Halo Rewards Smart Contract
+### Quick Start
+Install hardhat
+```
+cd hardhat
+npm install --save-dev hardhat
+```
 
 ### Running Tests
 
