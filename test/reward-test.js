@@ -509,11 +509,26 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
     ).to.not.be.reverted;
 
     await expect(haloChestContract.updateHaloHaloPrice()).to.not.be.reverted;
-
     var { lastHaloHaloPrice } = await haloChestContract.latestHaloHaloPrice();
-
     // minted additional tokens to the contract simulating release of 20% HALO from the rewards contract. the release from the previous tests is
     expect(formatEther(lastHaloHaloPrice)).to.equal("110.0");
+  });
+
+  it("Computes estimated APY in HaloHalo Contract", async () => {
+    await expect(
+      haloTokenContract.mint(
+        haloChestContract.address,
+        parseEther(`${60000 * INITIAL_MINT}`)
+      )
+    ).to.not.be.reverted;
+
+    await sleep(5);
+    await haloChestContract.estimateHaloHaloAPY();
+
+    // expect 2%++ APY
+    expect(formatEther(await haloChestContract.APY())).to.equal(
+      "0.02075532724498918"
+    );
   });
 
   it("Send unclaimed vested rewards to HaloChest", async () => {

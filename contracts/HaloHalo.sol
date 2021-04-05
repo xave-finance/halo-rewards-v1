@@ -23,6 +23,8 @@ contract HaloHalo is ERC20("HaloHalo", "HALOHALO") {
 
     HaloHaloPrice public latestHaloHaloPrice;
 
+    uint256 public APY;
+
     // Stake HALOs for HALOHALOs.
     // Locks Halo and mints HALOHALO
     function enter(uint256 _amount) public {
@@ -62,6 +64,30 @@ contract HaloHalo is ERC20("HaloHalo", "HALOHALO") {
         // unixtimestamp
         latestHaloHaloPrice.lastHaloHaloUpdateTimestamp = now;
         // ratio in wei
-        latestHaloHaloPrice.lastHaloHaloPrice = haloHaloPrice * DECIMALS;
+        latestHaloHaloPrice.lastHaloHaloPrice = haloHaloPrice.mul(DECIMALS);
+    }
+
+    function estimateHaloHaloAPY() public returns (uint256) {
+        // get old halohalo values
+        uint256 oldHaloHaloPrice = latestHaloHaloPrice.lastHaloHaloPrice;
+        uint256 oldHaloHaloLastUpdateTimestamp =
+            latestHaloHaloPrice.lastHaloHaloUpdateTimestamp;
+
+        // update price
+        updateHaloHaloPrice();
+
+        // calculate interval changes
+        uint256 haloHaloPriceChange =
+            latestHaloHaloPrice.lastHaloHaloPrice.sub(oldHaloHaloPrice);
+
+        uint256 updateIntervalDuration =
+            now.sub(oldHaloHaloLastUpdateTimestamp);
+
+        //calculate ratio, pad decimal zeroes to support decimal values
+        uint256 APYDurationRatio =
+            updateIntervalDuration.mul(DECIMALS).div(31536000);
+        uint256 APYProjection = haloHaloPriceChange * APYDurationRatio;
+        // remove padding
+        APY = APYProjection.div(DECIMALS);
     }
 }
