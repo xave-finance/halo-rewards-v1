@@ -196,7 +196,7 @@ before(async () => {
   console.log("==========================================================\n\n");
 });
 
-describe("Check Contract Deployments", function () {
+describe("Check Contract Deployments", () => {
   it("Collateral ERC20 should be deployed and owner should have initial mint", async () => {
     expect(await collateralERC20Contract.symbol()).to.equal("collateral ERC20");
     expect(await collateralERC20Contract.name()).to.equal("collateral ERC20");
@@ -348,7 +348,7 @@ describe("When I deposit collateral ERC20 on the Minter dApp, I start to earn HA
   });
 });
 
-describe("When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO", function () {
+describe("When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO", () => {
   let depositTxTs;
   let withdrawalTxTs;
   let haloBal;
@@ -436,7 +436,7 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
   });
 });
 
-describe("Earn vesting rewards by staking HALO inside HaloChest", function () {
+describe("Earn vesting rewards by staking HALO inside HaloChest", () => {
   let ownerHaloBal;
   it("Deposit HALO tokens to HaloChest, receive xHALO", async () => {
     ownerHaloBal = await haloTokenContract.balanceOf(owner.address);
@@ -564,7 +564,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function () {
   });
 });
 
-describe("As an Admin, I can update AMM LP pool’s allocation points", function () {
+describe("As an Admin, I can update AMM LP pool’s allocation points", () => {
   const maxAllocationPoints = 10;
 
   it("AMM LP allocation points before", async () => {
@@ -605,7 +605,7 @@ describe("As an Admin, I can update AMM LP pool’s allocation points", function
   });
 });
 
-describe("As an Admin, I can update minter lp collateral allocation points", function () {
+describe("As an Admin, I can update minter lp collateral allocation points", () => {
   it("collateral ERC20 allocation points before", async () => {
     expect(
       (
@@ -678,7 +678,7 @@ describe("As an Admin, I can remove whitelisted AMM LP pool", function () {
   });
 });
 
-describe("As an Admin, I can remove whitelisted collateral type", function () {
+describe("As an Admin, I can remove whitelisted collateral type", () => {
   it("Should be valid collateral type", async () => {
     expect(
       await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
