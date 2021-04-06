@@ -1,5 +1,5 @@
 const { parseEther, formatEther } = require("@ethersproject/units");
-const { chai, expect, should } = require("chai");
+const { expect, should } = require("chai");
 const { BigNumber, Contract } = require("ethers");
 const { ethers } = require("hardhat");
 
@@ -11,7 +11,7 @@ let lpTokenContract2;
 let minterContract;
 let ubeContract;
 let haloTokenContract;
-let haloChestContract;
+let halohaloContract;
 let genesisTs;
 let epochLength;
 const DECIMALS = 10 ** 18;
@@ -32,9 +32,9 @@ const sleep = (delay) =>
 let expectedPerSecondHALOReward;
 
 const sumExp = (m, n) => {
-  const x = DECIMALS;
-  const s = 0;
-  for (const i = 0; i < n; i++) {
+  let x = DECIMALS;
+  let s = 0;
+  for (let i = 0; i < n; i++) {
     x = (x * m) / DECIMALS;
     s = s + x;
   }
@@ -122,9 +122,9 @@ before(async () => {
   );
   console.log();
 
-  const HaloChestContract = await ethers.getContractFactory("HaloHalo");
-  haloChestContract = await HaloChestContract.deploy(haloTokenContract.address);
-  await haloChestContract.deployed();
+  const HalohaloContract = await ethers.getContractFactory("HaloHalo");
+  halohaloContract = await HalohaloContract.deploy(haloTokenContract.address);
+  await halohaloContract.deployed();
   console.log("halohalo deployed");
 
   const MinterContract = await ethers.getContractFactory("Minter");
@@ -166,7 +166,7 @@ before(async () => {
   console.log("Rewards Contract deployed");
   console.log();
 
-  await rewardsContract.setHaloChest(haloChestContract.address);
+  await rewardsContract.setHaloChest(halohaloContract.address);
   console.log("Halo Chest set");
   console.log();
 
@@ -228,7 +228,7 @@ before(async () => {
   console.log("==========================================================\n\n");
 });
 
-describe("Check Contract Deployments", function() {
+describe("Check Contract Deployments", function () {
   it("Collateral ERC20 should be deployed and owner should have initial mint", async () => {
     expect(await collateralERC20Contract.symbol()).to.equal("collateral ERC20");
     expect(await collateralERC20Contract.name()).to.equal("collateral ERC20");
@@ -252,9 +252,9 @@ describe("Check Contract Deployments", function() {
     expect(await haloTokenContract.symbol()).to.equal("HALO");
     expect(await haloTokenContract.name()).to.equal("Halo");
   });
-  it("HaloChest should be deployed", async () => {
-    expect(await haloChestContract.symbol()).to.equal("HALOHALO");
-    expect(await haloChestContract.name()).to.equal("HaloHalo");
+  it("Halohalo should be deployed", async () => {
+    expect(await halohaloContract.symbol()).to.equal("HALOHALO");
+    expect(await halohaloContract.name()).to.equal("HaloHalo");
   });
   it("Rewards Contract should be deployed", async () => {
     expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10);
@@ -276,7 +276,7 @@ describe("Check Contract Deployments", function() {
   });
 });
 
-describe("When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards", function() {
+describe("When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards", function () {
   let depositTxTs = 0;
   let withdrawalTxTs = 0;
 
@@ -386,7 +386,7 @@ describe("When I deposit collateral ERC20 on the Minter dApp, I start to earn HA
   });
 });
 
-describe("When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO", function() {
+describe("When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO", function () {
   var depositTxTs;
   var withdrawalTxTs;
   var haloBal;
@@ -484,79 +484,81 @@ describe("When I supply liquidity to an AMM, I am able to receive my proportion 
   });
 });
 
-describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
+describe("Earn vesting rewards by staking HALO inside halohalo", function () {
   var ownerHaloBal;
-  it("Deposit HALO tokens to HaloChest, receive xHALO", async () => {
+  it("Deposit HALO tokens to halohalo, receive xHALO", async () => {
     ownerHaloBal = await haloTokenContract.balanceOf(owner.address);
-    console.log("OWNER BAL:", ownerHaloBal.toString());
-    await haloTokenContract.approve(haloChestContract.address, ownerHaloBal);
-    await expect(haloChestContract.enter(ownerHaloBal)).to.not.be.reverted;
+
+    await haloTokenContract.approve(halohaloContract.address, ownerHaloBal);
+    await expect(halohaloContract.enter(ownerHaloBal)).to.not.be.reverted;
   });
 
   it("Updates the current halohalo price in the contract", async () => {
-    await expect(haloChestContract.updateHaloHaloPrice()).to.not.be.reverted;
+    await expect(halohaloContract.updateHaloHaloPrice()).to.not.be.reverted;
 
-    var { lastHaloHaloPrice } = await haloChestContract.latestHaloHaloPrice();
+    var { lastHaloHaloPrice } = await halohaloContract.latestHaloHaloPrice();
 
     // equal to 1 since there is one halohalo per one halo in the contract
     expect(formatEther(lastHaloHaloPrice)).to.equal("1.0");
 
     await expect(
       haloTokenContract.mint(
-        haloChestContract.address,
+        halohaloContract.address,
         parseEther(`${60 * INITIAL_MINT}`)
       )
     ).to.not.be.reverted;
 
-    await expect(haloChestContract.updateHaloHaloPrice()).to.not.be.reverted;
-    var { lastHaloHaloPrice } = await haloChestContract.latestHaloHaloPrice();
+    await expect(halohaloContract.updateHaloHaloPrice()).to.not.be.reverted;
+    var { lastHaloHaloPrice } = await halohaloContract.latestHaloHaloPrice();
     // minted additional tokens to the contract simulating release of 20% HALO from the rewards contract. the release from the previous tests is
     expect(formatEther(lastHaloHaloPrice)).to.equal("110.0");
   });
 
   it("Computes estimated APY in HaloHalo Contract", async () => {
+    // minted additional tokens to the contract simulating release of 20% HALO from the rewards contract to establish an APY value
     await expect(
       haloTokenContract.mint(
-        haloChestContract.address,
+        halohaloContract.address,
         parseEther(`${60000 * INITIAL_MINT}`)
       )
     ).to.not.be.reverted;
 
+    // sleep for 5 for updateIntervalDuration
     await sleep(5);
-    await haloChestContract.estimateHaloHaloAPY();
+    await halohaloContract.estimateHaloHaloAPY();
 
     // expect 2%++ APY
-    expect(formatEther(await haloChestContract.APY())).to.equal(
+    expect(formatEther(await halohaloContract.APY())).to.equal(
       "0.02075532724498918"
     );
   });
 
-  it("Send unclaimed vested rewards to HaloChest", async () => {
+  it("Send unclaimed vested rewards to Halohalo", async () => {
     const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards();
     await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted;
     // TODO: Check value vested
   });
 
-  it("Claim staked HALO + bonus rewards from HaloChest and burn xHALO", async () => {
-    const haloInHaloChest = await haloTokenContract.balanceOf(
-      haloChestContract.address
+  it("Claim staked HALO + bonus rewards from Halohalo and burn xHALO", async () => {
+    const haloInHalohalo = await haloTokenContract.balanceOf(
+      halohaloContract.address
     );
 
-    const ownerXHalo = await haloChestContract.balanceOf(owner.address);
-    await haloChestContract.leave(ownerXHalo);
+    const ownerXHalo = await halohaloContract.balanceOf(owner.address);
+    await halohaloContract.leave(ownerXHalo);
 
     expect(await haloTokenContract.balanceOf(owner.address)).to.equal(
-      haloInHaloChest
+      haloInHalohalo
     );
     //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
   });
 
   it("HALO earned by User A > HALO earned by User B > HALO earned by User C", async () => {
     console.log(
-      "Current HALO balance in HaloChest:" +
+      "Current HALO balance in Halohalo:" +
         ethers.utils.parseEther(
           (
-            await haloTokenContract.balanceOf(haloChestContract.address)
+            await haloTokenContract.balanceOf(halohaloContract.address)
           ).toString()
         )
     );
@@ -576,18 +578,18 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
       ethers.utils.parseEther("100")
     );
 
-    console.log("100 HALO deposited by User A to HaloChest");
+    console.log("100 HALO deposited by User A to halohalo");
     await haloTokenContract
       .connect(addrs[0])
-      .approve(haloChestContract.address, ethers.utils.parseEther("100"));
-    await haloChestContract
+      .approve(halohaloContract.address, ethers.utils.parseEther("100"));
+    await halohaloContract
       .connect(addrs[0])
       .enter(ethers.utils.parseEther("100"));
 
     sleep(3);
 
     console.log(
-      "Releasing vested bonus tokens to HaloChest from Rewards contract"
+      "Releasing vested bonus tokens to halohalo from Rewards contract"
     );
     const currVestedHalo = (
       await rewardsContract.getUnclaimedVestingRewards()
@@ -595,39 +597,39 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
     console.log(currVestedHalo);
     await rewardsContract.releaseVestedRewards();
 
-    console.log("100 HALO deposited by User B to HaloChest");
+    console.log("100 HALO deposited by User B to halohalo");
     await haloTokenContract
       .connect(addrs[1])
-      .approve(haloChestContract.address, ethers.utils.parseEther("100"));
-    await haloChestContract
+      .approve(halohaloContract.address, ethers.utils.parseEther("100"));
+    await halohaloContract
       .connect(addrs[1])
       .enter(ethers.utils.parseEther("100"));
 
     sleep(3);
 
     console.log(
-      "Releasing vested bonus tokens to HaloChest from Rewards contract"
+      "Releasing vested bonus tokens to halohalo from Rewards contract"
     );
     await rewardsContract.releaseVestedRewards();
 
-    console.log("100 HALO deposited by User C to HaloChest");
+    console.log("100 HALO deposited by User C to halohalo");
     await haloTokenContract
       .connect(addrs[2])
-      .approve(haloChestContract.address, ethers.utils.parseEther("100"));
-    await haloChestContract
+      .approve(halohaloContract.address, ethers.utils.parseEther("100"));
+    await halohaloContract
       .connect(addrs[2])
       .enter(ethers.utils.parseEther("100"));
-    console.log("All users leave HaloChest");
+    console.log("All users leave halohalo");
 
-    await haloChestContract
+    await halohaloContract
       .connect(addrs[0])
-      .leave(await haloChestContract.balanceOf(addrs[0].address));
-    await haloChestContract
+      .leave(await halohaloContract.balanceOf(addrs[0].address));
+    await halohaloContract
       .connect(addrs[1])
-      .leave(await haloChestContract.balanceOf(addrs[1].address));
-    await haloChestContract
+      .leave(await halohaloContract.balanceOf(addrs[1].address));
+    await halohaloContract
       .connect(addrs[2])
-      .leave(await haloChestContract.balanceOf(addrs[2].address));
+      .leave(await halohaloContract.balanceOf(addrs[2].address));
 
     console.log("Final HALO balances:");
     console.log(
@@ -651,7 +653,7 @@ describe("Earn vesting rewards by staking HALO inside HaloChest", function() {
   });
 });
 
-describe("As an Admin, I can update AMM LP pool’s allocation points", function() {
+describe("As an Admin, I can update AMM LP pool’s allocation points", function () {
   const maxAllocationPoints = 10;
 
   it("AMM LP allocation points before", async () => {
@@ -692,7 +694,7 @@ describe("As an Admin, I can update AMM LP pool’s allocation points", function
   });
 });
 
-describe("As an Admin, I can update minter lp collateral allocation points", function() {
+describe("As an Admin, I can update minter lp collateral allocation points", function () {
   it("collateral ERC20 allocation points before", async () => {
     expect(
       (
@@ -737,7 +739,7 @@ describe("As an Admin, I can update minter lp collateral allocation points", fun
   });
 });
 
-describe("As an Admin, I can remove whitelisted AMM LP pool", function() {
+describe("As an Admin, I can remove whitelisted AMM LP pool", function () {
   it("Should be valid amm lp", async () => {
     expect(
       await rewardsContract.isValidAmmLp(lpTokenContract.address)
@@ -765,7 +767,7 @@ describe("As an Admin, I can remove whitelisted AMM LP pool", function() {
   });
 });
 
-describe("As an Admin, I can remove whitelisted collateral type", function() {
+describe("As an Admin, I can remove whitelisted collateral type", function () {
   it("Should be valid collateral type", async () => {
     expect(
       await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
