@@ -1,6 +1,6 @@
 import { parseEther, formatEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, waffle } from 'hardhat'
 
 let contractCreatorAccount
 let rewardsContract
@@ -16,7 +16,7 @@ let epochLength
 const DECIMALS = 10 ** 18
 const BPS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
-const INITIAL_USER_HALO_MINT = '550000000000000002000000'
+const INITIAL_USER_HALO_MINT = '550000000000000002000000' // got from the previous contract
 let owner
 let addr1
 let addr2
@@ -194,8 +194,7 @@ describe('HALOHALO Contract', async () => {
     )
 
     // Mint halo for owner
-    await expect(haloTokenContract.mint(owner.address, INITIAL_USER_HALO_MINT))
-      .to.not.be.reverted
+    await haloTokenContract.mint(owner.address, INITIAL_USER_HALO_MINT)
 
     console.log(
       INITIAL_USER_HALO_MINT + ' minted to user contract ' + owner.address
@@ -259,6 +258,13 @@ describe('HALOHALO Contract', async () => {
 
   describe('Earn vesting rewards by staking HALO inside halohalo', function () {
     var ownerHaloBal
+
+    it('Reverts if there is no HaloHalo supply', async () => {
+      await expect(halohaloContract.updateHaloHaloPrice()).to.be.revertedWith(
+        'No HALOHALO supply'
+      )
+    })
+
     it('Deposit HALO tokens to halohalo, receive xHALO', async () => {
       ownerHaloBal = await haloTokenContract.balanceOf(owner.address)
       await haloTokenContract.approve(halohaloContract.address, ownerHaloBal)
