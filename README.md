@@ -1,17 +1,15 @@
 ### Halo Rewards Smart Contract
 ### Quick Start
 Install hardhat
-```
-cd hardhat
-npm install --save-dev hardhat
+```bash
+cd halo-rewards
+yarn install
 ```
 
 ### Running Tests
 
-```
-
+```bash
 npm i
-
 npx hardhat test
 ```
 
