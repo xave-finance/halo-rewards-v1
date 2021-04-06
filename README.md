@@ -9,8 +9,8 @@ yarn install
 ### Running Tests
 
 ```bash
-npm i
-npx hardhat test
+yarn install
+yarn run test
 ```
 
 ### Using dev scripts
