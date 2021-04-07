@@ -10,6 +10,8 @@ contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
   using SafeMath for uint256;
   IERC20 public halo;
   uint256 public constant DECIMALS = 10**18;
+  uint256 public APY;
+  HaloHaloPrice public latestHaloHaloPrice;
 
   // Define the Halo token contract
   constructor(IERC20 _halo) public {
@@ -21,9 +23,10 @@ contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
     uint256 lastHaloHaloPrice;
   }
 
-  HaloHaloPrice public latestHaloHaloPrice;
-
-  uint256 public APY;
+  event HaloHaloPriceUpdated(
+    uint256 lastHaloHaloUpdateTimestamp,
+    uint256 lastHaloHaloPrice
+  );
 
   // Stake HALOs for HALOHALOs.
   // Locks Halo and mints HALOHALO
@@ -35,18 +38,18 @@ contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
     // If no HALOHALO exists, mint it 1:1 to the amount put in
     if (totalShares == 0 || totalHalo == 0) {
       _mint(msg.sender, _amount);
-    }
-    // Calculate and mint the amount of HALOHALO the Halo is worth. The ratio will change overtime, as HALOHALO is burned/minted and Halo deposited from LP rewards.
-    else {
+    } else {
+      // Calculate and mint the amount of HALOHALO the Halo is worth. The ratio will change overtime, as HALOHALO is burned/minted and Halo deposited from LP rewards.
       uint256 haloHaloAmount = _amount.mul(totalShares).div(totalHalo);
       _mint(msg.sender, haloHaloAmount);
     }
+
     // Lock the Halo in the contract
     halo.transferFrom(msg.sender, address(this), _amount);
   }
 
   // Claim HALOs from HALOHALOs.
-  // Unclocks the staked + gained Halo and burns HALOHALO
+  // Unlocks the staked + gained Halo and burns HALOHALO
   function leave(uint256 _share) public {
     // Gets the amount of HALOHALO in existence
     uint256 totalShares = totalSupply();
@@ -65,6 +68,12 @@ contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
     latestHaloHaloPrice.lastHaloHaloUpdateTimestamp = now;
     // ratio in wei
     latestHaloHaloPrice.lastHaloHaloPrice = haloHaloPrice.mul(DECIMALS);
+
+    // using the newly set values to avoid timestamp differences
+    emit HaloHaloPriceUpdated(
+      latestHaloHaloPrice.lastHaloHaloUpdateTimestamp,
+      latestHaloHaloPrice.lastHaloHaloPrice
+    );
   }
 
   function estimateHaloHaloAPY() public returns (uint256) {
@@ -82,10 +91,10 @@ contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
 
     uint256 updateIntervalDuration = now.sub(oldHaloHaloLastUpdateTimestamp);
 
-    //calculate ratio, pad decimal zeroes to support decimal values
+    // calculate ratio by dividing it to number of seconds in a year, pad decimal zeroes to support decimal values
     uint256 APYDurationRatio =
       updateIntervalDuration.mul(DECIMALS).div(31536000);
-    uint256 APYProjection = haloHaloPriceChange * APYDurationRatio;
+    uint256 APYProjection = haloHaloPriceChange.mul(APYDurationRatio);
     // remove padding
     APY = APYProjection.div(DECIMALS);
   }

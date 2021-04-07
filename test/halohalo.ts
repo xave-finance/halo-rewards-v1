@@ -1,6 +1,7 @@
 import { parseEther, formatEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
-import { ethers, waffle } from 'hardhat'
+import { ethers } from 'hardhat'
+import { BigNumber } from 'ethers'
 
 let contractCreatorAccount
 let rewardsContract
@@ -272,7 +273,10 @@ describe('HALOHALO Contract', async () => {
     })
 
     it('Updates the current halohalo price in the contract', async () => {
-      await expect(halohaloContract.updateHaloHaloPrice()).to.not.be.reverted
+      await expect(halohaloContract.updateHaloHaloPrice()).to.emit(
+        halohaloContract,
+        'HaloHaloPriceUpdated'
+      ).to.be.not.reverted
 
       var { lastHaloHaloPrice } = await halohaloContract.latestHaloHaloPrice()
 
@@ -313,7 +317,7 @@ describe('HALOHALO Contract', async () => {
 
     it('Send unclaimed vested rewards to Halohalo', async () => {
       const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards()
-      console.log(currVestedHalo.toString())
+      expect(currVestedHalo).to.not.equal(BigNumber.from(0))
       await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted
       // TODO: Check value vested
     })
