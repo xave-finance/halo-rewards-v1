@@ -210,7 +210,7 @@ describe('HALOHALO Contract', async () => {
     )
   })
 
-  describe('Check Contract Deployments', function () {
+  describe('Check Contract Deployments', () => {
     it('Collateral ERC20 should be deployed and owner should have initial mint', async () => {
       expect(await collateralERC20Contract.symbol()).to.equal(
         'collateral ERC20'
@@ -257,7 +257,7 @@ describe('HALOHALO Contract', async () => {
     })
   })
 
-  describe('Earn vesting rewards by staking HALO inside halohalo', function () {
+  describe('Earn vesting rewards by staking HALO inside halohalo', () => {
     var ownerHaloBal
 
     it('Reverts if there is no HaloHalo supply', async () => {

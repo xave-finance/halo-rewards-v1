@@ -232,7 +232,7 @@ describe('Rewards Contract', async () => {
     )
   })
 
-  describe('Check Contract Deployments', function () {
+  describe('Check Contract Deployments', () => {
     it('Collateral ERC20 should be deployed and owner should have initial mint', async () => {
       expect(await collateralERC20Contract.symbol()).to.equal(
         'collateral ERC20'
@@ -282,7 +282,7 @@ describe('Rewards Contract', async () => {
     })
   })
 
-  describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', function () {
+  describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
     let depositTxTs = 0
     let withdrawalTxTs = 0
 
@@ -393,7 +393,7 @@ describe('Rewards Contract', async () => {
     })
   })
 
-  describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', function () {
+  describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', () => {
     var depositTxTs
     var withdrawalTxTs
     var haloBal
@@ -496,7 +496,7 @@ describe('Rewards Contract', async () => {
     })
   })
 
-  describe('Earn vesting rewards by staking HALO inside halohalo', function () {
+  describe('Earn vesting rewards by staking HALO inside halohalo', () => {
     it('Send unclaimed vested rewards to Halohalo', async () => {
       const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards()
       await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted
@@ -504,7 +504,7 @@ describe('Rewards Contract', async () => {
     })
   })
 
-  describe('As an Admin, I can update AMM LP pool’s allocation points', function () {
+  describe('As an Admin, I can update AMM LP pool’s allocation points', () => {
     const maxAllocationPoints = 10
 
     it('AMM LP allocation points before', async () => {
@@ -545,7 +545,7 @@ describe('Rewards Contract', async () => {
     })
   })
 
-  describe('As an Admin, I can update minter lp collateral allocation points', function () {
+  describe('As an Admin, I can update minter lp collateral allocation points', () => {
     it('collateral ERC20 allocation points before', async () => {
       expect(
         (
@@ -590,7 +590,7 @@ describe('Rewards Contract', async () => {
     })
   })
 
-  describe('As an Admin, I can remove whitelisted AMM LP pool', function () {
+  describe('As an Admin, I can remove whitelisted AMM LP pool', () => {
     it('Should be valid amm lp', async () => {
       expect(
         await rewardsContract.isValidAmmLp(lpTokenContract.address)
@@ -618,7 +618,7 @@ describe('Rewards Contract', async () => {
     })
   })
 
-  describe('As an Admin, I can remove whitelisted collateral type', function () {
+  describe('As an Admin, I can remove whitelisted collateral type', () => {
     it('Should be valid collateral type', async () => {
       expect(
         await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
