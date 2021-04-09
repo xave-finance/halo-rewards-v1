@@ -146,7 +146,7 @@ describe('Rewards Contract', async () => {
       (parseFloat(ethers.utils.formatEther(startingRewards)) / epochLength) *
       0.4
     console.log('expectedPerSecondHALOReward: ', expectedPerSecondHALOReward)
-    genesisTs = Math.floor(Date.now() / 1000)
+    genesisBlock = Math.floor(Date.now() / 1000)
     const minterLpPools = [[collateralERC20Contract.address, 10]]
     const ammLpPools = [[lpTokenContract.address, 10]]
 
@@ -159,7 +159,7 @@ describe('Rewards Contract', async () => {
       ammLpRewardsRatio, //in bps, multiplied by 10^4
       vestingRewardsRatio, //in bps, multiplied by 10^4
       minterContract.address,
-      genesisTs,
+      genesisBlock,
       minterLpPools,
       ammLpPools
     )

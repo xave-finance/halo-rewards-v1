@@ -100,13 +100,9 @@ contract Rewards is Ownable {
     /// @notice address of the halo erc20 token
     address public haloTokenAddress;
     /// @notice timestamp of rewards genesis
-    uint256 public genesisTs;
+    uint256 public genesisBlock;
     /// @notice rewards allocated for the first month
     uint256 public startingRewards;
-    /// @notice decay base
-    uint256 public decayBase; //multiply fraction by 10^18, keeps decimals consistent and gives enough entropy for more precision
-    /// @notice length of a month = 30*24*60*60
-    uint256 public epochLength;
     /// @notice percentage of rewards allocated to minter Lps
     uint256 public minterLpRewardsRatio; //in bps, multiply fraction by 10^4
     /// @notice percentage of rewards allocated to minter Amm Lps
@@ -162,32 +158,30 @@ contract Rewards is Ownable {
     /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
     /// @param _vestingRewardsRatio percentage of rewards allocated to stakers in bps
     /// @param _minter address of the minter contract
-    /// @param _genesisTs timestamp of rewards genesis
+    /// @param _genesisBlock timestamp of rewards genesis
     /// @param _minterLpPools info of whitelisted minter Lp pools at genesis
     /// @param _ammLpPools info of whitelisted amm Lp pools at genesis
     constructor(
         address _haloTokenAddress,
         uint256 _startingRewards,
-        uint256 _decayBase, //multiplied by 10^18
         uint256 _epochLength,
         uint256 _minterLpRewardsRatio, //in bps, multiplied by 10^4
         uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
         uint256 _vestingRewardsRatio, //in bps, multiplied by 10^4
         address _minter,
-        uint256 _genesisTs,
+        uint256 _genesisBlock,
         Pool[] memory _minterLpPools,
         Pool[] memory _ammLpPools
     ) public {
         haloTokenAddress = _haloTokenAddress;
         startingRewards = _startingRewards;
-        decayBase = _decayBase;
         epochLength = _epochLength;
         minterLpRewardsRatio = _minterLpRewardsRatio;
         ammLpRewardsRatio = _ammLpRewardsRatio;
         vestingRewardsRatio = _vestingRewardsRatio;
         minterContract = _minter;
-        genesisTs = _genesisTs;
-        lastHaloVestRewardTs = genesisTs;
+        genesisBlock = _genesisBlock;
+        lastHaloVestRewardTs = genesisBlock;
         for (uint8 i = 0; i < _minterLpPools.length; i++) {
             addMinterCollateralType(
                 _minterLpPools[i].poolAddress,
@@ -532,11 +526,11 @@ contract Rewards is Ownable {
     /// @dev view function to check unclaimed rewards for stakers since last withdrawal to vesting contract
     /// @return unclaimed rewards for stakers
     function getUnclaimedVestingRewards() public view returns (uint256) {
-        uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
+        uint256 nMonths = (now.sub(genesisBlock)).div(epochLength);
         uint256 accMonthlyHalo =
             startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
         uint256 diffTime =
-            ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS))
+            ((now.sub(genesisBlock.add(epochLength.mul(nMonths)))).mul(DECIMALS))
                 .div(epochLength);
         uint256 thisMonthsReward =
             startingRewards.mul(exp(decayBase, nMonths + 1)).div(DECIMALS);
@@ -666,7 +660,7 @@ contract Rewards is Ownable {
             ammLpPools[_lpAddress].whitelisted == false,
             "AMM LP Pool already added"
         );
-        uint256 lastRewardTs = now > genesisTs ? now : genesisTs;
+        uint256 lastRewardTs = now > genesisBlock ? now : genesisBlock;
         totalAmmLpAllocs = totalAmmLpAllocs.add(_allocPoint);
 
         //add lp to ammLpPools
@@ -691,7 +685,7 @@ contract Rewards is Ownable {
             minterLpPools[_collateralAddress].whitelisted == false,
             "Collateral type already added"
         );
-        uint256 lastRewardTs = now > genesisTs ? now : genesisTs;
+        uint256 lastRewardTs = now > genesisBlock ? now : genesisBlock;
         totalMinterLpAllocs = totalMinterLpAllocs.add(_allocPoint);
 
         //add lp to ammLpPools
@@ -740,11 +734,11 @@ contract Rewards is Ownable {
     /// @dev releases unclaimed vested rewards for stakers for extra bonus
     function releaseVestedRewards() public onlyOwner {
         require(now > lastHaloVestRewardTs, "now<lastHaloVestRewardTs");
-        uint256 nMonths = (now.sub(genesisTs)).div(epochLength);
+        uint256 nMonths = (now.sub(genesisBlock)).div(epochLength);
         uint256 accMonthlyHalo =
             startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
         uint256 diffTime =
-            ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS))
+            ((now.sub(genesisBlock.add(epochLength.mul(nMonths)))).mul(DECIMALS))
                 .div(epochLength);
         require(
             diffTime < epochLength.mul(DECIMALS),
@@ -778,10 +772,10 @@ contract Rewards is Ownable {
 
     /// @notice set genesis timestamp
     /// @dev set genesis timestamp
-    /// @param _genesisTs genesis timestamp
-    function setGenesisTs(uint256 _genesisTs) public onlyOwner {
-        require(now < genesisTs, "Already initialized");
-        genesisTs = _genesisTs;
+    /// @param _genesisBlock genesis timestamp
+    function setGenesisBlock(uint256 _genesisBlock) public onlyOwner {
+        require(now < genesisBlock, "Already initialized");
+        genesisBlock = _genesisBlock;
     }
 
     /****************************************
@@ -921,34 +915,29 @@ contract Rewards is Ownable {
     /// @param _from last timestamp when rewards were updated
     /// @return unclaimed rewards since last update
     function calcReward(uint256 _from) internal view returns (uint256) {
-        uint256 nMonths = (_from.sub(genesisTs)).div(epochLength);
-        uint256 accMonthlyHalo =
-            startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
-        uint256 diffTime =
-            ((_from.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS))
-                .div(epochLength);
+        uint256 nMonths = (_from.sub(genesisBlock)).div(epochLength);
+        // uint256 accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
+        // uint256 diffTime = ((_from.sub(genesisBlock.add(epochLength.mul(nMonths)))).mul(DECIMALS))
+        //         .div(epochLength);
 
-        uint256 thisMonthsReward =
-            startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
-        uint256 tillFrom =
-            (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
+        // uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
+        // uint256 tillFrom = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
 
-        nMonths = (now.sub(genesisTs)).div(epochLength);
-        accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(
-            DECIMALS
-        );
-        diffTime = (
-            (now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)
-        )
-            .div(epochLength);
+        // nMonths = (now.sub(genesisBlock)).div(epochLength);
+        // accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
+        
+        // diffTime = ((now.sub(genesisBlock.add(epochLength.mul(nMonths)))).mul(DECIMALS))
+        //     .div(epochLength);
 
-        thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(
-            DECIMALS
-        );
-        uint256 tillNow =
-            (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
+        // thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(
+        //     DECIMALS
+        // );
 
-        return tillNow.sub(tillFrom);
+        // uint256 tillNow = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
+
+        // return tillNow.sub(tillFrom);
+
+        return nMonths.mul(1000);
     }
 
     function exp(uint256 m, uint256 n) internal pure returns (uint256) {

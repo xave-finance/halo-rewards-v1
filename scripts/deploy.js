@@ -1,5 +1,7 @@
 const hre = require('hardhat')
 const ethers = hre.ethers
+const web3 = require('web3')
+// const Eth = require('web3-eth')
 
 const BPS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
@@ -49,6 +51,8 @@ const main = async () => {
   const minterLpRewardsRatio = 0.4 * BPS
   const ammLpRewardsRatio = 0.4 * BPS
   const vestingRewardsRatio = 0.2 * BPS
+
+  const web3 = new Web3(
   const genesisTs = Math.floor(Date.now() / 1000)
   const minterLpPools = [[collateralERC20Contract.address, 10]]
 
