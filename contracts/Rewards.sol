@@ -99,10 +99,12 @@ contract Rewards is Ownable {
 
     /// @notice address of the halo erc20 token
     address public haloTokenAddress;
-    /// @notice timestamp of rewards genesis
+    /// @notice block number of rewards genesis
     uint256 public genesisBlock;
     /// @notice rewards allocated for the first month
     uint256 public startingRewards;
+    /// @notice length of a month = 30*24*60*60
+    uint256 public epochLength;
     /// @notice percentage of rewards allocated to minter Lps
     uint256 public minterLpRewardsRatio; //in bps, multiply fraction by 10^4
     /// @notice percentage of rewards allocated to minter Amm Lps
@@ -148,11 +150,43 @@ contract Rewards is Ownable {
      *           PUBLIC FUNCTIONS           *
      ****************************************/
 
+    function monthlyHalo() public view returns (uint256) {
+        return startingRewards.mul(sumExp(1, nMonths())).div(DECIMALS);
+    }
+
+    function thisMonthsReward() public view returns (uint256) {
+        return startingRewards.mul(exp(1, nMonths() + 1)).div(DECIMALS);
+    }
+
+    function accHalo(uint256 diffTime) public view returns (uint256) {
+        require(diffTime > 0, "Invalid diff time");
+        uint256 accMonthlyHalo = monthlyHalo();
+        return (diffTime.mul(thisMonthsReward()).div(DECIMALS)).add(accMonthlyHalo);
+    }
+
+    function unclaimed() public view returns (uint256) {
+        return unclaimed(diffTime());
+    }
+
+    function unclaimed(uint256 diffTime) public view returns (uint256) {
+        require(diffTime > 0, "Invalid diff time");
+        uint256 accHalo = accHalo(diffTime);
+        return (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
+    }
+
+    function nMonths() public view returns (uint256) {
+        return (now.sub(genesisBlock)).div(epochLength);
+    }
+
+    function diffTime() public view returns (uint256) {
+        return ((now.sub(genesisBlock.add(epochLength.mul(nMonths())))).mul(DECIMALS))
+                .div(epochLength);
+    }
+
     /// @notice initiates the contract with predefined params
     /// @dev initiates the contract with predefined params
     /// @param _haloTokenAddress address of the halo erc20 token
     /// @param _startingRewards rewards allocated for the first month
-    /// @param _decayBase decay base
     /// @param _epochLength length of a month = 30*24*60*60
     /// @param _minterLpRewardsRatio percentage of rewards allocated to minter Lps in bps
     /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
@@ -181,7 +215,7 @@ contract Rewards is Ownable {
         vestingRewardsRatio = _vestingRewardsRatio;
         minterContract = _minter;
         genesisBlock = _genesisBlock;
-        lastHaloVestRewardTs = genesisBlock;
+        lastHaloVestRewardTs = genesisBlock; // check this
         for (uint8 i = 0; i < _minterLpPools.length; i++) {
             addMinterCollateralType(
                 _minterLpPools[i].poolAddress,
@@ -265,6 +299,7 @@ contract Rewards is Ownable {
             IMinter(minterContract).getTotalCollateralByCollateralAddress(
                 _collateralAddress
             );
+
         if (minterCollateralSupply == 0) {
             pool.lastRewardTs = now;
             return;
@@ -344,7 +379,6 @@ contract Rewards is Ownable {
         require(user.amount >= _amount, "Error: Not enough balance");
 
         updateAmmRewardPool(_lpAddress);
-
         withdrawUnclaimedRewards(user, pool, msg.sender);
 
         subtractAmountUpdateRewardDebtForUserForPoolTokens(
@@ -413,7 +447,6 @@ contract Rewards is Ownable {
         require(user.amount >= _amount, "Error: Not enough balance");
 
         updateMinterRewardPool(_collateralAddress);
-
         withdrawUnclaimedRewards(user, pool, _account);
 
         subtractAmountUpdateRewardDebtAndForMinter(
@@ -526,18 +559,10 @@ contract Rewards is Ownable {
     /// @dev view function to check unclaimed rewards for stakers since last withdrawal to vesting contract
     /// @return unclaimed rewards for stakers
     function getUnclaimedVestingRewards() public view returns (uint256) {
-        uint256 nMonths = (now.sub(genesisBlock)).div(epochLength);
-        uint256 accMonthlyHalo =
-            startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
-        uint256 diffTime =
-            ((now.sub(genesisBlock.add(epochLength.mul(nMonths)))).mul(DECIMALS))
+        uint256 diffTime = (now.sub(genesisBlock.add(epochLength.mul(nMonths()))).mul(DECIMALS))
                 .div(epochLength);
-        uint256 thisMonthsReward =
-            startingRewards.mul(exp(decayBase, nMonths + 1)).div(DECIMALS);
-        uint256 accHalo =
-            (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-        uint256 unclaimed =
-            (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
+
+        uint256 unclaimed = unclaimed(diffTime);
         return unclaimed;
     }
 
@@ -734,22 +759,20 @@ contract Rewards is Ownable {
     /// @dev releases unclaimed vested rewards for stakers for extra bonus
     function releaseVestedRewards() public onlyOwner {
         require(now > lastHaloVestRewardTs, "now<lastHaloVestRewardTs");
-        uint256 nMonths = (now.sub(genesisBlock)).div(epochLength);
-        uint256 accMonthlyHalo =
-            startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
+        uint256 accMonthlyHalo = monthlyHalo();
+            
         uint256 diffTime =
-            ((now.sub(genesisBlock.add(epochLength.mul(nMonths)))).mul(DECIMALS))
+            (now.sub(genesisBlock.add(epochLength.mul(nMonths()))).mul(DECIMALS))
                 .div(epochLength);
         require(
             diffTime < epochLength.mul(DECIMALS),
             "diffTime > epochLength.mul(DECIMALS)"
         );
-        uint256 thisMonthsReward =
-            startingRewards.mul(exp(decayBase, nMonths + 1)).div(DECIMALS);
-        uint256 accHalo =
-            (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-        uint256 unclaimed =
-            (accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
+
+        uint256 thisMonthsReward = thisMonthsReward();
+        uint256 accHalo = accHalo(diffTime);
+        uint256 unclaimed = unclaimed(diffTime);
+            
         vestingRewardsDebt = accHalo.mul(vestingRewardsRatio).div(BPS);
         safeHaloTransfer(haloChestContract, unclaimed);
         emit VestedRewardsReleasedEvent(unclaimed, now);
@@ -891,53 +914,12 @@ contract Rewards is Ownable {
         claimedHalo[_to] = claimedHalo[_to].add(_amount);
     }
 
-    ///
-    /// Calculates reward since last update timestamp based on the decay function
-    /// Calculation works as follows:
-    /// Rewards since last update = 1. Rewards since the genesis - 2. Rewards since the genesis till last update
-    /// 1. Rewards since the genesis
-    ///     Number of complete months since genesis = (timestamp_current - timestamp_genesis) / month_length
-    ///     Rewards since the genesis = Total rewards till end of last month + reward since end of last month
-    ///     I.  Total rewards till end of last month = ( startingRewards * ∑ decayBase ^ n )
-    ///     II.  Reward since end of last month = (timediff since end of last month * this month's reward) / (Length of month)
-    ///
-    /// 2. Rewards since the genesis till last update
-    ///     Number of complete months since genesis till last update = (timestamp_last - timestamp_genesis) / month_length
-    ///     Rewards since the genesis till last update = Total rewards till end of last month before last update
-    ///                                                  + reward since end of last month till last update
-    ///     I.  Total rewards till end of last month before last update = ( startingRewards * ∑ decayBase ^ n )
-    ///     II.  Reward since end of last month till last update = (timediff since end of last month before last update * that month's reward) / (Length of month)
-    ///
-    ///
-    ///
     /// @notice calculates the unclaimed rewards for last timestamp
     /// @dev calculates the unclaimed rewards for last timestamp
     /// @param _from last timestamp when rewards were updated
     /// @return unclaimed rewards since last update
     function calcReward(uint256 _from) internal view returns (uint256) {
-        uint256 nMonths = (_from.sub(genesisBlock)).div(epochLength);
-        // uint256 accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
-        // uint256 diffTime = ((_from.sub(genesisBlock.add(epochLength.mul(nMonths)))).mul(DECIMALS))
-        //         .div(epochLength);
-
-        // uint256 thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
-        // uint256 tillFrom = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-
-        // nMonths = (now.sub(genesisBlock)).div(epochLength);
-        // accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
-        
-        // diffTime = ((now.sub(genesisBlock.add(epochLength.mul(nMonths)))).mul(DECIMALS))
-        //     .div(epochLength);
-
-        // thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(
-        //     DECIMALS
-        // );
-
-        // uint256 tillNow = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-
-        // return tillNow.sub(tillFrom);
-
-        return nMonths.mul(1000);
+        return nMonths().mul(1000);
     }
 
     function exp(uint256 m, uint256 n) internal pure returns (uint256) {
