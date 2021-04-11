@@ -107,8 +107,7 @@ describe('HALOHALO Contract', async () => {
     const RewardsContract = await ethers.getContractFactory('Rewards')
     const startingRewards = ethers.utils.parseEther('7500000')
     const decayBase = ethers.utils.parseEther('0.813')
-    // epochLength = 2629800
-    epochLength = 60
+    epochLength = 30 * 24 * 60 * 5
     console.log('BPS = ', BPS)
     const minterLpRewardsRatio = 0.4 * BPS
     const ammLpRewardsRatio = 0.4 * BPS
@@ -125,7 +124,6 @@ describe('HALOHALO Contract', async () => {
     rewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
       startingRewards,
-      decayBase, //multiplied by 10^18
       epochLength,
       minterLpRewardsRatio, //in bps, multiplied by 10^4
       ammLpRewardsRatio, //in bps, multiplied by 10^4

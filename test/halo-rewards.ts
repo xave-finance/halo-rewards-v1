@@ -1,14 +1,4 @@
 import { parseEther, formatEther } from 'ethers/lib/utils'
-import { expect } from 'chai'
-import { ethers } from 'hardhat'
-
-// const {
-//   BN,
-//   expectEvent,
-//   expectRevert,
-//   time,
-//   constants: { ZERO_ADDRESS }
-// } = require("@openzeppelin/test-helpers")
 
 import {
   BN,
@@ -16,7 +6,9 @@ import {
   expectRevert,
   time,
 } from "@openzeppelin/test-helpers"
-import { Z_FILTERED } from 'node:zlib'
+
+import { expect } from 'chai'
+import { ethers } from 'hardhat'
 
 let contractCreatorAccount
 let rewardsContract
@@ -694,13 +686,17 @@ describe('Rewards Contract', async () => {
   })
 
   describe('Rewards helper functions', () => {
-    it.only('should calc rewards', async () => {
+    it('should calc rewards', async () => {
       let currentBlock = await ethers.provider.getBlockNumber();
       console.log(`Current block ${currentBlock}`);
 
-      const actual = await rewardsContract.calcReward(0)
+      const actual = await rewardsContract.calcReward(currentBlock - 1)
       //await time.advanceBlock()
-      console.log(actual)
+      const expected = 29 // new BN('29')
+
+      // big number assertion failing form some reason.
+      // expect(expected.eq(ethers.BigNumber.from('29'))).to.equal(true);
+      expect(actual).to.equal(expected)
     })
 
     it.skip('should get monthly halo', async () => {
@@ -708,12 +704,12 @@ describe('Rewards Contract', async () => {
       console.log(actual)
     })
 
-    it.only('should get nMonths', async () => {
+    it.skip('should get nMonths', async () => {
       const actual = await rewardsContract.nMonths()
       console.log(actual)
     })
 
-    it.only('should get diffTime', async () => {
+    it.skip('should get diffTime', async () => {
       const actual = await rewardsContract.diffTime()
       console.log(actual)
     })

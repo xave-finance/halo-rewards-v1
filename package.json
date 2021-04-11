@@ -12,14 +12,15 @@
     "chai": "^4.3.3",
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.0.31",
-    "hardhat": "^2.1.2"
+    "hardhat": "^2.1.2",
+    "@openzeppelin/test-helpers": "^0.5.10",
+    "@types/chai": "^4.2.16"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.1",
-    "@openzeppelin/test-helpers": "^0.5.10",
-    "@types/chai": "^4.2.16",
     "@types/mocha": "^8.2.2",
     "@types/node": "^14.14.37",
+    "chai-bignumber": "^3.0.0",
     "dotenv": "^8.2.0",
     "hardhat-gas-reporter": "^1.0.4",
     "ts-node": "^9.1.1",
