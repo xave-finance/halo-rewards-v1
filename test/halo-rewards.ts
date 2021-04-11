@@ -2,6 +2,21 @@ import { parseEther, formatEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
+// const {
+//   BN,
+//   expectEvent,
+//   expectRevert,
+//   time,
+//   constants: { ZERO_ADDRESS }
+// } = require("@openzeppelin/test-helpers")
+
+import {
+  BN,
+  expectEvent,
+  expectRevert,
+  time,
+} from "@openzeppelin/test-helpers"
+
 let contractCreatorAccount
 let rewardsContract
 let collateralERC20Contract
@@ -11,7 +26,7 @@ let minterContract
 let ubeContract
 let haloTokenContract
 let halohaloContract
-let genesisTs
+const genesisBlock = 0
 let epochLength
 const DECIMALS = 10 ** 18
 const BPS = 10 ** 4
@@ -30,32 +45,14 @@ const sleep = (delay) =>
 
 let expectedPerSecondHALOReward
 
-const sumExp = (m, n) => {
-  let x = DECIMALS
-  let s = 0
-  for (let i = 0; i < n; i++) {
-    x = (x * m) / DECIMALS
-    s = s + x
-  }
-  return s
-}
+// const advanceBlock = async () => {
+//   await ethers.provider.send({
+//       jsonrpc: '2.0',
+//       method: 'evm_increaseTime',
+//       id: new Date().getTime()
+//     })
+//   }
 
-// const rewardCalc = (genesisTs, to) => {
-//     const nMonths = (to - genesisTs)/epochLength;
-//     const accMonthlyHalo = ( startingRewards * sumExp(decayBase, nMonths) ) / DECIMALS;
-//     const diffTime = ( (to - genesisTs + (epochLength * nMonths)) * DECIMALS) / epochLength;
-//     const thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
-//     uint256 tillFrom = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-//
-//     nMonths = (now.sub(genesisTs)).div(epochLength);
-//     accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
-//     diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
-//
-//     thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
-//     uint256 tillNow = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-//
-//     return tillNow.sub(tillFrom);
-// }
 describe('Rewards Contract', async () => {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
@@ -134,32 +131,31 @@ describe('Rewards Contract', async () => {
 
     const RewardsContract = await ethers.getContractFactory('Rewards')
     const startingRewards = ethers.utils.parseEther('7500000')
-    const decayBase = ethers.utils.parseEther('0.813')
-    // epochLength = 2629800
+
     epochLength = 60
     console.log('BPS = ', BPS)
     const minterLpRewardsRatio = 0.4 * BPS
     const ammLpRewardsRatio = 0.4 * BPS
     const vestingRewardsRatio = 0.2 * BPS
+    
     // right now we don't need to change ammLpRewardsRatio to ammLpRewardsRatio since its the same
     expectedPerSecondHALOReward =
       (parseFloat(ethers.utils.formatEther(startingRewards)) / epochLength) *
       0.4
+
     console.log('expectedPerSecondHALOReward: ', expectedPerSecondHALOReward)
-    // genesisBlock = Math.floor(Date.now() / 1000)
     const minterLpPools = [[collateralERC20Contract.address, 10]]
     const ammLpPools = [[lpTokenContract.address, 10]]
 
     rewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
       startingRewards,
-      decayBase, //multiplied by 10^18
       epochLength,
       minterLpRewardsRatio, //in bps, multiplied by 10^4
       ammLpRewardsRatio, //in bps, multiplied by 10^4
       vestingRewardsRatio, //in bps, multiplied by 10^4
       minterContract.address,
-      //genesisBlock,
+      genesisBlock,
       minterLpPools,
       ammLpPools
     )
@@ -242,26 +238,32 @@ describe('Rewards Contract', async () => {
         ethers.utils.parseEther(INITIAL_MINT.toString())
       )
     })
+
     it('Lptoken should be deployed', async () => {
       expect(await lpTokenContract.symbol()).to.equal('LPT')
       expect(await lpTokenContract.name()).to.equal('LpToken')
     })
+
     it('Lptoken2 should be deployed', async () => {
       expect(await lpTokenContract2.symbol()).to.equal('LPT')
       expect(await lpTokenContract2.name()).to.equal('LpToken 2')
     })
+
     it('UBE should be deployed', async () => {
       expect(await ubeContract.symbol()).to.equal('UBE')
       expect(await ubeContract.name()).to.equal('UBE')
     })
+
     it('HaloToken should be deployed', async () => {
       expect(await haloTokenContract.symbol()).to.equal('HALO')
       expect(await haloTokenContract.name()).to.equal('Halo')
     })
+
     it('Halohalo should be deployed', async () => {
       expect(await halohaloContract.symbol()).to.equal('HALOHALO')
       expect(await halohaloContract.name()).to.equal('HaloHalo')
     })
+
     it('Rewards Contract should be deployed', async () => {
       expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10)
       expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
@@ -286,7 +288,13 @@ describe('Rewards Contract', async () => {
     let depositTxTs = 0
     let withdrawalTxTs = 0
 
-    it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
+    it.only('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
+
+      console.log('lucas *************')
+
+      let currentBlock = await ethers.provider.getBlockNumber();
+      console.log(`Current block ${currentBlock}`);
+
       const depositMinterTxn = await minterContract.depositByCollateralAddress(
         ethers.utils.parseEther('100'),
         ethers.utils.parseEther('100'),
@@ -296,14 +304,18 @@ describe('Rewards Contract', async () => {
       depositTxTs = (await ethers.provider.getBlock(depositMinterTxn.blockHash))
         .timestamp
 
-      await sleep(sleepTime)
+      time.advanceBlock()
       console.log('\t Done sleeping. Updating Minter Rewards')
+
+      currentBlock = await ethers.provider.getBlockNumber();
+      console.log(`Current block ${currentBlock}`);
 
       // this function needs to be called so that rewards state is updated and then becomes claimable
       const updateMinterTxn = await rewardsContract.updateMinterRewardPool(
         collateralERC20Contract.address
       )
-      var updateTxTs = (
+
+      let updateTxTs = (
         await ethers.provider.getBlock(updateMinterTxn.blockHash)
       ).timestamp
 
@@ -380,23 +392,18 @@ describe('Rewards Contract', async () => {
     })
 
     it('Should have correct amount of HALO token balance', async () => {
-      const actualHaloBal = Math.round(
-        parseFloat(
-          ethers.utils.formatEther(
-            await haloTokenContract.balanceOf(owner.address)
-          )
-        )
-      )
-      const expectedHaloBal =
-        (withdrawalTxTs - depositTxTs - 1) * expectedPerSecondHALOReward
+      const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
+          
+      const expectedHaloBal = BigInt('0')
+        //(withdrawalTxTs - depositTxTs - 1) * expectedPerSecondHALOReward
       expect(actualHaloBal).to.equal(expectedHaloBal)
     })
   })
 
   describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', () => {
-    var depositTxTs
-    var withdrawalTxTs
-    var haloBal
+    let depositTxTs
+    let withdrawalTxTs
+    let haloBal
 
     it('I earn the correct number of HALO tokens per time interval on depositing LPT', async () => {
       haloBal = Math.round(
@@ -423,7 +430,8 @@ describe('Rewards Contract', async () => {
       const updateAmmPoolOnPoolTokenDepositTxn = await rewardsContract.updateAmmRewardPool(
         lpTokenContract.address
       )
-      var updateTxTs = (
+
+      let updateTxTs = (
         await ethers.provider.getBlock(
           updateAmmPoolOnPoolTokenDepositTxn.blockHash
         )
@@ -514,11 +522,13 @@ describe('Rewards Contract', async () => {
         ).allocPoint.toString()
       ).to.equal('10')
     })
+
     it('Total LP allocation points before', async () => {
       expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(
         maxAllocationPoints
       )
     })
+
     it('If caller is not contract owner, it should fail', async () => {
       await expect(
         rewardsContract
@@ -526,6 +536,7 @@ describe('Rewards Contract', async () => {
           .setAmmLpAllocationPoints(lpTokenContract.address, 5)
       ).to.be.revertedWith('Ownable: caller is not the owner')
     })
+
     it('If caller is contract owner, it should not fail; If AMM LP pool is whitelisted it should not fail; Set Amm LP pool allocs', async () => {
       await expect(
         rewardsContract
@@ -533,6 +544,7 @@ describe('Rewards Contract', async () => {
           .setAmmLpAllocationPoints(lpTokenContract.address, 5)
       ).to.not.be.reverted
     })
+    
     it('AMM LP allocation points before', async () => {
       expect(
         (
@@ -555,11 +567,13 @@ describe('Rewards Contract', async () => {
         ).allocPoint.toString()
       ).to.equal('10')
     })
+
     it('Total Minter LP allocation points before', async () => {
       expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
         10
       )
     })
+
     it('If caller is not contract owner, it should fail', async () => {
       await expect(
         rewardsContract
@@ -567,6 +581,7 @@ describe('Rewards Contract', async () => {
           .setMinterLpAllocationPoints(collateralERC20Contract.address, 5)
       ).to.be.revertedWith('Ownable: caller is not the owner')
     })
+
     it('If caller is contract owner, it should not fail; If collateral type is whitelisted it should not fail; Set Minter Lp pool allocs', async () => {
       await expect(
         rewardsContract
@@ -574,6 +589,7 @@ describe('Rewards Contract', async () => {
           .setMinterLpAllocationPoints(collateralERC20Contract.address, 5)
       ).to.not.be.reverted
     })
+
     it('collateral ERC20 LP allocation points before', async () => {
       expect(
         (
@@ -583,6 +599,7 @@ describe('Rewards Contract', async () => {
         ).allocPoint.toString()
       ).to.equal('5')
     })
+
     it('expectedAllocPoints = (totalAllocPoints - currentAllocPoints) + newAllocPoints = 10 - 10 + 5', async () => {
       expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
         5
@@ -596,21 +613,25 @@ describe('Rewards Contract', async () => {
         await rewardsContract.isValidAmmLp(lpTokenContract.address)
       ).to.equal(true)
     })
+
     it('If caller is not contract owner, it should fail', async () => {
       await expect(
         rewardsContract.connect(addr1).removeAmmLp(lpTokenContract.address)
       ).to.be.revertedWith('Ownable: caller is not the owner')
     })
+
     it('If caller is contract owner, it should not fail; If AMM LP pool is whitelisted it should not fail; Remove AMM LP pool from ammLpPools', async () => {
       await expect(
         rewardsContract.connect(owner).removeAmmLp(lpTokenContract.address)
       ).to.not.be.reverted
     })
+
     it('If AMM LP pool is not whitelisted is should fail', async () => {
       await expect(
         rewardsContract.connect(owner).removeAmmLp(lpTokenContract.address)
       ).to.be.revertedWith('AMM LP Pool not whitelisted')
     })
+
     it('Should not be valid amm lp', async () => {
       expect(
         await rewardsContract.isValidAmmLp(lpTokenContract.address)
@@ -624,6 +645,7 @@ describe('Rewards Contract', async () => {
         await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
       ).to.equal(true)
     })
+
     it('If caller is not contract owner, it should fail', async () => {
       await expect(
         rewardsContract
@@ -631,6 +653,7 @@ describe('Rewards Contract', async () => {
           .removeMinterCollateralType(collateralERC20Contract.address)
       ).to.be.revertedWith('Ownable: caller is not the owner')
     })
+
     it('If caller is contract owner, it should not fail; If Minter collateral type is whitelisted it should not fail; Remove Minter collateral type from minterLpPools', async () => {
       await expect(
         rewardsContract
@@ -638,6 +661,7 @@ describe('Rewards Contract', async () => {
           .removeMinterCollateralType(collateralERC20Contract.address)
       ).to.not.be.reverted
     })
+
     it('If collateral type is not whitelisted is should fail', async () => {
       await expect(
         rewardsContract
@@ -645,6 +669,7 @@ describe('Rewards Contract', async () => {
           .removeMinterCollateralType(collateralERC20Contract.address)
       ).to.be.revertedWith('Collateral type not whitelisted')
     })
+
     it('Should not be valid collateral type', async () => {
       expect(
         await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
@@ -679,4 +704,27 @@ describe('Rewards Contract', async () => {
       expect(addresses).to.have.all.members(expectedAddresses)
     })
   })
-})
+
+  describe('Rewards helper functions', () => {
+    it('should do the things', async () => {
+
+    })
+  })
+  //   const rewardCalc = (genesisTs, to) => {
+  //     const nMonths = (to - genesisTs)/epochLength;
+  //     const accMonthlyHalo = ( startingRewards * sumExp(decayBase, nMonths) ) / DECIMALS;
+  //     const diffTime = ( (to - genesisTs + (epochLength * nMonths)) * DECIMALS) / epochLength;
+  //     const thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
+  //     uint256 tillFrom = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
+  
+  //     nMonths = (now.sub(genesisTs)).div(epochLength);
+  //     accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
+  //     diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
+  
+  //     thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
+  //     uint256 tillNow = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
+  
+  //     return tillNow.sub(tillFrom);
+  // }
+  })
+//})

@@ -1,7 +1,7 @@
 const hre = require('hardhat')
+const { copyFileSync } = require('node:fs')
 const ethers = hre.ethers
 const web3 = require('web3')
-// const Eth = require('web3-eth')
 
 const BPS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
@@ -46,33 +46,38 @@ const main = async () => {
    * Deploy Rewards contract
    */
   const startingRewards = ethers.utils.parseEther('7500000')
-  const decayBase = ethers.utils.parseEther('0.813')
+  //const decayBase = ethers.utils.parseEther('0.813')
   const epochLength = 60
   const minterLpRewardsRatio = 0.4 * BPS
   const ammLpRewardsRatio = 0.4 * BPS
   const vestingRewardsRatio = 0.2 * BPS
 
   const web3 = new Web3(
-  const genesisTs = Math.floor(Date.now() / 1000)
+    'wss://kovan.infura.io/ws/v3/64710bd1f20c42519965cd9c1dab700b'
+  )
+
+  console.log('web3')
+  console.log(web3.eth.defaultBlock)
+
+  const genesisBlock = 1 // todo get block from web3
   const minterLpPools = [[collateralERC20Contract.address, 10]]
 
   // Hardcode kovan balancer pools
   const ammLpPools = [
     ['0x37f80ac90235ce0d3911952d0ce49071a0ffdb1e', 10],
-    ['0x65850ecd767e7ef71e4b78a348bb605343bd87c3', 10],
+    ['0x65850ecd767e7ef71e4b78a348bb605343bd87c3', 10]
   ]
 
   const Rewards = await ethers.getContractFactory('Rewards')
   const rewardsContract = await Rewards.deploy(
     haloTokenContract.address,
     startingRewards,
-    decayBase, //multiplied by 10^18
     epochLength,
     minterLpRewardsRatio, //in bps, multiplied by 10^4
     ammLpRewardsRatio, //in bps, multiplied by 10^4
     vestingRewardsRatio, //in bps, multiplied by 10^4
     minterContract.address,
-    genesisTs,
+    genesisBlock,
     minterLpPools,
     ammLpPools
   )
@@ -84,6 +89,7 @@ const main = async () => {
     rewardsContract.address,
     ethers.utils.parseEther((40 * INITIAL_MINT).toString())
   )
+  
   console.log('Minted initial HALO for Rewards contract')
 }
 
