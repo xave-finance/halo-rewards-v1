@@ -16,6 +16,7 @@ import {
   expectRevert,
   time,
 } from "@openzeppelin/test-helpers"
+import { Z_FILTERED } from 'node:zlib'
 
 let contractCreatorAccount
 let rewardsContract
@@ -36,22 +37,9 @@ let addr1
 let addr2
 let addrs
 
-const sleepTime = 5
-const sleep = (delay) =>
-  new Promise((resolve) => {
-    console.log('\tSleeping for ' + delay + ' secs...')
-    setTimeout(resolve, delay * 1000)
-  })
+const sleepTime = 5000
 
 let expectedPerSecondHALOReward
-
-// const advanceBlock = async () => {
-//   await ethers.provider.send({
-//       jsonrpc: '2.0',
-//       method: 'evm_increaseTime',
-//       id: new Date().getTime()
-//     })
-//   }
 
 describe('Rewards Contract', async () => {
   before(async () => {
@@ -132,7 +120,8 @@ describe('Rewards Contract', async () => {
     const RewardsContract = await ethers.getContractFactory('Rewards')
     const startingRewards = ethers.utils.parseEther('7500000')
 
-    epochLength = 60
+    // Average block 12 seconds or 5 per minute
+    epochLength = 30 * 24 * 60 * 5
     console.log('BPS = ', BPS)
     const minterLpRewardsRatio = 0.4 * BPS
     const ammLpRewardsRatio = 0.4 * BPS
@@ -288,7 +277,7 @@ describe('Rewards Contract', async () => {
     let depositTxTs = 0
     let withdrawalTxTs = 0
 
-    it.only('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
+    it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
 
       console.log('lucas *************')
 
@@ -304,7 +293,7 @@ describe('Rewards Contract', async () => {
       depositTxTs = (await ethers.provider.getBlock(depositMinterTxn.blockHash))
         .timestamp
 
-      time.advanceBlock()
+      await time.advanceBlock()
       console.log('\t Done sleeping. Updating Minter Rewards')
 
       currentBlock = await ethers.provider.getBlockNumber();
@@ -353,7 +342,7 @@ describe('Rewards Contract', async () => {
         await ethers.provider.getBlock(withdrawlMinterTxn.blockHash)
       ).timestamp
 
-      await sleep(sleepTime)
+      await time.increase(sleepTime)
       console.log('\t Done sleeping. Updating Minter Rewards')
 
       await rewardsContract.updateMinterRewardPool(
@@ -424,7 +413,7 @@ describe('Rewards Contract', async () => {
       depositTxTs = (await ethers.provider.getBlock(depositPoolTxn.blockHash))
         .timestamp
 
-      await sleep(sleepTime)
+      await time.increase(sleepTime)
       console.log('\t Done sleeping. Updating AMM LP pool Rewards')
 
       const updateAmmPoolOnPoolTokenDepositTxn = await rewardsContract.updateAmmRewardPool(
@@ -464,7 +453,6 @@ describe('Rewards Contract', async () => {
         await ethers.provider.getBlock(withdrawPoolTxn.blockHash)
       ).timestamp
 
-      await sleep(5)
       console.log('\tUpdate Amm Lp pool Rewards')
 
       await rewardsContract.updateAmmRewardPool(lpTokenContract.address)
@@ -706,25 +694,28 @@ describe('Rewards Contract', async () => {
   })
 
   describe('Rewards helper functions', () => {
-    it('should do the things', async () => {
+    it.only('should calc rewards', async () => {
+      let currentBlock = await ethers.provider.getBlockNumber();
+      console.log(`Current block ${currentBlock}`);
 
+      const actual = await rewardsContract.calcReward(0)
+      //await time.advanceBlock()
+      console.log(actual)
+    })
+
+    it.skip('should get monthly halo', async () => {
+      const actual = await rewardsContract.monthlyHalo()
+      console.log(actual)
+    })
+
+    it.only('should get nMonths', async () => {
+      const actual = await rewardsContract.nMonths()
+      console.log(actual)
+    })
+
+    it.only('should get diffTime', async () => {
+      const actual = await rewardsContract.diffTime()
+      console.log(actual)
     })
   })
-  //   const rewardCalc = (genesisTs, to) => {
-  //     const nMonths = (to - genesisTs)/epochLength;
-  //     const accMonthlyHalo = ( startingRewards * sumExp(decayBase, nMonths) ) / DECIMALS;
-  //     const diffTime = ( (to - genesisTs + (epochLength * nMonths)) * DECIMALS) / epochLength;
-  //     const thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
-  //     uint256 tillFrom = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-  
-  //     nMonths = (now.sub(genesisTs)).div(epochLength);
-  //     accMonthlyHalo = startingRewards.mul(sumExp(decayBase, nMonths)).div(DECIMALS);
-  //     diffTime = ((now.sub(genesisTs.add(epochLength.mul(nMonths)))).mul(DECIMALS)).div(epochLength);
-  
-  //     thisMonthsReward = startingRewards.mul(exp(decayBase, nMonths)).div(DECIMALS);
-  //     uint256 tillNow = (diffTime.mul(thisMonthsReward).div(DECIMALS)).add(accMonthlyHalo);
-  
-  //     return tillNow.sub(tillFrom);
-  // }
-  })
-//})
+})
