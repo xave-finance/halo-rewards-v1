@@ -29,11 +29,21 @@ const MNEMONIC_SEED = process.env.MNEMONIC_SEED || ''
 const config: HardhatUserConfig = {
   solidity: '0.6.12',
   networks: {
+    hardhat: {
+      chainId: 1337,
+      accounts: {
+        mnemonic: MNEMONIC_SEED
+      }
+    },
     kovan: {
       url: `https://kovan.infura.io/v3/${INFURA_PROJECT_ID}`,
       accounts: {
         mnemonic: MNEMONIC_SEED
       }
+    },
+    localhost: {
+      chainId: 1337,
+      url: 'http://127.0.0.1:8545/'
     }
   }
 }
