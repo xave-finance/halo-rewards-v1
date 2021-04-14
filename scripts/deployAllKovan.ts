@@ -3,7 +3,7 @@ import { ethers } from 'hardhat'
 const BPS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
 
-const deploy = async () => {
+const deployAllKovan = async () => {
   /**
    * Deploy HeloToken contract
    */
@@ -82,7 +82,7 @@ const deploy = async () => {
   console.log('Minted initial HALO for Rewards contract')
 }
 
-deploy()
+deployAllKovan()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

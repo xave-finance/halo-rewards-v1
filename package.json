@@ -2,9 +2,9 @@
   "name": "hardhat-project",
   "scripts": {
     "test": "npx hardhat test",
-    "deploy:hardhat": "npx hardhat run scripts/deploy.ts",
-    "deploy:local": "npx hardhat run scripts/deploy.ts --network \"localhost\"",
-    "deploy:kovan": "npx hardhat run scripts/deploy.ts --network \"kovan\"",
+    "deploy:hardhat": "npx hardhat run scripts/deployAllLocal.ts",
+    "deploy:local": "npx hardhat run scripts/deployAllLocal.ts --network \"localhost\"",
+    "deploy:kovan": "npx hardhat run scripts/deployAllKovan.ts --network \"kovan\"",
     "deploy:halo-kovan": "npx hardhat run scripts/deployHalo.ts --network \"kovan\"",
     "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployOnlyRewardsContract.ts --network \"kovan\"",
     "node": "npx hardhat node"
