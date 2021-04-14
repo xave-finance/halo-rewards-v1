@@ -155,10 +155,8 @@ describe('Rewards Contract', async () => {
       startingRewards,
       decayBase, //multiplied by 10^18
       epochLength,
-      minterLpRewardsRatio, //in bps, multiplied by 10^4
       ammLpRewardsRatio, //in bps, multiplied by 10^4
       vestingRewardsRatio, //in bps, multiplied by 10^4
-      minterContract.address,
       genesisTs,
       minterLpPools,
       ammLpPools

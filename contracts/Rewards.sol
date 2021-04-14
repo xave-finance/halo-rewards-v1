@@ -158,10 +158,8 @@ contract Rewards is Ownable {
   /// @param _startingRewards rewards allocated for the first month
   /// @param _decayBase decay base
   /// @param _epochLength length of a month = 30*24*60*60
-  /// @param _minterLpRewardsRatio percentage of rewards allocated to minter Lps in bps
   /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
   /// @param _vestingRewardsRatio percentage of rewards allocated to stakers in bps
-  /// @param _minter address of the minter contract
   /// @param _genesisTs timestamp of rewards genesis
   /// @param _minterLpPools info of whitelisted minter Lp pools at genesis
   /// @param _ammLpPools info of whitelisted amm Lp pools at genesis
@@ -183,7 +181,7 @@ contract Rewards is Ownable {
     minterLpRewardsRatio = 0;
     ammLpRewardsRatio = _ammLpRewardsRatio;
     vestingRewardsRatio = _vestingRewardsRatio;
-    minterContract = 0x0000;
+
     genesisTs = _genesisTs;
     lastHaloVestRewardTs = genesisTs;
     for (uint8 i = 0; i < _minterLpPools.length; i++) {
@@ -631,7 +629,7 @@ contract Rewards is Ownable {
     minterLpRewardsRatio = _minterLpRewardsRatio;
   }
 
-  function getMinterLpRewardsRatio() public view returns (address) {
+  function getMinterLpRewardsRatio() public view returns (uint256) {
     return minterLpRewardsRatio;
   }
 

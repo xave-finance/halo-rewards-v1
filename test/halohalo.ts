@@ -31,7 +31,7 @@ const sleep = (delay) =>
   })
 
 let expectedPerSecondHALOReward
-describe('HALOHALO Contract', async () => {
+describe.skip('HALOHALO Contract', async () => {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
