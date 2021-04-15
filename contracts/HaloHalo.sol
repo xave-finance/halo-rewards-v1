@@ -10,27 +10,21 @@ contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
   using SafeMath for uint256;
   IERC20 public halo;
   uint256 public constant DECIMALS = 10**18;
-  uint256 public APY;
-  HaloHaloPrice public latestHaloHaloPrice;
+  uint256 public genesisTimestamp;
 
   // Define the Halo token contract
   constructor(IERC20 _halo) public {
     halo = _halo;
+    genesisTimestamp = 0;
   }
 
-  struct HaloHaloPrice {
-    uint256 lastHaloHaloUpdateTimestamp;
-    uint256 lastHaloHaloPrice;
-  }
-
-  event HaloHaloPriceUpdated(
-    uint256 lastHaloHaloUpdateTimestamp,
-    uint256 lastHaloHaloPrice
-  );
-
+  //TODO: add test before entering the genesis == 0, after enter  >0
   // Stake HALOs for HALOHALOs.
   // Locks Halo and mints HALOHALO
   function enter(uint256 _amount) public {
+    if (genesisTimestamp == 0) {
+      genesisTimestamp = now;
+    }
     // Gets the amount of Halo locked in the contract
     uint256 totalHalo = halo.balanceOf(address(this));
     // Gets the amount of HALOHALO in existence
@@ -60,42 +54,13 @@ contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
     halo.transfer(msg.sender, haloHaloAmount);
   }
 
-  function updateHaloHaloPrice() public {
-    uint256 totalShares = totalSupply();
+  function getCurrentHaloHaloPrice() public view returns (uint256) {
     require(totalShares > 0, 'No HALOHALO supply');
+
+    uint256 totalShares = totalSupply();
     uint256 haloHaloPrice = halo.balanceOf(address(this)).div(totalShares);
-    // unixtimestamp
-    latestHaloHaloPrice.lastHaloHaloUpdateTimestamp = now;
+
     // ratio in wei
-    latestHaloHaloPrice.lastHaloHaloPrice = haloHaloPrice.mul(DECIMALS);
-
-    // using the newly set values to avoid timestamp differences
-    emit HaloHaloPriceUpdated(
-      latestHaloHaloPrice.lastHaloHaloUpdateTimestamp,
-      latestHaloHaloPrice.lastHaloHaloPrice
-    );
-  }
-
-  function estimateHaloHaloAPY() public returns (uint256) {
-    // get old halohalo values
-    uint256 oldHaloHaloPrice = latestHaloHaloPrice.lastHaloHaloPrice;
-    uint256 oldHaloHaloLastUpdateTimestamp =
-      latestHaloHaloPrice.lastHaloHaloUpdateTimestamp;
-
-    // update price
-    updateHaloHaloPrice();
-
-    // calculate interval changes
-    uint256 haloHaloPriceChange =
-      latestHaloHaloPrice.lastHaloHaloPrice.sub(oldHaloHaloPrice);
-
-    uint256 updateIntervalDuration = now.sub(oldHaloHaloLastUpdateTimestamp);
-
-    // calculate ratio by dividing it to number of seconds in a year, pad decimal zeroes to support decimal values
-    uint256 APYDurationRatio =
-      updateIntervalDuration.mul(DECIMALS).div(31536000);
-    uint256 APYProjection = haloHaloPriceChange.mul(APYDurationRatio);
-    // remove padding
-    APY = APYProjection.div(DECIMALS);
+    return haloHaloPrice.mul(DECIMALS);
   }
 }
