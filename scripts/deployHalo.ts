@@ -1,9 +1,11 @@
-const hre = require('hardhat')
-const { formatEther, parseEther } = require('ethers/lib/utils')
-
-const main = async () => {
+import { ethers } from 'hardhat'
+import { parseEther, formatEther } from 'ethers/lib/utils'
+/**
+ * Note: This script only works on Kovan. This will supply the user with HALO tokens
+ */
+async function deployHalo() {
   // Get signer
-  const [deployer] = await hre.ethers.getSigners()
+  const [deployer] = await ethers.getSigners()
 
   // Signer details
   console.log('Caller Address:', deployer.address)
@@ -45,7 +47,7 @@ const main = async () => {
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main()
+deployHalo()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

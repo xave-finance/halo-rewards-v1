@@ -1,9 +1,9 @@
-const hre = require('hardhat')
-const { formatEther, parseEther } = require('ethers/lib/utils')
+import { ethers } from 'hardhat'
+import { parseEther, formatEther } from 'ethers/lib/utils'
 
-const main = async () => {
+async function deployOnlyRewards() {
   // We get the contract to deploy
-  const [deployer] = await hre.ethers.getSigners()
+  const [deployer] = await ethers.getSigners()
 
   // Deployer information
   console.log('Deployer Address:', deployer.address)
@@ -12,7 +12,7 @@ const main = async () => {
   // Rewards constants
   const BPS = 10 ** 4
   const INITIAL_MINT = 10 ** 6
-  const RewardsContract = await hre.ethers.getContractFactory('Rewards')
+  const RewardsContract = await ethers.getContractFactory('Rewards')
 
   const haloTokenContractAddress = '0xc4b3F0437c5D53B01B3C7dDEd7318A60ecE76650'
   const minterContractAddress = '0xE94B97b6b43639E238c851A7e693F50033EfD75C'
@@ -68,7 +68,7 @@ const main = async () => {
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main()
+deployOnlyRewards()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

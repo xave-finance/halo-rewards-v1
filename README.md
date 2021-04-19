@@ -1,5 +1,7 @@
 ### Halo Rewards Smart Contract
+
 ### Quick Start
+
 Install hardhat
 ```bash
 cd halo-rewards
@@ -15,9 +17,16 @@ yarn run test
 
 ### Using dev scripts
 
-- `npm/yarn run test` : for running test scripts usind hardhat
-- `npm/yarn run deploy:kovan` : deploy Rewards contract and all its dependencies
-- `npm/yarn run deploy:halo-kovan`: use to mint dummy HALO to your wallet. you can change the receiver, HALO token address and number of tokens to mint in ether units
+### Development and Debug Scripts
+
+- `npm/yarn run test` : for running test scripts using hardhat
+- `npm/yarn run deploy:hardhat` : deploy all contracts in a hardhat environment node. this goes away after executing the script
+- `npm/yarn run deploy:local` : deploys all contracts in a local node (hardhat node or ganache node). current local node is pointed to 8545 (hardhat)
+
+### Testnet Deployment scripts
+
+- `npm/yarn run deploy:kovan` : deploy all contracs on Kovan
+- `npm/yarn run deploy:halo-kovan`: use to mint dummy HALO to your wallet. you can change the receiver, HALO token address and number of tokens to mint in ether units. this script only works on kovan
 - `npm/yarn run deploy:onlyrewards-kovan` : use to deploy only the rewards contract. change the constructor parameters when necessary
 
 ### Output

@@ -1,12 +1,9 @@
-const hre = require('hardhat')
-const { copyFileSync } = require('node:fs')
-const ethers = hre.ethers
-const web3 = require('web3')
+import { ethers } from 'hardhat'
 
 const BPS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
 
-const main = async () => {
+const deployAllKovan = async () => {
   /**
    * Deploy HeloToken contract
    */
@@ -18,10 +15,10 @@ const main = async () => {
   /**
    * Deploy HeloChest contract
    */
-  const HaloChest = await ethers.getContractFactory('HaloChest')
-  const haloChestContract = await HaloChest.deploy(haloTokenContract.address)
-  await haloChestContract.deployed()
-  console.log('haloChestContract deployed at: ', haloChestContract.address)
+  const HaloHalo = await ethers.getContractFactory('HaloHalo')
+  const HaloHaloContract = await HaloHalo.deploy(haloTokenContract.address)
+  await HaloHaloContract.deployed()
+  console.log('halohaloContract deployed at: ', HaloHaloContract.address)
 
   /**
    * Deploy dummy contracts (required by Rewards contract)
@@ -34,7 +31,7 @@ const main = async () => {
   await collateralERC20Contract.deployed()
 
   const Minter = await ethers.getContractFactory('Minter')
-  minterContract = await Minter.deploy()
+  const minterContract = await Minter.deploy()
   await minterContract.deployed()
   console.log(
     'Collateral token & minter deployed at: ',
@@ -46,20 +43,12 @@ const main = async () => {
    * Deploy Rewards contract
    */
   const startingRewards = ethers.utils.parseEther('7500000')
-  //const decayBase = ethers.utils.parseEther('0.813')
+  const decayBase = ethers.utils.parseEther('0.813')
   const epochLength = 60
   const minterLpRewardsRatio = 0.4 * BPS
   const ammLpRewardsRatio = 0.4 * BPS
   const vestingRewardsRatio = 0.2 * BPS
-
-  const web3 = new Web3(
-    'wss://kovan.infura.io/ws/v3/64710bd1f20c42519965cd9c1dab700b'
-  )
-
-  console.log('web3')
-  console.log(web3.eth.defaultBlock)
-
-  const genesisBlock = 1 // todo get block from web3
+  const genesisTs = Math.floor(Date.now() / 1000)
   const minterLpPools = [[collateralERC20Contract.address, 10]]
 
   // Hardcode kovan balancer pools
@@ -72,12 +61,13 @@ const main = async () => {
   const rewardsContract = await Rewards.deploy(
     haloTokenContract.address,
     startingRewards,
+    decayBase, //multiplied by 10^18
     epochLength,
     minterLpRewardsRatio, //in bps, multiplied by 10^4
     ammLpRewardsRatio, //in bps, multiplied by 10^4
     vestingRewardsRatio, //in bps, multiplied by 10^4
     minterContract.address,
-    genesisBlock,
+    genesisTs,
     minterLpPools,
     ammLpPools
   )
@@ -89,11 +79,10 @@ const main = async () => {
     rewardsContract.address,
     ethers.utils.parseEther((40 * INITIAL_MINT).toString())
   )
-  
   console.log('Minted initial HALO for Rewards contract')
 }
 
-main()
+deployAllKovan()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
