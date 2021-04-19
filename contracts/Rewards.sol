@@ -108,7 +108,7 @@ contract Rewards is Ownable {
   /// @notice length of a month = 30*24*60*60
   uint256 public epochLength;
   /// @notice percentage of rewards allocated to minter Lps
-  uint256 public minterLpRewardsRatio; //in bps, multiply fraction by 10^4
+  uint256 private minterLpRewardsRatio;
   /// @notice percentage of rewards allocated to minter Amm Lps
   uint256 public ammLpRewardsRatio; //in bps, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to stakers
@@ -122,7 +122,7 @@ contract Rewards is Ownable {
   uint256 public vestingRewardsDebt;
 
   /// @notice address of the minter contract
-  address public minterContract;
+  address private minterContract;
 
   /// @notice address of the staking contract
   address public haloChestContract;
@@ -611,13 +611,6 @@ contract Rewards is Ownable {
     return ammLpPoolsAddresses;
   }
 
-  function setMinterContractAddress(address _minterContractAddress)
-    public
-    onlyOwner
-  {
-    minterContract = _minterContractAddress;
-  }
-
   function getMinterContractAddress() public view returns (address) {
     return minterContract;
   }
@@ -779,7 +772,7 @@ contract Rewards is Ownable {
   /// @notice sets the address of the minter contract
   /// @dev set the address of the minter contract
   /// @param _minter address of the minter contract
-  function setMinter(address _minter) public onlyOwner {
+  function setMinterContractAddress(address _minter) public onlyOwner {
     minterContract = _minter;
   }
 

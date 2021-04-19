@@ -16,6 +16,7 @@ let epochLength
 const DECIMALS = 10 ** 18
 const BPS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
+const minterLpRewardsRatio = 0.4 * BPS
 let owner
 let addr1
 let addr2
@@ -138,7 +139,7 @@ describe('Rewards Contract', async () => {
     // epochLength = 2629800
     epochLength = 60
     console.log('BPS = ', BPS)
-    const minterLpRewardsRatio = 0.4 * BPS
+
     const ammLpRewardsRatio = 0.4 * BPS
     const vestingRewardsRatio = 0.2 * BPS
     // right now we don't need to change ammLpRewardsRatio to ammLpRewardsRatio since its the same
@@ -283,6 +284,38 @@ describe('Rewards Contract', async () => {
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
     let depositTxTs = 0
     let withdrawalTxTs = 0
+
+    it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
+      expect(
+        (await rewardsContract.getMinterLpRewardsRatio()).toString()
+      ).to.equal('0')
+    })
+
+    it('Set MinterLpRewards ratio and verify if ratio is correct', async () => {
+      await expect(
+        rewardsContract.setMinterLpRewardsRatio(minterLpRewardsRatio)
+      ).to.not.be.reverted
+
+      expect(
+        (await rewardsContract.getMinterLpRewardsRatio()).toString()
+      ).to.equal(`${minterLpRewardsRatio}`)
+    })
+
+    it('Minter is not set after deploying Rewards contract', async () => {
+      expect(
+        (await rewardsContract.getMinterContractAddress()).toString()
+      ).to.equal('0x0000000000000000000000000000000000000000')
+    })
+
+    it('Adds minter to the Rewards contract and verify if minter address is added', async () => {
+      await expect(
+        rewardsContract.setMinterContractAddress(minterContract.address)
+      ).to.not.be.reverted
+
+      expect(
+        (await rewardsContract.getMinterContractAddress()).toString()
+      ).to.equal(minterContract.address)
+    })
 
     it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
       const depositMinterTxn = await minterContract.depositByCollateralAddress(
