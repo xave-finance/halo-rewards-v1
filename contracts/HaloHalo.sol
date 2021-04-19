@@ -55,12 +55,13 @@ contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
   }
 
   function getCurrentHaloHaloPrice() public view returns (uint256) {
-    require(totalShares > 0, 'No HALOHALO supply');
-
     uint256 totalShares = totalSupply();
-    uint256 haloHaloPrice = halo.balanceOf(address(this)).div(totalShares);
+    require(totalShares > 0, 'No HALOHALO supply');
+    // convert to decimals to get answer in wei
+    uint256 haloHaloPrice =
+      halo.balanceOf(address(this)).mul(DECIMALS).div(totalShares);
 
     // ratio in wei
-    return haloHaloPrice.mul(DECIMALS);
+    return haloHaloPrice;
   }
 }

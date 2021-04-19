@@ -18,10 +18,13 @@ const DECIMALS = 10 ** 18
 const BPS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
 const INITIAL_USER_HALO_MINT = '550000000000000002000000' // got from the previous contract
+const VESTED_REWARDS = '934560'
+const EXPECTED_HALOHALO_PRICE = '2.699199999999999993'
 let owner
 let addr1
 let addr2
 let addrs
+let halohaloPrice
 
 const sleepTime = 5
 const sleep = (delay) =>
@@ -31,7 +34,7 @@ const sleep = (delay) =>
   })
 
 let expectedPerSecondHALOReward
-describe.skip('HALOHALO Contract', async () => {
+describe('HALOHALO Contract', async () => {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
@@ -127,10 +130,8 @@ describe.skip('HALOHALO Contract', async () => {
       startingRewards,
       decayBase, //multiplied by 10^18
       epochLength,
-      minterLpRewardsRatio, //in bps, multiplied by 10^4
       ammLpRewardsRatio, //in bps, multiplied by 10^4
       vestingRewardsRatio, //in bps, multiplied by 10^4
-      minterContract.address,
       genesisTs,
       minterLpPools,
       ammLpPools
@@ -260,66 +261,57 @@ describe.skip('HALOHALO Contract', async () => {
   describe('Earn vesting rewards by staking HALO inside halohalo', () => {
     var ownerHaloBal
 
-    it('Reverts if there is no HaloHalo supply', async () => {
-      await expect(halohaloContract.updateHaloHaloPrice()).to.be.revertedWith(
-        'No HALOHALO supply'
-      )
+    it('Genesis is zero', async () => {
+      expect(
+        await halohaloContract.genesisTimestamp(),
+        'Genesis is not equal to zero.'
+      ).to.equal(0)
     })
 
     it('Deposit HALO tokens to halohalo, receive xHALO', async () => {
       ownerHaloBal = await haloTokenContract.balanceOf(owner.address)
       await haloTokenContract.approve(halohaloContract.address, ownerHaloBal)
-      await expect(halohaloContract.enter(ownerHaloBal)).to.not.be.reverted
-    })
-
-    it('Updates the current halohalo price in the contract', async () => {
-      await expect(halohaloContract.updateHaloHaloPrice()).to.emit(
-        halohaloContract,
-        'HaloHaloPriceUpdated'
-      ).to.be.not.reverted
-
-      var { lastHaloHaloPrice } = await halohaloContract.latestHaloHaloPrice()
-
-      // equal to 1 since there is one halohalo per one halo in the contract
-      expect(formatEther(lastHaloHaloPrice)).to.equal('1.0')
-
       await expect(
-        haloTokenContract.mint(
-          halohaloContract.address,
-          parseEther(`${60 * INITIAL_MINT}`)
-        )
+        halohaloContract.enter(ownerHaloBal),
+        'Enter transaction is reverted'
       ).to.not.be.reverted
 
-      await expect(halohaloContract.updateHaloHaloPrice()).to.not.be.reverted
-      var { lastHaloHaloPrice } = await halohaloContract.latestHaloHaloPrice()
-      // minted additional tokens to the contract simulating release of 20% HALO from the rewards contract. the release from the previous tests is
-      expect(formatEther(lastHaloHaloPrice)).to.equal('110.0')
+      expect(
+        +(await halohaloContract.genesisTimestamp()).toString(),
+        'Genesis timestamp is zero after entering HALO.'
+      ).to.be.greaterThan(0)
     })
 
-    it('Computes estimated APY in HaloHalo Contract', async () => {
-      // minted additional tokens to the contract simulating release of 20% HALO from the rewards contract to establish an APY value
-      await expect(
-        haloTokenContract.mint(
-          halohaloContract.address,
-          parseEther(`${60000 * INITIAL_MINT}`)
-        )
-      ).to.not.be.reverted
-
-      // sleep for 5 for updateIntervalDuration
-      await sleep(5)
-      await halohaloContract.estimateHaloHaloAPY()
-
-      // expect 2%++ APY
-      expect(formatEther(await halohaloContract.APY())).to.equal(
-        '0.02075532724498918'
+    it('Calculates current value of HALOHALO in terms of HALO without vesting', async () => {
+      // Before vesting, current halohalo price must be 1:1
+      halohaloPrice = +formatEther(
+        await halohaloContract.getCurrentHaloHaloPrice()
       )
+      expect(halohaloPrice, 'HALOHALO is not equal to 1').to.equal(1)
     })
 
     it('Send unclaimed vested rewards to Halohalo', async () => {
       const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards()
-      expect(currVestedHalo).to.not.equal(BigNumber.from(0))
-      await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted
-      // TODO: Check value vested
+      expect(currVestedHalo, 'Vested HALO is zero').to.not.equal(
+        BigNumber.from(0)
+      )
+      await expect(
+        rewardsContract.releaseVestedRewards(),
+        'Vested rewards not released'
+      ).to.not.be.reverted
+      // TODO: Check value vested after rewards contract update
+    })
+
+    it('Calculates current value of HALOHALO in terms of HALO after vesting', async () => {
+      const halohaloPriceAfterVesting = +formatEther(
+        await halohaloContract.getCurrentHaloHaloPrice()
+      )
+
+      // Expect price to be greater than 1
+      expect(
+        halohaloPrice,
+        `Current HALOHALO price is ${halohaloPriceAfterVesting} HALO and previous ${halohaloPrice} HALO`
+      ).to.be.lessThan(halohaloPriceAfterVesting)
     })
 
     it('Claim staked HALO + bonus rewards from Halohalo and burn xHALO', async () => {
