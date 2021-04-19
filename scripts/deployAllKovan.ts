@@ -80,6 +80,10 @@ const deployAllKovan = async () => {
     ethers.utils.parseEther((40 * INITIAL_MINT).toString())
   )
   console.log('Minted initial HALO for Rewards contract')
+
+  // Set Reward's Halo Chest Contract
+  await rewardsContract.setHaloChest(HaloHaloContract.address)
+  console.log('Done setting Halo Chest contract address')
 }
 
 deployAllKovan()
