@@ -38,6 +38,8 @@ contract Rewards is Ownable {
     /// @notice utility constant
     uint256 public constant BPS = 10**4;
 
+    uint256 public constant REWARD_PER_BLOCK = 29;
+
     using SafeMath for uint256;
 
     /****************************************
@@ -913,7 +915,7 @@ contract Rewards is Ownable {
     /// @return unclaimed rewards since last update
     function calcReward(uint256 _from) public view returns (uint256) {
         uint256 delta = block.number.sub(_from);
-        return delta.mul(29);
+        return delta.mul(REWARD_PER_BLOCK);
     }
 
     function exp(uint256 m, uint256 n) internal pure returns (uint256) {
