@@ -12,7 +12,7 @@ let minterContract
 let ubeContract
 let haloTokenContract
 let halohaloContract
-let genesisTs
+let genesisBlock
 let epochLength
 const DECIMALS = 10 ** 18
 const BPS = 10 ** 4
@@ -110,8 +110,7 @@ describe('HALOHALO Contract', async () => {
     const RewardsContract = await ethers.getContractFactory('Rewards')
     const startingRewards = ethers.utils.parseEther('7500000')
     const decayBase = ethers.utils.parseEther('0.813')
-    // epochLength = 2629800
-    epochLength = 60
+    epochLength = 30 * 24 * 60 * 5
     console.log('BPS = ', BPS)
     const minterLpRewardsRatio = 0.4 * BPS
     const ammLpRewardsRatio = 0.4 * BPS
@@ -121,18 +120,17 @@ describe('HALOHALO Contract', async () => {
       (parseFloat(ethers.utils.formatEther(startingRewards)) / epochLength) *
       0.4
     console.log('expectedPerSecondHALOReward: ', expectedPerSecondHALOReward)
-    genesisTs = Math.floor(Date.now() / 1000)
+    genesisBlock = 0
     const minterLpPools = [[collateralERC20Contract.address, 10]]
     const ammLpPools = [[lpTokenContract.address, 10]]
 
     rewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
       startingRewards,
-      decayBase, //multiplied by 10^18
       epochLength,
       ammLpRewardsRatio, //in bps, multiplied by 10^4
       vestingRewardsRatio, //in bps, multiplied by 10^4
-      genesisTs,
+      genesisBlock,
       minterLpPools,
       ammLpPools
     )

@@ -1,10 +1,9 @@
-const hre = require('hardhat')
-const ethers = hre.ethers
+import { ethers } from 'hardhat'
 
 const BPS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
 
-const main = async () => {
+const deployAllKovan = async () => {
   /**
    * Deploy HeloToken contract
    */
@@ -16,10 +15,10 @@ const main = async () => {
   /**
    * Deploy HeloChest contract
    */
-  const HaloChest = await ethers.getContractFactory('HaloChest')
-  const haloChestContract = await HaloChest.deploy(haloTokenContract.address)
-  await haloChestContract.deployed()
-  console.log('haloChestContract deployed at: ', haloChestContract.address)
+  const HaloHalo = await ethers.getContractFactory('HaloHalo')
+  const HaloHaloContract = await HaloHalo.deploy(haloTokenContract.address)
+  await HaloHaloContract.deployed()
+  console.log('halohaloContract deployed at: ', HaloHaloContract.address)
 
   /**
    * Deploy dummy contracts (required by Rewards contract)
@@ -32,7 +31,7 @@ const main = async () => {
   await collateralERC20Contract.deployed()
 
   const Minter = await ethers.getContractFactory('Minter')
-  minterContract = await Minter.deploy()
+  const minterContract = await Minter.deploy()
   await minterContract.deployed()
   console.log(
     'Collateral token & minter deployed at: ',
@@ -55,7 +54,7 @@ const main = async () => {
   // Hardcode kovan balancer pools
   const ammLpPools = [
     ['0x37f80ac90235ce0d3911952d0ce49071a0ffdb1e', 10],
-    ['0x65850ecd767e7ef71e4b78a348bb605343bd87c3', 10],
+    ['0x65850ecd767e7ef71e4b78a348bb605343bd87c3', 10]
   ]
 
   const Rewards = await ethers.getContractFactory('Rewards')
@@ -83,7 +82,7 @@ const main = async () => {
   console.log('Minted initial HALO for Rewards contract')
 }
 
-main()
+deployAllKovan()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
