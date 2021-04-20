@@ -37,6 +37,8 @@ contract Rewards is Ownable {
   uint256 public constant DECIMALS = 10**18;
   /// @notice utility constant
   uint256 public constant BPS = 10**4;
+  address private constant NULL_ADDRESS =
+    0x0000000000000000000000000000000000000000;
 
   using SafeMath for uint256;
 
@@ -798,6 +800,7 @@ contract Rewards is Ownable {
 
   /// @dev only minter contract can call function
   modifier onlyMinter() {
+    require(minterContract != NULL_ADDRESS, 'minter contract is not set');
     require(
       msg.sender == minterContract,
       'Only minter contract can call this function'

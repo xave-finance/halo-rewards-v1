@@ -302,9 +302,19 @@ describe('Rewards Contract', async () => {
     })
 
     it('Minter is not set after deploying Rewards contract', async () => {
+      // check the value of the minter variable
       expect(
         (await rewardsContract.getMinterContractAddress()).toString()
       ).to.equal('0x0000000000000000000000000000000000000000')
+
+      // checking any functions with onlyMinter modifier to revert
+      await expect(
+        minterContract.depositByCollateralAddress(
+          parseEther('100'),
+          parseEther('100'),
+          collateralERC20Contract.address
+        )
+      ).to.be.reverted
     })
 
     it('Adds minter to the Rewards contract and verify if minter address is added', async () => {
