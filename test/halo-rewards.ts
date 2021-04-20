@@ -273,7 +273,7 @@ describe('Rewards Contract', async () => {
 
     it.only('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
 
-      const startBlock = await time.latestBlock() // ethers.provider.getBlockNumber()
+      const startBlock = await ethers.provider.getBlockNumber()
       console.log(`Start block ${startBlock}`);
 
       const depositMinterTxn = await minterContract.depositByCollateralAddress(
@@ -288,30 +288,36 @@ describe('Rewards Contract', async () => {
       // Should be mined in the first block
       expect(Number(startBlock) + 1).to.equal(Number(pool.lastRewardBlock))
 
-      const currentBlock = await time.latestBlock() // ethers.provider.getBlockNumber()
+      // compare both
+      const currentBlock = await ethers.provider.getBlockNumber()
       console.log(`Current block ${currentBlock}`)
 
       await time.advanceBlock()
       console.log('\t Done sleeping. Updating Minter Rewards')
 
-      const currentBlock2 = await time.latestBlock() // ethers.provider.getBlockNumber()
-      console.log(`Current block ${currentBlock2}`)
+      const nextBlock = await ethers.provider.getBlockNumber()
+      console.log(`Next block ${nextBlock}`)
 
       // Should have advanced 1 block
-      // expect(Number(pool.lastRewardBlock)).to.equal(Number(currentBlock))
+      expect(Number(nextBlock)).to.be.greaterThan(Number(currentBlock))
 
-      // const reward = await rewardsContract.calcReward(pool.lastRewardBlock)
-      // console.log(`Current reward per block ${Number(reward)}`)
+      const reward = await rewardsContract.calcReward(pool.lastRewardBlock)
+      console.log(`Current reward per block ${Number(reward)}`)
+      expect(Number(reward)).to.equal(29)
 
-      // // this function needs to be called so that rewards state is updated and then becomes claimable
-      // const updateMinterTxn = await rewardsContract.updateMinterRewardPool(
-      //   collateralERC20Contract.address
-      // )
+      // this function needs to be called so that rewards state is updated and then becomes claimable
+      const updateMinterTxn = await rewardsContract.updateMinterRewardPool(
+        collateralERC20Contract.address
+      )
 
-      // pool = await rewardsContract.minterLpPools(collateralERC20Contract.address)
-      // console.log(`Last reward block for minter pool ${Number(pool.lastRewardBlock)}`)
+      pool = await rewardsContract.minterLpPools(collateralERC20Contract.address)
+      console.log(`Last reward block for minter pool ${Number(pool.lastRewardBlock)}`)
+      console.log(`Halo per share on minter pool ${Number(pool.accHaloPerShare)}`)
 
-      // // now check unclaimed HALO reward balance after sleep
+      expect(Number(pool.accHaloPerShare)).to.equal(1)
+
+      await time.advanceBlock()
+      // now check unclaimed HALO reward balance after sleep
       // const actualUnclaimedHaloRewardBal = Math.round(
       //   parseFloat(
       //     ethers.utils.formatEther(
@@ -323,17 +329,19 @@ describe('Rewards Contract', async () => {
       //   )
       // )
 
-      // console.log(Number(actualUnclaimedHaloRewardBal))
+      const actualUnclaimedHaloRewardBal = await rewardsContract.getUnclaimedMinterLpRewardsByUser(
+        collateralERC20Contract.address,
+        owner.address
+      )
 
-      // // calculate expected HALO rewards balance
-      // // Should only be one 1 block
-      // const expectedUnclaimedHaloRewardsBal = 29
-      // expect(currentBlock - startBlock).to.equal(1)
+      // calculate expected HALO rewards balance
+      // Should only be one 1 block
+      const expectedUnclaimedHaloRewardsBal = 29
 
-      // // assert that expected and actual are equal
-      // expect(actualUnclaimedHaloRewardBal).to.equal(
-      //   expectedUnclaimedHaloRewardsBal
-      // )
+      // assert that expected and actual are equal
+      expect(Number(actualUnclaimedHaloRewardBal)).to.equal(
+        expectedUnclaimedHaloRewardsBal
+      )
     })
 
     it('I stop earning HALO tokens on withdrawing collateral ERC20', async () => {
