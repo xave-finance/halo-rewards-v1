@@ -310,13 +310,14 @@ contract Rewards is Ownable {
         uint256 totalRewards = calcReward(pool.lastRewardBlock);
         uint256 haloReward =
             totalRewards
-                .mul(minterLpRewardsRatio)
-                .mul(pool.allocPoint)
-                .div(totalMinterLpAllocs)
+                .mul(minterLpRewardsRatio) // 4000 (0*4 ** BPS)
+                .mul(pool.allocPoint) // 10
+                .div(totalMinterLpAllocs) // 
                 .div(BPS);
 
         pool.accHaloPerShare = pool.accHaloPerShare.add(
             haloReward.mul(DECIMALS).div(minterCollateralSupply)
+            //haloReward
         );
 
         pool.lastRewardBlock = block.number;
@@ -915,7 +916,7 @@ contract Rewards is Ownable {
     /// @return unclaimed rewards since last update
     function calcReward(uint256 _from) public view returns (uint256) {
         uint256 delta = block.number.sub(_from);
-        return delta.mul(REWARD_PER_BLOCK);
+        return delta.mul(REWARD_PER_BLOCK).mul(BPS);
     }
 
     function exp(uint256 m, uint256 n) internal pure returns (uint256) {

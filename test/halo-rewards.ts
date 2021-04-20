@@ -33,7 +33,7 @@ const sleepTime = 5000
 
 // Oboslete
 let expectedPerSecondHALOReward
-const expectedHALORewardPerBlock = 29
+const expectedHALORewardPerBlock = 290000
 
 describe('Rewards Contract', async () => {
   before(async () => {
@@ -117,16 +117,18 @@ describe('Rewards Contract', async () => {
     // Average block 12 seconds or 5 per minute
     epochLength = 30 * 24 * 60 * 5
     console.log('BPS = ', BPS)
+    
     const minterLpRewardsRatio = 0.4 * BPS
     const ammLpRewardsRatio = 0.4 * BPS
     const vestingRewardsRatio = 0.2 * BPS
     
-    // right now we don't need to change ammLpRewardsRatio to ammLpRewardsRatio since its the same
-    expectedPerSecondHALOReward =
-      (parseFloat(ethers.utils.formatEther(startingRewards)) / epochLength) *
-      0.4
+    // // right now we don't need to change ammLpRewardsRatio to ammLpRewardsRatio since its the same
+    // expectedPerSecondHALOReward =
+    //   (parseFloat(ethers.utils.formatEther(startingRewards)) / epochLength) *
+    //   0.4
 
-    console.log('expectedPerSecondHALOReward: ', expectedPerSecondHALOReward)
+    // console.log('expectedPerSecondHALOReward: ', expectedPerSecondHALOReward)
+
     const minterLpPools = [[collateralERC20Contract.address, 10]]
     const ammLpPools = [[lpTokenContract.address, 10]]
 
@@ -303,7 +305,7 @@ describe('Rewards Contract', async () => {
 
       const reward = await rewardsContract.calcReward(pool.lastRewardBlock)
       console.log(`Current reward per block ${Number(reward)}`)
-      expect(Number(reward)).to.equal(29)
+      expect(Number(reward)).to.equal(expectedHALORewardPerBlock)
 
       // this function needs to be called so that rewards state is updated and then becomes claimable
       const updateMinterTxn = await rewardsContract.updateMinterRewardPool(
@@ -314,20 +316,9 @@ describe('Rewards Contract', async () => {
       console.log(`Last reward block for minter pool ${Number(pool.lastRewardBlock)}`)
       console.log(`Halo per share on minter pool ${Number(pool.accHaloPerShare)}`)
 
-      expect(Number(pool.accHaloPerShare)).to.equal(1)
+      expect(Number(pool.accHaloPerShare)).to.equal(12760)
 
       await time.advanceBlock()
-      // now check unclaimed HALO reward balance after sleep
-      // const actualUnclaimedHaloRewardBal = Math.round(
-      //   parseFloat(
-      //     ethers.utils.formatEther(
-      //       await rewardsContract.getUnclaimedMinterLpRewardsByUser(
-      //         collateralERC20Contract.address,
-      //         owner.address
-      //       )
-      //     )
-      //   )
-      // )
 
       const actualUnclaimedHaloRewardBal = await rewardsContract.getUnclaimedMinterLpRewardsByUser(
         collateralERC20Contract.address,
@@ -335,8 +326,11 @@ describe('Rewards Contract', async () => {
       )
 
       // calculate expected HALO rewards balance
-      // Should only be one 1 block
-      const expectedUnclaimedHaloRewardsBal = 29
+      // const totalMinterLpAllocs = await rewardsContract.getTotalMinterLpAllocationPoints()
+      // const minterLpRewardsRatio = 0.4 * BPS
+      const expectedUnclaimedHaloRewardsBal = 232000 // expectedHALORewardPerBlock * minterLpRewardsRatio * 10 / totalMinterLpAllocs / BPS
+
+      console.log(`Unclaimed reward should be ${Number(expectedUnclaimedHaloRewardsBal)}`)
 
       // assert that expected and actual are equal
       expect(Number(actualUnclaimedHaloRewardBal)).to.equal(

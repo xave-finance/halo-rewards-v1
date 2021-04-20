@@ -3,7 +3,7 @@ import { parseEther, formatEther } from 'ethers/lib/utils'
 /**
  * Note: This script only works on Kovan. This will supply the user with HALO tokens
  */
-async function deployHalo() {
+const deployHalo = async () => {
   // Get signer
   const [deployer] = await ethers.getSigners()
 
