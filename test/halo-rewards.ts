@@ -457,7 +457,7 @@ describe('Rewards Contract', async () => {
     let depositTxTs
     let withdrawalTxTs
     let haloBal
-    // ? - value is NaN
+    // ? - i'm getting NaN here
     it('I earn the correct number of HALO tokens per time interval on depositing LPT', async () => {
       haloBal = Math.round(
         parseFloat(
@@ -541,7 +541,7 @@ describe('Rewards Contract', async () => {
         expectedUnclaimedHaloPoolRewards
       )
     })
-    // ? - getting NaN
+    // ? - i'm getting NaN here
     it('Should have correct amount of HALO token balance', async () => {
       const actualHaloBal = Math.round(
         parseFloat(
@@ -769,10 +769,14 @@ describe('Rewards Contract', async () => {
       // big number assertion failing form some reason.
 
       // expect(expected.eq(ethers.BigNumber.from('29'))).to.equal(true);
-      // ? - check, value appearing is expectedPerSecondHALOReward
+      // ? - check, currently the value appearing is expectedPerSecondHALOReward
       //expect(actual).to.equal(expected)
-
-      expect(`${actual}`).to.equal(`${expectedHALORewardPerBlock}`)
+      // ? - used ether's big number library for the comparing
+      expect(
+        BigNumber.from(actual).eq(
+          BigNumber.from(`${expectedHALORewardPerBlock}`)
+        )
+      )
     })
 
     it.skip('should get monthly halo', async () => {

@@ -298,6 +298,7 @@ describe('HALOHALO Contract', async () => {
         'Vested rewards not released'
       ).to.not.be.reverted
       // TODO: Check value vested after rewards contract update
+      // ? - still not sure how to resolve this, your computations might affect the logic? not sure if there's any changes
     })
 
     it('Calculates current value of HALOHALO in terms of HALO after vesting', async () => {
@@ -328,7 +329,7 @@ describe('HALOHALO Contract', async () => {
       //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
     })
 
-    // ? - errors in node, okay in npx hardhat test
+    // ? - errors in node (timing out), okay in npx hardhat test
     it('HALO earned by User A > HALO earned by User B > HALO earned by User C', async () => {
       console.log(
         'Current HALO balance in Halohalo:' +
