@@ -122,13 +122,6 @@ describe('Rewards Contract', async () => {
     const ammLpRewardsRatio = 0.4 * BPS
     const vestingRewardsRatio = 0.2 * BPS
     
-    // // right now we don't need to change ammLpRewardsRatio to ammLpRewardsRatio since its the same
-    // expectedPerSecondHALOReward =
-    //   (parseFloat(ethers.utils.formatEther(startingRewards)) / epochLength) *
-    //   0.4
-
-    // console.log('expectedPerSecondHALOReward: ', expectedPerSecondHALOReward)
-
     const minterLpPools = [[collateralERC20Contract.address, 10]]
     const ammLpPools = [[lpTokenContract.address, 10]]
 
@@ -270,9 +263,6 @@ describe('Rewards Contract', async () => {
   })
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
-    // let depositTxTs = 0
-    // let withdrawalTxTs = 0
-
     it.only('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
 
       const startBlock = await ethers.provider.getBlockNumber()
