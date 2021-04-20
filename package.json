@@ -1,7 +1,7 @@
 {
   "name": "hardhat-project",
   "scripts": {
-    "test": "npx hardhat test",
+    "test": "npx hardhat --network localhost test",
     "deploy:hardhat": "npx hardhat run scripts/deployAllLocal.ts",
     "deploy:local": "npx hardhat run scripts/deployAllLocal.ts --network \"localhost\"",
     "deploy:kovan": "npx hardhat run scripts/deployAllKovan.ts --network \"kovan\"",
