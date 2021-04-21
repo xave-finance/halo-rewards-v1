@@ -299,7 +299,7 @@ describe('HALOHALO Contract', async () => {
 
       // expect 2%++ APY
       expect(formatEther(await halohaloContract.APY())).to.equal(
-        '0.01729610603745462'
+        '0.00345922120742547'
       )
     })
 

@@ -636,7 +636,7 @@ describe('Rewards Contract', async () => {
 
   describe('Rewards helper functions', () => {
     it('should calc rewards', async () => {
-      let currentBlock = await ethers.provider.getBlockNumber();
+      const currentBlock = await ethers.provider.getBlockNumber();
       console.log(`Current block ${currentBlock}`);
 
       const actual = await rewardsContract.calcReward(currentBlock - 1)
@@ -645,9 +645,11 @@ describe('Rewards Contract', async () => {
       expect(Number(actual)).to.equal(expected)
     })
 
-    it.skip('should get monthly halo', async () => {
+    it('should get monthly halo', async () => {
       const actual = await rewardsContract.monthlyHalo()
-      console.log(actual)
+      const expected = Number(7500000)
+
+      expect(Number(actual)).to.equal(expected)
     })
 
     it.skip('should get nMonths', async () => {
@@ -656,8 +658,9 @@ describe('Rewards Contract', async () => {
     })
 
     it.skip('should get diffTime', async () => {
+      await time.advanceBlock()
       const actual = await rewardsContract.diffTime()
-      console.log(actual)
+      console.log(Number(actual))
     })
   })
 })
