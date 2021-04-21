@@ -427,7 +427,6 @@ describe('Rewards Contract', async () => {
       )
 
       const expectedUnclaimedHaloPoolRewards = 232000
-        // (updateTxTs - depositTxTs) * expectedPerSecondHALOReward
 
       expect(actualUnclaimedHaloPoolRewards).to.equal(
         expectedUnclaimedHaloPoolRewards
@@ -447,7 +446,6 @@ describe('Rewards Contract', async () => {
       console.log('\tUpdate Amm Lp pool Rewards')
 
       await rewardsContract.updateAmmRewardPool(lpTokenContract.address)
-      //var updateTxTs = (await ethers.provider.getBlock()).timestamp
 
       console.log(
         '\tUnclaimed rewards for user after withdrawing LPT should be 0'
@@ -477,8 +475,7 @@ describe('Rewards Contract', async () => {
           )
         )
       )
-      const expectedBal = 1
-        // (withdrawalTxTs - depositTxTs) * expectedPerSecondHALOReward + haloBal
+      const expectedBal = BigInt('0')
       expect(actualHaloBal).to.equal(expectedBal)
     })
   })
@@ -690,8 +687,7 @@ describe('Rewards Contract', async () => {
       console.log(`Current block ${currentBlock}`);
 
       const actual = await rewardsContract.calcReward(currentBlock - 1)
-      //await time.advanceBlock()
-      const expected = 29 // new BN('29')
+      const expected = new BN('290000')
 
       // big number assertion failing form some reason.
       // expect(expected.eq(ethers.BigNumber.from('29'))).to.equal(true);
