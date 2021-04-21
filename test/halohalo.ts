@@ -3,6 +3,10 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { BigNumber } from 'ethers'
 
+import {
+  time,
+} from '@openzeppelin/test-helpers'
+
 let contractCreatorAccount
 let rewardsContract
 let collateralERC20Contract
@@ -24,11 +28,11 @@ let addr2
 let addrs
 
 let expectedPerSecondHALOReward
-describe.skip('HALOHALO Contract', async () => {
+describe('HALOHALO Contract', async () => {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
-    // console.log(addrs.map(addr=>addr.address));
+
     const CollateralERC20 = await ethers.getContractFactory('CollateralERC20')
     collateralERC20Contract = await CollateralERC20.deploy(
       'collateral ERC20',
@@ -41,9 +45,7 @@ describe.skip('HALOHALO Contract', async () => {
       owner.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
-    console.log(
-      INITIAL_MINT.toString() + ' collateral ERC20 minted to ' + owner.address
-    )
+    console.log(`${INITIAL_MINT} collateral ERC20 minted to ${owner.address}`)
     console.log()
 
     const LpToken = await ethers.getContractFactory('LpToken')
@@ -99,16 +101,13 @@ describe.skip('HALOHALO Contract', async () => {
 
     const RewardsContract = await ethers.getContractFactory('Rewards')
     const startingRewards = ethers.utils.parseEther('7500000')
-    const decayBase = ethers.utils.parseEther('0.813')
+
     epochLength = 30 * 24 * 60 * 5
     console.log('BPS = ', BPS)
     const minterLpRewardsRatio = 0.4 * BPS
     const ammLpRewardsRatio = 0.4 * BPS
     const vestingRewardsRatio = 0.2 * BPS
-    // right now we don't need to change ammLpRewardsRatio to ammLpRewardsRatio since its the same
-    expectedPerSecondHALOReward =
-      (parseFloat(ethers.utils.formatEther(startingRewards)) / epochLength) *
-      0.4
+
     console.log('expectedPerSecondHALOReward: ', expectedPerSecondHALOReward)
     genesisBlock = 0
     const minterLpPools = [[collateralERC20Contract.address, 10]]
@@ -126,6 +125,7 @@ describe.skip('HALOHALO Contract', async () => {
       minterLpPools,
       ammLpPools
     )
+
     await rewardsContract.deployed()
     console.log('Rewards Contract deployed')
     console.log()
@@ -146,11 +146,9 @@ describe.skip('HALOHALO Contract', async () => {
       rewardsContract.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
+
     console.log(
-      'Rewards contract approved to transfer ' +
-        DECIMALS.toString() +
-        ' LPT of ' +
-        owner.address
+      `Rewards contract approved to transfer ${Number(DECIMALS)} LPT of ${owner.address}`
     )
     console.log()
 
@@ -158,11 +156,9 @@ describe.skip('HALOHALO Contract', async () => {
       minterContract.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
+
     console.log(
-      'Minter contract approved to transfer ' +
-        DECIMALS.toString() +
-        ' collateral ERC20 of ' +
-        owner.address
+      `Minter contract approved to transfer  ${Number(DECIMALS)} collateral ERC20 of ${owner.address}`
     )
     console.log()
 
@@ -170,31 +166,28 @@ describe.skip('HALOHALO Contract', async () => {
       minterContract.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
+
     console.log(
-      'Minter contract approved to transfer ' +
-        DECIMALS.toString() +
-        ' UBE of ' +
-        owner.address
+      `Minter contract approved to transfer ${Number(DECIMALS)} UBE of ${owner.address}`
     )
     console.log()
 
     const ownerHaloBalance = await haloTokenContract.balanceOf(owner.address)
     await haloTokenContract.transfer(rewardsContract.address, ownerHaloBalance)
     console.log(
-      ownerHaloBalance.toString() +
-        ' HALO tokens transfered to rewards contract'
+      `${Number(ownerHaloBalance)}  HALO tokens transfered to rewards contract`
     )
 
     // Mint halo for owner
     await haloTokenContract.mint(owner.address, INITIAL_USER_HALO_MINT)
 
     console.log(
-      INITIAL_USER_HALO_MINT + ' minted to user contract ' + owner.address
+      `${INITIAL_USER_HALO_MINT} minted to user contract ${owner.address}`
     )
     const ownerUbeBalance = await ubeContract.balanceOf(owner.address)
     await ubeContract.transfer(minterContract.address, ownerUbeBalance)
     console.log(
-      ownerUbeBalance.toString() + ' UBE tokens transfered to minter contract'
+      `${ownerUbeBalance} UBE tokens transfered to minter contract`
     )
     console.log(
       '==========================================================\n\n'
@@ -301,12 +294,12 @@ describe.skip('HALOHALO Contract', async () => {
       ).to.not.be.reverted
 
       // sleep for 5 for updateIntervalDuration
-      await sleep(5)
+      await time.advanceBlock()
       await halohaloContract.estimateHaloHaloAPY()
 
       // expect 2%++ APY
       expect(formatEther(await halohaloContract.APY())).to.equal(
-        '0.02075532724498918'
+        '0.01729610603745462'
       )
     })
 
@@ -363,7 +356,8 @@ describe.skip('HALOHALO Contract', async () => {
         .connect(addrs[0])
         .enter(ethers.utils.parseEther('100'))
 
-      sleep(3)
+      //sleep(3)
+      await time.advanceBlock()
 
       console.log(
         'Releasing vested bonus tokens to halohalo from Rewards contract'
@@ -382,7 +376,8 @@ describe.skip('HALOHALO Contract', async () => {
         .connect(addrs[1])
         .enter(ethers.utils.parseEther('100'))
 
-      sleep(3)
+      //sleep(3)
+      await time.advanceBlock()
 
       console.log(
         'Releasing vested bonus tokens to halohalo from Rewards contract'

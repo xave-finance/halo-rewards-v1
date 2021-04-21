@@ -1,11 +1,6 @@
-import { parseEther, formatEther } from 'ethers/lib/utils'
-
 import {
-  BN,
-  expectEvent,
-  expectRevert,
   time,
-} from "@openzeppelin/test-helpers"
+} from '@openzeppelin/test-helpers'
 
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
@@ -30,14 +25,13 @@ let addr2
 let addrs
 
 const sleepTime = 5000
-
 const expectedHALORewardPerBlock = 290000
 
 describe('Rewards Contract', async () => {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
-    // console.log(addrs.map(addr=>addr.address));
+
     const CollateralERC20 = await ethers.getContractFactory('CollateralERC20')
     collateralERC20Contract = await CollateralERC20.deploy(
       'collateral ERC20',
@@ -50,9 +44,7 @@ describe('Rewards Contract', async () => {
       owner.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
-    console.log(
-      INITIAL_MINT.toString() + ' collateral ERC20 minted to ' + owner.address
-    )
+    console.log(`${INITIAL_MINT} collateral ERC20 minted to ${owner.address}`)
     console.log()
 
     const LpToken = await ethers.getContractFactory('LpToken')
@@ -66,11 +58,13 @@ describe('Rewards Contract', async () => {
       owner.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
+
     await lpTokenContract2.mint(
       owner.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
-    console.log(INITIAL_MINT.toString() + ' LPT minted to ' + owner.address)
+
+    console.log(`${INITIAL_MINT} LPT minted to ${owner.address}`)
     console.log()
 
     const UBE = await ethers.getContractFactory('UBE')
@@ -135,6 +129,7 @@ describe('Rewards Contract', async () => {
       minterLpPools,
       ammLpPools
     )
+
     await rewardsContract.deployed()
     console.log('Rewards Contract deployed')
     console.log()
@@ -155,6 +150,7 @@ describe('Rewards Contract', async () => {
       rewardsContract.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
+
     console.log(
       `Rewards contract approved to transfer ${Number(DECIMALS)} LPT of ${owner.address}`
     )
@@ -164,6 +160,7 @@ describe('Rewards Contract', async () => {
       minterContract.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
+
     console.log(
       `Minter contract approved to transfer  ${Number(DECIMALS)} collateral ERC20 of ${owner.address}`
     )
@@ -173,9 +170,9 @@ describe('Rewards Contract', async () => {
       minterContract.address,
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
+
     console.log(
       `Minter contract approved to transfer ${Number(DECIMALS)} UBE of ${owner.address}`
-        
     )
     console.log()
 
