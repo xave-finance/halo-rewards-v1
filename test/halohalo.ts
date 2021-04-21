@@ -2,6 +2,7 @@ import { parseEther, formatEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { BigNumber } from 'ethers'
+import { time } from '@openzeppelin/test-helpers'
 
 let contractCreatorAccount
 let rewardsContract
@@ -27,7 +28,7 @@ let addrs
 let halohaloPrice
 
 let expectedPerSecondHALOReward
-describe.skip('HALOHALO Contract', async () => {
+describe('HALOHALO Contract', async () => {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
@@ -295,13 +296,12 @@ describe.skip('HALOHALO Contract', async () => {
         'Vested rewards not released'
       ).to.not.be.reverted
       // TODO: Check value vested after rewards contract update
-      // ? - still not sure how to resolve this, your computations might affect the logic? not sure if there's any changes
     })
 
     it('Calculates current value of HALOHALO in terms of HALO after vesting', async () => {
-      // vesting
-
+      // Simulate sending 20% of released rewards
       await haloTokenContract.mint(halohaloContract.address, parseEther('120'))
+
       const halohaloPriceAfterVesting = +formatEther(
         await halohaloContract.getCurrentHaloHaloPrice()
       )
@@ -325,7 +325,6 @@ describe.skip('HALOHALO Contract', async () => {
       )
     })
 
-    // ? - errors in node (timing out), okay in npx hardhat test
     it('HALO earned by User A > HALO earned by User B > HALO earned by User C', async () => {
       console.log(
         'Current HALO balance in Halohalo:' +
@@ -359,10 +358,10 @@ describe.skip('HALOHALO Contract', async () => {
         .connect(addrs[0])
         .enter(ethers.utils.parseEther('100'))
 
-      sleep(3)
+      await time.increase(3000)
 
       console.log(
-        'Releasing vested bonus tokens to halohalo from Rewards contract'
+        'Releasing vested bonus tokens to halohalo from Rewards contract #1'
       )
       const currVestedHalo = (
         await rewardsContract.getUnclaimedVestingRewards()
@@ -378,31 +377,45 @@ describe.skip('HALOHALO Contract', async () => {
         .connect(addrs[1])
         .enter(ethers.utils.parseEther('100'))
 
-      sleep(3)
+      await time.increase(3000)
 
       console.log(
-        'Releasing vested bonus tokens to halohalo from Rewards contract'
+        'Releasing vested bonus tokens to halohalo from Rewards contract #2'
       )
-      await rewardsContract.releaseVestedRewards()
+
+      // ? - still add release vested rewards? why was it added here?
+      console.log(
+        `Current unclaimed halo ${(
+          await rewardsContract.getUnclaimedVestingRewards()
+        ).toString()}`
+      )
+      //await rewardsContract.releaseVestedRewards()
 
       console.log('100 HALO deposited by User C to halohalo')
       await haloTokenContract
         .connect(addrs[2])
         .approve(halohaloContract.address, ethers.utils.parseEther('100'))
+      console.log(`Transfer to ${addrs[2].address} approved`)
       await halohaloContract
         .connect(addrs[2])
         .enter(ethers.utils.parseEther('100'))
+
+      console.log(`${addrs[2].address} entered`)
+
       console.log('All users leave halohalo')
 
       await halohaloContract
         .connect(addrs[0])
         .leave(await halohaloContract.balanceOf(addrs[0].address))
+      console.log('Address 0 left')
       await halohaloContract
         .connect(addrs[1])
         .leave(await halohaloContract.balanceOf(addrs[1].address))
+      console.log('Address 1 left')
       await halohaloContract
         .connect(addrs[2])
         .leave(await halohaloContract.balanceOf(addrs[2].address))
+      console.log('Address 2 left')
 
       console.log('Final HALO balances:')
       console.log(
@@ -423,6 +436,6 @@ describe.skip('HALOHALO Contract', async () => {
             await haloTokenContract.balanceOf(addrs[2].address)
           )
       )
-    })
+    }).timeout(100000)
   })
 })

@@ -116,7 +116,7 @@ describe('Rewards Contract', async () => {
     //const minterLpRewardsRatio = 0.4 * BPS
     const ammLpRewardsRatio = 0.4 * BPS
     const vestingRewardsRatio = 0.2 * BPS
-    
+
     const minterLpPools = [[collateralERC20Contract.address, 10]]
     const ammLpPools = [[lpTokenContract.address, 10]]
 
@@ -153,7 +153,9 @@ describe('Rewards Contract', async () => {
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
     console.log(
-      `Rewards contract approved to transfer ${Number(DECIMALS)} LPT of ${owner.address}`
+      `Rewards contract approved to transfer ${Number(DECIMALS)} LPT of ${
+        owner.address
+      }`
     )
     console.log()
 
@@ -162,7 +164,9 @@ describe('Rewards Contract', async () => {
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
     console.log(
-      `Minter contract approved to transfer  ${Number(DECIMALS)} collateral ERC20 of ${owner.address}`
+      `Minter contract approved to transfer  ${Number(
+        DECIMALS
+      )} collateral ERC20 of ${owner.address}`
     )
     console.log()
 
@@ -171,20 +175,22 @@ describe('Rewards Contract', async () => {
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
     console.log(
-      `Minter contract approved to transfer ${Number(DECIMALS)} UBE of ${owner.address}`
-        
+      `Minter contract approved to transfer ${Number(DECIMALS)} UBE of ${
+        owner.address
+      }`
     )
     console.log()
 
     const ownerHaloBalance = await haloTokenContract.balanceOf(owner.address)
     await haloTokenContract.transfer(rewardsContract.address, ownerHaloBalance)
     console.log(
-        `${Number(ownerHaloBalance)}  HALO tokens transfered to rewards contract`
+      `${Number(ownerHaloBalance)}  HALO tokens transfered to rewards contract`
     )
 
     const ownerUbeBalance = await ubeContract.balanceOf(owner.address)
     await ubeContract.transfer(minterContract.address, ownerUbeBalance)
-    console.log(`${Number(ownerUbeBalance)} UBE tokens transfered to minter contract`
+    console.log(
+      `${Number(ownerUbeBalance)} UBE tokens transfered to minter contract`
     )
     console.log(
       '==========================================================\n\n'
@@ -248,7 +254,7 @@ describe('Rewards Contract', async () => {
   })
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
-    it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
+    it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {})
 
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
       expect(
@@ -362,7 +368,7 @@ describe('Rewards Contract', async () => {
       )
 
       // calculate expected HALO rewards balance
-      const expectedUnclaimedHaloRewardsBal = Number(232000) 
+      const expectedUnclaimedHaloRewardsBal = Number(232000)
 
       expect(Number(actualUnclaimedHaloRewardBal)).to.equal(
         expectedUnclaimedHaloRewardsBal
@@ -425,9 +431,7 @@ describe('Rewards Contract', async () => {
   })
 
   describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', () => {
-
     it('I earn the correct number of HALO tokens per time interval on depositing LPT', async () => {
-
       // deposit LP tokens to Rewards contract
       const depositPoolTxn = await rewardsContract.depositPoolTokens(
         lpTokenContract.address,
@@ -558,7 +562,9 @@ describe('Rewards Contract', async () => {
 
   describe('As an Admin, I can update minter lp collateral allocation points', () => {
     it('collateral ERC20 allocation points before', async () => {
-      const actual = await rewardsContract.getMinterLpPoolInfo(collateralERC20Contract.address)
+      const actual = await rewardsContract.getMinterLpPoolInfo(
+        collateralERC20Contract.address
+      )
       expect(Number(actual.allocPoint)).to.equal(Number(10))
     })
 
@@ -599,9 +605,8 @@ describe('Rewards Contract', async () => {
 
   describe('As an Admin, I can remove whitelisted AMM LP pool', () => {
     it('Should be valid amm lp', async () => {
-      expect(
-        await rewardsContract.isValidAmmLp(lpTokenContract.address)
-      ).to.be.true
+      expect(await rewardsContract.isValidAmmLp(lpTokenContract.address)).to.be
+        .true
     })
 
     it('If caller is not contract owner, it should fail', async () => {
@@ -623,9 +628,8 @@ describe('Rewards Contract', async () => {
     })
 
     it('Should not be valid amm lp', async () => {
-      expect(
-        await rewardsContract.isValidAmmLp(lpTokenContract.address)
-      ).to.be.false
+      expect(await rewardsContract.isValidAmmLp(lpTokenContract.address)).to.be
+        .false
     })
   })
 
