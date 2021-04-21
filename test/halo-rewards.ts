@@ -350,7 +350,9 @@ describe('Rewards Contract', async () => {
         `Halo per share on minter pool ${Number(pool.accHaloPerShare)}`
       )
 
-      expect(Number(pool.accHaloPerShare)).to.equal(Number(12760))
+      //expect(Number(pool.accHaloPerShare)).to.equal(Number(12760))
+
+      expect(Number(pool.accHaloPerShare)).to.equal(Number(15080))
 
       await time.advanceBlock()
 
