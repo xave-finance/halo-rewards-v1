@@ -4,7 +4,6 @@ import { BN, expectEvent, expectRevert, time } from '@openzeppelin/test-helpers'
 
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { BigNumber } from 'ethers'
 
 let contractCreatorAccount
 let rewardsContract
@@ -113,7 +112,6 @@ describe('Rewards Contract', async () => {
     epochLength = 30 * 24 * 60 * 5
     console.log('BPS = ', BPS)
 
-    //const minterLpRewardsRatio = 0.4 * BPS
     const ammLpRewardsRatio = 0.4 * BPS
     const vestingRewardsRatio = 0.2 * BPS
 
@@ -124,10 +122,10 @@ describe('Rewards Contract', async () => {
       haloTokenContract.address,
       startingRewards,
       epochLength,
-      //minterLpRewardsRatio, //in bps, multiplied by 10^4
+      // minterLpRewardsRatio, //in bps, multiplied by 10^4
       ammLpRewardsRatio, //in bps, multiplied by 10^4
       vestingRewardsRatio, //in bps, multiplied by 10^4
-      //minterContract.address,
+      // minterContract.address,
       genesisBlock,
       minterLpPools,
       ammLpPools
@@ -254,8 +252,6 @@ describe('Rewards Contract', async () => {
   })
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
-    it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {})
-
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
       expect(
         (await rewardsContract.getMinterLpRewardsRatio()).toString()
@@ -302,11 +298,7 @@ describe('Rewards Contract', async () => {
       console.log('Minter Contract is set and verified')
     })
 
-    // it.only('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
-    it.skip('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
-      await expect(
-        rewardsContract.setMinterContractAddress(minterContract.address)
-      ).to.not.be.reverted
+    it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
       const startBlock = await ethers.provider.getBlockNumber()
       console.log(`Start block ${startBlock}`)
 
@@ -375,7 +367,7 @@ describe('Rewards Contract', async () => {
       )
     })
 
-    it.skip('I stop earning HALO tokens on withdrawing collateral ERC20', async () => {
+    it('I stop earning HALO tokens on withdrawing collateral ERC20', async () => {
       // withdraw all collateral from Minter
       const withdrawlMinterTxn = await minterContract.redeemByCollateralAddress(
         ethers.utils.parseEther('100'),
@@ -423,7 +415,7 @@ describe('Rewards Contract', async () => {
       )
     })
 
-    it.skip('Should have correct amount of HALO token balance', async () => {
+    it('Should have correct amount of HALO token balance', async () => {
       const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
       const expectedHaloBal = Number(232000)
       expect(Number(actualHaloBal)).to.equal(expectedHaloBal)
@@ -500,7 +492,7 @@ describe('Rewards Contract', async () => {
         expectedUnclaimedHaloPoolRewards
       )
     })
-    // ? - i'm getting NaN here
+
     it('Should have correct amount of HALO token balance', async () => {
       const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
       const expectedBal = Number(580000)
