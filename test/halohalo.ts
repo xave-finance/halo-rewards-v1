@@ -23,15 +23,8 @@ let addr1
 let addr2
 let addrs
 
-const sleepTime = 5
-const sleep = (delay) =>
-  new Promise((resolve) => {
-    console.log('\tSleeping for ' + delay + ' secs...')
-    setTimeout(resolve, delay * 1000)
-  })
-
 let expectedPerSecondHALOReward
-describe('HALOHALO Contract', async () => {
+describe.skip('HALOHALO Contract', async () => {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
@@ -218,6 +211,7 @@ describe('HALOHALO Contract', async () => {
         ethers.utils.parseEther(INITIAL_MINT.toString())
       )
     })
+
     it('Lptoken should be deployed', async () => {
       expect(await lpTokenContract.symbol()).to.equal('LPT')
       expect(await lpTokenContract.name()).to.equal('LpToken')
@@ -227,14 +221,17 @@ describe('HALOHALO Contract', async () => {
       expect(await ubeContract.symbol()).to.equal('UBE')
       expect(await ubeContract.name()).to.equal('UBE')
     })
+
     it('HaloToken should be deployed', async () => {
       expect(await haloTokenContract.symbol()).to.equal('HALO')
       expect(await haloTokenContract.name()).to.equal('Halo')
     })
+
     it('Halohalo should be deployed', async () => {
       expect(await halohaloContract.symbol()).to.equal('HALOHALO')
       expect(await halohaloContract.name()).to.equal('HaloHalo')
     })
+
     it('Rewards Contract should be deployed', async () => {
       expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10)
       expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
@@ -256,7 +253,7 @@ describe('HALOHALO Contract', async () => {
   })
 
   describe('Earn vesting rewards by staking HALO inside halohalo', () => {
-    var ownerHaloBal
+    let ownerHaloBal
 
     it('Reverts if there is no HaloHalo supply', async () => {
       await expect(halohaloContract.updateHaloHaloPrice()).to.be.revertedWith(
@@ -331,7 +328,6 @@ describe('HALOHALO Contract', async () => {
       expect(await haloTokenContract.balanceOf(owner.address)).to.equal(
         haloInHalohalo
       )
-      //console.log(ethers.utils.formatEther(await haloTokenContract.balanceOf(owner.address)));
     })
 
     it('HALO earned by User A > HALO earned by User B > HALO earned by User C', async () => {
