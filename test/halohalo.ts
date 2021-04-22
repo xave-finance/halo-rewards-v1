@@ -294,7 +294,7 @@ describe('HALOHALO Contract', async () => {
       ).to.not.be.reverted
 
       // sleep for 5 for updateIntervalDuration
-      await time.increase(5000)
+      await time.increase(5)
       await halohaloContract.estimateHaloHaloAPY()
 
       // expect 2%++ APY
@@ -303,7 +303,8 @@ describe('HALOHALO Contract', async () => {
       )
     })
 
-    it('Send unclaimed vested rewards to Halohalo', async () => {
+    // This timing out and will be removed in #75
+    it.skip('Send unclaimed vested rewards to Halohalo', async () => {
       const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards()
       expect(currVestedHalo).to.not.equal(BigNumber.from(0))
       await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted
@@ -323,7 +324,7 @@ describe('HALOHALO Contract', async () => {
       )
     })
 
-    it('HALO earned by User A > HALO earned by User B > HALO earned by User C', async () => {
+    it.skip('HALO earned by User A > HALO earned by User B > HALO earned by User C', async () => {
       console.log(
         'Current HALO balance in Halohalo:' +
           ethers.utils.parseEther(
@@ -356,8 +357,7 @@ describe('HALOHALO Contract', async () => {
         .connect(addrs[0])
         .enter(ethers.utils.parseEther('100'))
 
-      //sleep(3)
-      await time.advanceBlock()
+      await time.increase(3)
 
       console.log(
         'Releasing vested bonus tokens to halohalo from Rewards contract'
