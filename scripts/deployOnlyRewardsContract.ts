@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat'
 import { parseEther, formatEther } from 'ethers/lib/utils'
 
-async function deployOnlyRewards() {
+const deployOnlyRewards = async () => {
   // We get the contract to deploy
   const [deployer] = await ethers.getSigners()
 
@@ -19,12 +19,12 @@ async function deployOnlyRewards() {
   const dummyCollateralAddress = '0xcE2E091802c44191ca147EAee66bFE064A01FE37'
   const BPTAddress = '0x37f80ac90235ce0d3911952d0ce49071a0ffdb1e'
 
-  const startingRewards = 0
+  const startingRewards = ethers.utils.parseEther('7500000')
   const epochLength = 60
   const minterLpRewardsRatio = 0.4 * BPS
   const ammLpRewardsRatio = 0.4 * BPS
   const vestingRewardsRatio = 0.2 * BPS
-  const genesisBlock = 0
+  const genesisBlock = await ethers.provider.getBlockNumber()
   const minterLpPools = [[dummyCollateralAddress, 10]]
   const ammLpPools = [[BPTAddress, 10]]
 
