@@ -651,16 +651,5 @@ describe('Rewards Contract', async () => {
 
       expect(Number(actual)).to.equal(expected)
     })
-
-    it.skip('should get nMonths', async () => {
-      const actual = await rewardsContract.nMonths()
-      console.log(actual)
-    })
-
-    it.skip('should get diffTime', async () => {
-      await time.advanceBlock()
-      const actual = await rewardsContract.diffTime()
-      console.log(Number(actual))
-    })
   })
 })
