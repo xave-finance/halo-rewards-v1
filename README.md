@@ -3,19 +3,16 @@
 ### Quick Start
 
 Install hardhat
-
-```
-cd hardhat
-npm install --save-dev hardhat
+```bash
+cd halo-rewards
+yarn install
 ```
 
 ### Running Tests
 
-```
-
-npm i
-
-npx hardhat test
+```bash
+yarn install
+yarn run test
 ```
 
 ### Using dev scripts

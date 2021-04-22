@@ -24,7 +24,7 @@ You will need the following things installed in order to run the app:
 
 - Nodejs `v14.15`. We **strongly** recommend you install via [NVM](https://github.com/creationix/nvm) to avoid incompatibility issues between different node projects.
 
-```
+```sh
    brew install nvm
    nvm install v14.15
    nvm use v14.15
@@ -32,12 +32,12 @@ You will need the following things installed in order to run the app:
 
 - Check that the correct node (v14.15) and npm (6.14.11) versions are installed
 
-```
+```sh
     node -v
     npm -v
 ```
 - Hardhat - for compiling, testing and debugging smart contracts. Read their [Quick Start](https://hardhat.org/getting-started/#quick-start) for more details.
-```
+```sh
 npm install --save-dev hardhat
 ```
 - Metamask  
