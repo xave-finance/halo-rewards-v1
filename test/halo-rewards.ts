@@ -1,6 +1,4 @@
-import {
-  time,
-} from '@openzeppelin/test-helpers'
+import { time } from '@openzeppelin/test-helpers'
 
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
@@ -176,7 +174,9 @@ describe('Rewards Contract', async () => {
     )
 
     console.log(
-      `Minter contract approved to transfer ${Number(DECIMALS)} UBE of ${owner.address}`
+      `Minter contract approved to transfer ${Number(DECIMALS)} UBE of ${
+        owner.address
+      }`
     )
     console.log()
 
@@ -280,8 +280,8 @@ describe('Rewards Contract', async () => {
 
       await expect(
         minterContract.depositByCollateralAddress(
-          parseEther('100'),
-          parseEther('100'),
+          ethers.utils.parseEther('100'),
+          ethers.utils.parseEther('100'),
           collateralERC20Contract.address
         )
       ).to.be.reverted
@@ -335,37 +335,22 @@ describe('Rewards Contract', async () => {
       const reward = await rewardsContract.calcReward(pool.lastRewardBlock)
       console.log(`Current reward per block ${Number(reward)}`)
       expect(Number(reward)).to.equal(expectedHALORewardPerBlock)
+
       // Check value of poo.accHaloPerShare ebefore next update
       const beforeAccHaloPerShare = Number(pool.accHaloPerShare)
+
       // this function needs to be called so that rewards state is updated and then becomes claimable
       const updateMinterTxn = await rewardsContract.updateMinterRewardPool(
         collateralERC20Contract.address
       )
-      const totalMinterAllocationPoints = Number(
-        await rewardsContract.totalMinterLpAllocs()
-      )
+
       pool = await rewardsContract.minterLpPools(
         collateralERC20Contract.address
       )
-      // TODO: Check if we can derive where 2320 come from
-      const haloRewardToBeAdded =
-        (Number(reward) *
-          Number(minterLpRewardsRatio) *
-          Number(pool.allocPoint)) /
-        totalMinterAllocationPoints /
-        BPS
 
       console.log(
         Number(await collateralERC20Contract.balanceOf(minterContract.address))
       )
-
-      /*
-      const expectedAccHaloPerShare =
-        haloRewardToBeAdded /
-        Number(await collateralERC20Contract.balanceOf(rewardsContract.address))
-      */
-
-      // ?? - 2320 difference between prev pool.accHaloPershare to current
 
       console.log(
         `Last reward block for minter pool ${Number(pool.lastRewardBlock)}`
@@ -375,8 +360,10 @@ describe('Rewards Contract', async () => {
       )
 
       // expect(Number(pool.accHaloPerShare)).to.equal(Number(12760))
-      // Expect current pool.accHaloPerShare to be greaterThanOrEqualTo the previous pool.accHaloShare
-      // Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
+      /**
+       * Expect current pool.accHaloPerShare to be greaterThanOrEqualTo the previous pool.accHaloShare
+       * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
+       * */
 
       expect(Number(pool.accHaloPerShare)).to.be.greaterThanOrEqual(
         beforeAccHaloPerShare
@@ -530,6 +517,7 @@ describe('Rewards Contract', async () => {
     })
   })
 
+  // TODO: Sending vesting rewards inside halohalo
   describe.skip('Earn vesting rewards by staking HALO inside halohalo', () => {
     it('Send unclaimed vested rewards to Halohalo', async () => {
       const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards()
@@ -723,8 +711,8 @@ describe('Rewards Contract', async () => {
 
   describe('Rewards helper functions', () => {
     it('should calc rewards', async () => {
-      const currentBlock = await ethers.provider.getBlockNumber();
-      console.log(`Current block ${currentBlock}`);
+      const currentBlock = await ethers.provider.getBlockNumber()
+      console.log(`Current block ${currentBlock}`)
 
       const actual = await rewardsContract.calcReward(currentBlock - 1)
       const expected = Number(290000)
