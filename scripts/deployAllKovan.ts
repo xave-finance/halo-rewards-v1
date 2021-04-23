@@ -43,12 +43,11 @@ const deployAllKovan = async () => {
    * Deploy Rewards contract
    */
   const startingRewards = ethers.utils.parseEther('7500000')
-  const decayBase = ethers.utils.parseEther('0.813')
   const epochLength = 60
   const minterLpRewardsRatio = 0.4 * BPS
   const ammLpRewardsRatio = 0.4 * BPS
   const vestingRewardsRatio = 0.2 * BPS
-  const genesisTs = Math.floor(Date.now() / 1000)
+  const genesisBlock = await ethers.provider.getBlockNumber()
   const minterLpPools = [[collateralERC20Contract.address, 10]]
 
   // Hardcode kovan balancer pools
@@ -61,13 +60,12 @@ const deployAllKovan = async () => {
   const rewardsContract = await Rewards.deploy(
     haloTokenContract.address,
     startingRewards,
-    decayBase, //multiplied by 10^18
     epochLength,
     minterLpRewardsRatio, //in bps, multiplied by 10^4
     ammLpRewardsRatio, //in bps, multiplied by 10^4
     vestingRewardsRatio, //in bps, multiplied by 10^4
     minterContract.address,
-    genesisTs,
+    genesisBlock,
     minterLpPools,
     ammLpPools
   )
@@ -80,6 +78,10 @@ const deployAllKovan = async () => {
     ethers.utils.parseEther((40 * INITIAL_MINT).toString())
   )
   console.log('Minted initial HALO for Rewards contract')
+
+  // Set Reward's Halo Chest Contract
+  await rewardsContract.setHaloChest(HaloHaloContract.address)
+  console.log('Done setting Halo Chest contract address')
 }
 
 deployAllKovan()
