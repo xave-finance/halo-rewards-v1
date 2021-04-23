@@ -254,9 +254,9 @@ describe('Rewards Contract', async () => {
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
-      expect(
-        (await rewardsContract.getMinterLpRewardsRatio()).toString()
-      ).to.equal('0')
+      expect(Number(await rewardsContract.getMinterLpRewardsRatio())).to.equal(
+        0
+      )
     })
 
     it('Set MinterLpRewards ratio and verify if ratio is correct', async () => {
