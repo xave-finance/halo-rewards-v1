@@ -58,6 +58,7 @@ contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
     uint256 totalShares = totalSupply();
     require(totalShares > 0, 'No HALOHALO supply');
     // convert to decimals to get answer in wei
+
     uint256 haloHaloPrice =
       halo.balanceOf(address(this)).mul(DECIMALS).div(totalShares);
 

@@ -5,12 +5,19 @@ import { ethers } from 'hardhat'
 let haloTokenContract
 let halohaloContract
 
+// Number constants
 const INITIAL_MINT = 10 ** 6
+const EXPECTED_HALOHALOPRICE_WITHOUT_VESTING = 1
+const EXPECTED_HALOHALOPRICE_AFTER_VESTING = 1.0000029593094943
+
+// String constants
 const INITIAL_USER_HALO_MINT = '550000000000000002000000' // got from the previous contract
+const INITIAL_HALO_FOR_USERS = '100'
+const SIMULATED_VESTED_REWARDS = '120'
 
 let owner
 let addrs
-let halohaloPrice
+let actualHaloHaloPrice
 
 describe('HALOHALO Contract', async () => {
   before(async () => {
@@ -75,6 +82,11 @@ describe('HALOHALO Contract', async () => {
       ).to.not.be.reverted
 
       expect(
+        Number(await halohaloContract.balanceOf(owner.address)),
+        'Halohalo balance and entered Halo is not equal'
+      ).to.equal(Number(ownerHaloBal))
+
+      expect(
         Number(await halohaloContract.genesisTimestamp()),
         'Genesis timestamp is zero after entering HALO.'
       ).to.be.greaterThan(0)
@@ -82,24 +94,36 @@ describe('HALOHALO Contract', async () => {
 
     it('Calculates current value of HALOHALO in terms of HALO without vesting', async () => {
       // Before vesting, current halohalo price must be 1:1
-      halohaloPrice = +formatEther(
+      actualHaloHaloPrice = +formatEther(
         await halohaloContract.getCurrentHaloHaloPrice()
       )
-      expect(halohaloPrice, 'HALOHALO is not equal to 1').to.equal(1)
+      expect(
+        actualHaloHaloPrice,
+        `HALOHALO is not equal to ${EXPECTED_HALOHALOPRICE_WITHOUT_VESTING}`
+      ).to.equal(EXPECTED_HALOHALOPRICE_WITHOUT_VESTING)
     })
 
     it('Calculates current value of HALOHALO in terms of HALO after vesting', async () => {
       // Simulate sending 20% of released rewards
-      await haloTokenContract.mint(halohaloContract.address, parseEther('120'))
+      await haloTokenContract.mint(
+        halohaloContract.address,
+        parseEther(SIMULATED_VESTED_REWARDS)
+      )
 
       const halohaloPriceAfterVesting = +formatEther(
         await halohaloContract.getCurrentHaloHaloPrice()
       )
       // Expect price to be greater than 1
       expect(
-        halohaloPrice,
-        `Current HALOHALO price is ${halohaloPriceAfterVesting} HALO and previous ${halohaloPrice} HALO`
+        actualHaloHaloPrice,
+        `Current HALOHALO price at ${actualHaloHaloPrice} HALO is not less than previous HALOHALO price at ${halohaloPriceAfterVesting} HALO)  `
       ).to.be.lessThan(halohaloPriceAfterVesting)
+
+      // Check the exact price
+      expect(
+        halohaloPriceAfterVesting,
+        `${halohaloPriceAfterVesting} is not equal to ${EXPECTED_HALOHALOPRICE_AFTER_VESTING}`
+      ).to.be.equal(EXPECTED_HALOHALOPRICE_AFTER_VESTING)
     })
 
     it('Claim staked HALO + bonus rewards from Halohalo and burn halohalo', async () => {
@@ -118,61 +142,71 @@ describe('HALOHALO Contract', async () => {
     it('HALO earned by User A > HALO earned by User B > HALO earned by User C', async () => {
       console.log('Minting HALO to be entered in the halohalo contract..')
       console.log()
-      console.log('Minting 100 HALO to User A...')
+      console.log(`Minting ${INITIAL_HALO_FOR_USERS} HALO to User A...`)
       await haloTokenContract.mint(
         addrs[0].address,
-        ethers.utils.parseEther('100')
+        parseEther(INITIAL_HALO_FOR_USERS)
       )
-      console.log('Minting 100 HALO to User B...')
+      console.log(`Minting ${INITIAL_HALO_FOR_USERS} HALO to User B...`)
       await haloTokenContract.mint(
         addrs[1].address,
-        ethers.utils.parseEther('100')
+        parseEther(INITIAL_HALO_FOR_USERS)
       )
-      console.log('Minting 100 HALO to User C...')
+      console.log(`Minting ${INITIAL_HALO_FOR_USERS} HALO to User C...`)
       await haloTokenContract.mint(
         addrs[2].address,
-        ethers.utils.parseEther('100')
+        parseEther(INITIAL_HALO_FOR_USERS)
       )
 
-      console.log('100 HALO deposited by User A to halohalo')
+      console.log(
+        `${INITIAL_HALO_FOR_USERS} HALO deposited by User A to halohalo`
+      )
       await haloTokenContract
         .connect(addrs[0])
-        .approve(halohaloContract.address, ethers.utils.parseEther('100'))
+        .approve(halohaloContract.address, parseEther(INITIAL_HALO_FOR_USERS))
 
       await halohaloContract
         .connect(addrs[0])
-        .enter(ethers.utils.parseEther('100'))
+        .enter(parseEther(INITIAL_HALO_FOR_USERS))
 
       console.log(
         'Simulate releasing vested bonus tokens to halohalo from Rewards contract #1'
       )
 
-      // Simulated vesting by minting additional HALO to halohalo contract
-      await haloTokenContract.mint(halohaloContract.address, parseEther('120'))
+      // Simulated 20% vesting by minting additional HALO to halohalo contract # 1
+      await haloTokenContract.mint(
+        halohaloContract.address,
+        parseEther(SIMULATED_VESTED_REWARDS)
+      )
 
-      console.log('100 HALO deposited by User B to halohalo')
+      console.log(
+        `${INITIAL_HALO_FOR_USERS} HALO deposited by User B to halohalo`
+      )
       await haloTokenContract
         .connect(addrs[1])
-        .approve(halohaloContract.address, ethers.utils.parseEther('100'))
+        .approve(halohaloContract.address, parseEther(INITIAL_HALO_FOR_USERS))
       await halohaloContract
         .connect(addrs[1])
-        .enter(ethers.utils.parseEther('100'))
+        .enter(parseEther(INITIAL_HALO_FOR_USERS))
 
       console.log(
         'Simulate releasing vested bonus tokens to halohalo from Rewards contract #2'
       )
 
-      // Simulated 20% vesting by minting additional HALO to halohalo contract
-      await haloTokenContract.mint(halohaloContract.address, parseEther('120'))
+      // Simulated 20% vesting by minting additional HALO to halohalo contract #2
+      await haloTokenContract.mint(
+        halohaloContract.address,
+        parseEther(SIMULATED_VESTED_REWARDS)
+      )
 
       console.log('100 HALO deposited by User C to halohalo')
       await haloTokenContract
         .connect(addrs[2])
-        .approve(halohaloContract.address, ethers.utils.parseEther('100'))
+        .approve(halohaloContract.address, parseEther(INITIAL_HALO_FOR_USERS))
       console.log(`Transfer to ${addrs[2].address} approved`)
       await halohaloContract
         .connect(addrs[2])
-        .enter(ethers.utils.parseEther('100'))
+        .enter(parseEther(INITIAL_HALO_FOR_USERS))
 
       console.log('All users leave halohalo')
 

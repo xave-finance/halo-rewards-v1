@@ -38,8 +38,7 @@ contract Rewards is Ownable {
   /// @notice utility constant
   uint256 public constant BPS = 10**4;
   uint256 public constant REWARD_PER_BLOCK = 29;
-  address private constant NULL_ADDRESS =
-    0x0000000000000000000000000000000000000000;
+  address private constant NULL_ADDRESS = address(0);
 
   using SafeMath for uint256;
 
@@ -68,12 +67,12 @@ contract Rewards is Ownable {
     uint256 amount
   );
   event MinterRewardPoolRatioUpdatedEvent(
-    address collateralAddress,
+    address indexed collateralAddress,
     uint256 accHaloPerShare,
     uint256 lastRewardBlock
   );
   event AmmLPRewardUpdatedEvent(
-    address lpAddress,
+    address indexed lpAddress,
     uint256 accHaloPerShare,
     uint256 lastRewardBlock
   );
@@ -211,10 +210,8 @@ contract Rewards is Ownable {
     haloTokenAddress = _haloTokenAddress;
     startingRewards = _startingRewards;
     epochLength = _epochLength;
-    // minterLpRewardsRatio = _minterLpRewardsRatio;
     ammLpRewardsRatio = _ammLpRewardsRatio;
     vestingRewardsRatio = _vestingRewardsRatio;
-    //minterContract = _minter;
     genesisBlock = _genesisBlock;
     lastHaloVestRewardBlock = genesisBlock;
     for (uint8 i = 0; i < _minterLpPools.length; i++) {
@@ -290,7 +287,10 @@ contract Rewards is Ownable {
   /// @notice updates minter reward pool state
   /// @dev keeps track of accHaloPerShare as the number of stakers change
   /// @param _collateralAddress address of the minter lp token
-  function updateMinterRewardPool(address _collateralAddress) public {
+  function updateMinterRewardPool(address _collateralAddress)
+    public
+    requireMinter()
+  {
     PoolInfo storage pool = minterLpPools[_collateralAddress];
     if (block.number <= pool.lastRewardBlock) {
       return;
@@ -316,7 +316,6 @@ contract Rewards is Ownable {
 
     pool.accHaloPerShare = pool.accHaloPerShare.add(
       haloReward.mul(DECIMALS).div(minterCollateralSupply)
-      //haloReward
     );
 
     pool.lastRewardBlock = block.number;
@@ -503,7 +502,6 @@ contract Rewards is Ownable {
     return totalAmmLpAllocs;
   }
 
-  /// @notice total minter lp alloc points
   /// @dev total minter lp alloc points
   /// @return total minter lp alloc points
   function getTotalMinterLpAllocationPoints() public view returns (uint256) {
@@ -565,7 +563,6 @@ contract Rewards is Ownable {
     return _unclaimed;
   }
 
-  /// @notice checks if an amm lp address is whitelisted
   /// @dev checks if an amm lp address is whitelisted
   /// @param _lpAddress address of the lp token
   /// @return true if valid amm lp
@@ -573,7 +570,6 @@ contract Rewards is Ownable {
     return ammLpPools[_lpAddress].whitelisted;
   }
 
-  /// @notice checks if a collateral address is whitelisted
   /// @dev checks if a collateral address is whitelisted
   /// @param _collateralAddress address of the collateral
   /// @return true if valid minter lp
@@ -585,7 +581,6 @@ contract Rewards is Ownable {
     return minterLpPools[_collateralAddress].whitelisted;
   }
 
-  /// @notice view amm lp pool info
   /// @dev view amm lp pool info
   /// @param _lpAddress address of the lp token
   /// @return poolinfo
@@ -597,7 +592,6 @@ contract Rewards is Ownable {
     return ammLpPools[_lpAddress];
   }
 
-  /// @notice view minter lp pool info
   /// @dev view minter lp pool info
   /// @param _collateralAddress address of the collateral
   /// @return view minter lp pool info
@@ -609,7 +603,6 @@ contract Rewards is Ownable {
     return minterLpPools[_collateralAddress];
   }
 
-  /// @notice get total claimed halo by user
   /// @dev get total claimed halo by user
   /// @param _account address of the user
   /// @return total claimed halo by user
@@ -621,7 +614,6 @@ contract Rewards is Ownable {
     return claimedHalo[_account];
   }
 
-  /// @notice get all whitelisted AMM LM pool addresses
   /// @dev get all whitelisted AMM LM pool addresses
   /// @return AMM LP addresses as array
   function getWhitelistedAMMPoolAddresses()
@@ -632,7 +624,14 @@ contract Rewards is Ownable {
     return ammLpPoolsAddresses;
   }
 
-  function getMinterContractAddress() public view returns (address) {
+  /// @dev get current minter address
+  /// @return minter address
+  function getMinterContractAddress()
+    public
+    view
+    requireMinter()
+    returns (address)
+  {
     return minterContract;
   }
 
@@ -795,13 +794,6 @@ contract Rewards is Ownable {
     emit VestedRewardsReleasedEvent(_unclaimed, block.number);
   }
 
-  /// @notice sets the address of the minter contract
-  /// @dev set the address of the minter contract
-  /// @param _minter address of the minter contract
-  function setMinter(address _minter) public onlyOwner {
-    minterContract = _minter;
-  }
-
   /// @notice sets the address of the halochest contract
   /// @dev set the address of the halochest contract
   /// @param _haloChest address of the halochest contract
@@ -821,10 +813,13 @@ contract Rewards is Ownable {
   /****************************************
    *               MODIFIERS              *
    ****************************************/
-
+  /// @dev require minter to be set before funtion is called
+  modifier requireMinter() {
+    require(minterContract != NULL_ADDRESS, 'minter contract is not set');
+    _;
+  }
   /// @dev only minter contract can call function
   modifier onlyMinter() {
-    require(minterContract != NULL_ADDRESS, 'minter contract is not set');
     require(
       msg.sender == minterContract,
       'Only minter contract can call this function'
