@@ -402,7 +402,7 @@ contract Rewards is Ownable {
     address _collateralAddress,
     address _account,
     uint256 _amount
-  ) public onlyMinter {
+  ) public onlyMinter() requireMinter() {
     require(
       minterLpPools[_collateralAddress].whitelisted == true,
       'Error: Collateral type not allowed'
@@ -439,7 +439,7 @@ contract Rewards is Ownable {
     address _collateralAddress,
     address _account,
     uint256 _amount
-  ) public onlyMinter {
+  ) public onlyMinter() requireMinter() {
     //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
 
     PoolInfo storage pool = minterLpPools[_collateralAddress];
@@ -482,7 +482,7 @@ contract Rewards is Ownable {
   function withdrawUnclaimedMinterLpRewards(
     address _collateralAddress,
     address _account
-  ) public onlyMinter {
+  ) public onlyMinter() requireMinter() {
     PoolInfo storage pool = minterLpPools[_collateralAddress];
     UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
