@@ -100,7 +100,7 @@ contract Rewards is Ownable {
   }
 
   /// @notice address of the halo erc20 token
-  address public immutable haloHaloTokenAddress;
+  address public immutable rewardsTokenAddress;
   /// @notice block number of rewards genesis
   uint256 public genesisBlock;
   /// @notice rewards allocated for the first month
@@ -123,9 +123,6 @@ contract Rewards is Ownable {
 
   /// @notice address of the minter contract
   address public minterContract;
-
-  /// @notice address of the staking contract
-  address public haloChestContract;
 
   /// @notice timestamp of last allocation of rewards to stakers
   uint256 public lastHaloVestRewardBlock;
@@ -189,29 +186,26 @@ contract Rewards is Ownable {
 
   /// @notice initiates the contract with predefined params
   /// @dev initiates the contract with predefined params
-  /// @param _haloHaloTokenAddress address of the halo erc20 token
+  /// @param _rewardsTokenAddress This is currently the HALO HALO token
   /// @param _startingRewards rewards allocated for the first month
   /// @param _epochLength length of a month = 30*24*60*60
   /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
-  /// @param _vestingRewardsRatio percentage of rewards allocated to stakers in bps
   /// @param _genesisBlock timestamp of rewards genesis
   /// @param _minterLpPools info of whitelisted minter Lp pools at genesis
   /// @param _ammLpPools info of whitelisted amm Lp pools at genesis
   constructor(
-    address _haloHaloTokenAddress,
+    address _rewardsTokenAddress,
     uint256 _startingRewards,
     uint256 _epochLength,
     uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
-    uint256 _vestingRewardsRatio, //in bps, multiplied by 10^4
     uint256 _genesisBlock,
     Pool[] memory _minterLpPools,
     Pool[] memory _ammLpPools
   ) public {
-    haloHaloTokenAddress = _haloHaloTokenAddress;
+    rewardsTokenAddress = _rewardsTokenAddress;
     startingRewards = _startingRewards;
     epochLength = _epochLength;
     ammLpRewardsRatio = _ammLpRewardsRatio;
-    vestingRewardsRatio = _vestingRewardsRatio;
     genesisBlock = _genesisBlock;
     lastHaloVestRewardBlock = genesisBlock;
     for (uint8 i = 0; i < _minterLpPools.length; i++) {
@@ -772,36 +766,6 @@ contract Rewards is Ownable {
     minterLpPools[_collateralAddress].whitelisted = false;
   }
 
-  /// @notice releases unclaimed vested rewards for stakers for extra bonus
-  /// @dev releases unclaimed vested rewards for stakers for extra bonus
-  function releaseVestedRewards() public onlyOwner {
-    require(
-      block.number > lastHaloVestRewardBlock,
-      'block.number<lastHaloVestRewardBlock'
-    );
-    uint256 _diffTime = diffTime();
-
-    require(
-      _diffTime < epochLength.mul(DECIMALS),
-      '_diffTime > epochLength.mul(DECIMALS)'
-    );
-
-    uint256 _accHalo = accHalo(_diffTime);
-    uint256 _unclaimed = unclaimed(_diffTime);
-
-    vestingRewardsDebt = _accHalo.mul(vestingRewardsRatio).div(BPS);
-    safeHaloHaloTransfer(haloChestContract, _unclaimed);
-    emit VestedRewardsReleasedEvent(_unclaimed, block.number);
-  }
-
-  /// @notice sets the address of the halochest contract
-  /// @dev set the address of the halochest contract
-  /// @param _haloChest address of the halochest contract
-  function setHaloChest(address _haloChest) public onlyOwner {
-    require(_haloChest != address(0), 'Set to valid address');
-    haloChestContract = _haloChest;
-  }
-
   /// @notice set genesis timestamp
   /// @dev set genesis timestamp
   /// @param _genesisBlock genesis timestamp
@@ -919,9 +883,9 @@ contract Rewards is Ownable {
   /// @param _to address of the recipient
   /// @param _amount amount of halo tokens
   function safeHaloHaloTransfer(address _to, uint256 _amount) internal {
-    uint256 haloBal = IERC20(haloHaloTokenAddress).balanceOf(address(this));
+    uint256 haloBal = IERC20(rewardsTokenAddress).balanceOf(address(this));
     require(_amount <= haloBal, 'Not enough HALO HALO tokens in the contract');
-    IERC20(haloHaloTokenAddress).transfer(_to, _amount);
+    IERC20(rewardsTokenAddress).transfer(_to, _amount);
     claimedHaloHalo[_to] = claimedHaloHalo[_to].add(_amount);
   }
 
