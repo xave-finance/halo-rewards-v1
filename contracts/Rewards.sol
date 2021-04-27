@@ -100,7 +100,7 @@ contract Rewards is Ownable {
   }
 
   /// @notice address of the halo erc20 token
-  address public immutable haloTokenAddress;
+  address public immutable haloHaloTokenAddress;
   /// @notice block number of rewards genesis
   uint256 public genesisBlock;
   /// @notice rewards allocated for the first month
@@ -139,7 +139,7 @@ contract Rewards is Ownable {
   /// @notice info of minter Lps
   mapping(address => mapping(address => UserInfo)) public minterLpUserInfo;
 
-  mapping(address => uint256) public claimedHalo;
+  mapping(address => uint256) public claimedHaloHalo;
 
   /****************************************
    *          PRIVATE VARIABLES            *
@@ -189,7 +189,7 @@ contract Rewards is Ownable {
 
   /// @notice initiates the contract with predefined params
   /// @dev initiates the contract with predefined params
-  /// @param _haloTokenAddress address of the halo erc20 token
+  /// @param _haloHaloTokenAddress address of the halo erc20 token
   /// @param _startingRewards rewards allocated for the first month
   /// @param _epochLength length of a month = 30*24*60*60
   /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
@@ -198,7 +198,7 @@ contract Rewards is Ownable {
   /// @param _minterLpPools info of whitelisted minter Lp pools at genesis
   /// @param _ammLpPools info of whitelisted amm Lp pools at genesis
   constructor(
-    address _haloTokenAddress,
+    address _haloHaloTokenAddress,
     uint256 _startingRewards,
     uint256 _epochLength,
     uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
@@ -207,7 +207,7 @@ contract Rewards is Ownable {
     Pool[] memory _minterLpPools,
     Pool[] memory _ammLpPools
   ) public {
-    haloTokenAddress = _haloTokenAddress;
+    haloHaloTokenAddress = _haloHaloTokenAddress;
     startingRewards = _startingRewards;
     epochLength = _epochLength;
     ammLpRewardsRatio = _ammLpRewardsRatio;
@@ -611,7 +611,7 @@ contract Rewards is Ownable {
     view
     returns (uint256)
   {
-    return claimedHalo[_account];
+    return claimedHaloHalo[_account];
   }
 
   /// @dev get all whitelisted AMM LM pool addresses
@@ -790,7 +790,7 @@ contract Rewards is Ownable {
     uint256 _unclaimed = unclaimed(_diffTime);
 
     vestingRewardsDebt = _accHalo.mul(vestingRewardsRatio).div(BPS);
-    safeHaloTransfer(haloChestContract, _unclaimed);
+    safeHaloHaloTransfer(haloChestContract, _unclaimed);
     emit VestedRewardsReleasedEvent(_unclaimed, block.number);
   }
 
@@ -911,18 +911,18 @@ contract Rewards is Ownable {
   ) internal {
     uint256 _unclaimed =
       user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
-    safeHaloTransfer(account, _unclaimed);
+    safeHaloHaloTransfer(account, _unclaimed);
   }
 
   /// @notice transfer halo to users
   /// @dev transfer halo to users
   /// @param _to address of the recipient
   /// @param _amount amount of halo tokens
-  function safeHaloTransfer(address _to, uint256 _amount) internal {
-    uint256 haloBal = IERC20(haloTokenAddress).balanceOf(address(this));
-    require(_amount <= haloBal, 'Not enough HALO tokens in the contract');
-    IERC20(haloTokenAddress).transfer(_to, _amount);
-    claimedHalo[_to] = claimedHalo[_to].add(_amount);
+  function safeHaloHaloTransfer(address _to, uint256 _amount) internal {
+    uint256 haloBal = IERC20(haloHaloTokenAddress).balanceOf(address(this));
+    require(_amount <= haloBal, 'Not enough HALO HALO tokens in the contract');
+    IERC20(haloHaloTokenAddress).transfer(_to, _amount);
+    claimedHaloHalo[_to] = claimedHaloHalo[_to].add(_amount);
   }
 
   /// @notice calculates the unclaimed rewards for last timestamp
