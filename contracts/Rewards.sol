@@ -104,7 +104,7 @@ contract Rewards is Ownable {
   /// @notice block number of rewards genesis
   uint256 public genesisBlock;
   /// @notice rewards allocated for the first month
-  uint256 public immutable startingRewards;
+  uint256 public startingRewards;
   /// @notice length of a month = 30*24*60*60
   uint256 public immutable epochLength;
   /// @notice percentage of rewards allocated to minter Lps
@@ -187,7 +187,6 @@ contract Rewards is Ownable {
   /// @notice initiates the contract with predefined params
   /// @dev initiates the contract with predefined params
   /// @param _rewardsTokenAddress This is currently the HALO HALO token
-  /// @param _startingRewards rewards allocated for the first month
   /// @param _epochLength length of a month = 30*24*60*60
   /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
   /// @param _genesisBlock timestamp of rewards genesis
@@ -195,7 +194,6 @@ contract Rewards is Ownable {
   /// @param _ammLpPools info of whitelisted amm Lp pools at genesis
   constructor(
     address _rewardsTokenAddress,
-    uint256 _startingRewards,
     uint256 _epochLength,
     uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
     uint256 _genesisBlock,
@@ -203,7 +201,6 @@ contract Rewards is Ownable {
     Pool[] memory _ammLpPools
   ) public {
     rewardsTokenAddress = _rewardsTokenAddress;
-    startingRewards = _startingRewards;
     epochLength = _epochLength;
     ammLpRewardsRatio = _ammLpRewardsRatio;
     genesisBlock = _genesisBlock;
