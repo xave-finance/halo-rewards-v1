@@ -334,14 +334,7 @@ contract Rewards is Ownable {
       'Error: AMM Pool Address not allowed'
     );
 
-    PoolInfo storage pool = ammLpPools[_lpAddress];
-    UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
-
     updateAmmRewardPool(_lpAddress);
-
-    if (user.amount > 0) {
-      withdrawUnclaimedRewards(user, pool, msg.sender);
-    }
 
     IERC20(_lpAddress).transferFrom(
       address(msg.sender),
@@ -365,13 +358,11 @@ contract Rewards is Ownable {
   function withdrawPoolTokens(address _lpAddress, uint256 _amount) public {
     //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lp
 
-    PoolInfo storage pool = ammLpPools[_lpAddress];
     UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
 
     require(user.amount >= _amount, 'Error: Not enough balance');
 
     updateAmmRewardPool(_lpAddress);
-    withdrawUnclaimedRewards(user, pool, msg.sender);
 
     subtractAmountUpdateRewardDebtForUserForPoolTokens(
       _lpAddress,
@@ -399,14 +390,7 @@ contract Rewards is Ownable {
       'Error: Collateral type not allowed'
     );
 
-    PoolInfo storage pool = minterLpPools[_collateralAddress];
-    UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
-
     updateMinterRewardPool(_collateralAddress);
-
-    if (user.amount > 0) {
-      withdrawUnclaimedRewards(user, pool, _account);
-    }
 
     addAmountUpdateRewardDebtAndForMinter(
       _collateralAddress,
@@ -433,13 +417,11 @@ contract Rewards is Ownable {
   ) public onlyMinter() requireMinter() {
     //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
 
-    PoolInfo storage pool = minterLpPools[_collateralAddress];
     UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
     require(user.amount >= _amount, 'Error: Not enough balance');
 
     updateMinterRewardPool(_collateralAddress);
-    withdrawUnclaimedRewards(user, pool, _account);
 
     subtractAmountUpdateRewardDebtAndForMinter(
       _collateralAddress,
@@ -462,7 +444,11 @@ contract Rewards is Ownable {
     UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
 
     updateAmmRewardPool(_lpAddress);
-    withdrawUnclaimedRewards(user, pool, msg.sender);
+
+    uint256 _unclaimed =
+      user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+    safeHaloHaloTransfer(msg.sender, _unclaimed);
+
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
   }
 
@@ -478,7 +464,11 @@ contract Rewards is Ownable {
     UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
     updateMinterRewardPool(_collateralAddress);
-    withdrawUnclaimedRewards(user, pool, _account);
+
+    uint256 _unclaimed =
+      user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+    safeHaloHaloTransfer(_account, _unclaimed);
+
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
   }
 
@@ -866,10 +856,10 @@ contract Rewards is Ownable {
   /// @param pool instance of the PoolInfo struct
   /// @param account user address
   function withdrawUnclaimedRewards(
-    UserInfo storage user,
-    PoolInfo storage pool,
+    UserInfo memory user,
+    PoolInfo memory pool,
     address account
-  ) internal {
+  ) external {
     uint256 _unclaimed =
       user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
     safeHaloHaloTransfer(account, _unclaimed);
