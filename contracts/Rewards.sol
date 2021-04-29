@@ -456,7 +456,7 @@ contract Rewards is Ownable {
 
     uint256 _unclaimed =
       user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
-    safeHaloHaloTransfer(msg.sender, _unclaimed);
+    safeRewardTokenTransfer(msg.sender, _unclaimed);
 
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
   }
@@ -476,7 +476,7 @@ contract Rewards is Ownable {
 
     uint256 _unclaimed =
       user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
-    safeHaloHaloTransfer(_account, _unclaimed);
+    safeRewardTokenTransfer(_account, _unclaimed);
 
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
   }
@@ -907,7 +907,7 @@ contract Rewards is Ownable {
   ) external {
     uint256 _unclaimed =
       user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
-    safeHaloHaloTransfer(account, _unclaimed);
+    safeRewardTokenTransfer(account, _unclaimed);
   }
 
   /// @notice transfer reward token to users
