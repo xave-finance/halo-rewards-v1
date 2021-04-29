@@ -30,8 +30,8 @@ import 'hardhat/console.sol';
 /// ============================
 ///
 /// @title Rewards
-/// @notice Rewards for participation in the halo ecosystem.
-/// @dev Rewards for participation in the halo ecosystem.
+/// @notice Rewards for participation in the HALODAO ecosystem.
+/// @dev Rewards for participation in the HALODAO ecosystem.
 contract Rewards is Ownable {
   /// @notice utility constant
   uint256 public constant DECIMALS = 10**18;
@@ -99,7 +99,7 @@ contract Rewards is Ownable {
     uint256 accHaloPerShare; // Accumulated HALO per share, times 10^18.
   }
 
-  /// @notice address of the halo erc20 token
+  /// @notice address of the reward erc20 token
   address public immutable rewardsTokenAddress;
   /// @notice block number of rewards genesis
   uint256 public genesisBlock;
@@ -136,7 +136,7 @@ contract Rewards is Ownable {
   /// @notice info of minter Lps
   mapping(address => mapping(address => UserInfo)) public minterLpUserInfo;
 
-  mapping(address => uint256) public claimedHaloHalo;
+  mapping(address => uint256) public claimedRewardsToken;
 
   /****************************************
    *          PRIVATE VARIABLES            *
@@ -243,7 +243,7 @@ contract Rewards is Ownable {
     }
 
     uint256 totalRewards = calcReward(pool.lastRewardBlock);
-    uint256 haloReward =
+    uint256 tokenReward =
       totalRewards
         .mul(ammLpRewardsRatio)
         .mul(pool.allocPoint)
@@ -251,7 +251,7 @@ contract Rewards is Ownable {
         .div(BPS);
 
     pool.accHaloPerShare = pool.accHaloPerShare.add(
-      haloReward.mul(DECIMALS).div(lpSupply)
+      tokenReward.mul(DECIMALS).div(lpSupply)
     );
 
     pool.lastRewardBlock = block.number;
@@ -298,7 +298,7 @@ contract Rewards is Ownable {
     }
 
     uint256 totalRewards = calcReward(pool.lastRewardBlock);
-    uint256 haloReward =
+    uint256 tokenReward =
       totalRewards
         .mul(minterLpRewardsRatio) // 4000 (0*4 ** BPS)
         .mul(pool.allocPoint) // 10
@@ -306,7 +306,7 @@ contract Rewards is Ownable {
         .div(BPS);
 
     pool.accHaloPerShare = pool.accHaloPerShare.add(
-      haloReward.mul(DECIMALS).div(minterCollateralSupply)
+      tokenReward.mul(DECIMALS).div(minterCollateralSupply)
     );
 
     pool.lastRewardBlock = block.number;
@@ -584,15 +584,15 @@ contract Rewards is Ownable {
     return minterLpPools[_collateralAddress];
   }
 
-  /// @dev get total claimed halo by user
+  /// @dev get total claimed reward token by user
   /// @param _account address of the user
-  /// @return total claimed halo by user
+  /// @return total claimed reward token by user
   function getTotalRewardsClaimedByUser(address _account)
     public
     view
     returns (uint256)
   {
-    return claimedHaloHalo[_account];
+    return claimedRewardsToken[_account];
   }
 
   /// @dev get all whitelisted AMM LM pool addresses
@@ -865,15 +865,19 @@ contract Rewards is Ownable {
     safeHaloHaloTransfer(account, _unclaimed);
   }
 
-  /// @notice transfer halo to users
-  /// @dev transfer halo to users
+  /// @notice transfer reward token to users
+  /// @dev transfer reward token to users
   /// @param _to address of the recipient
-  /// @param _amount amount of halo tokens
-  function safeHaloHaloTransfer(address _to, uint256 _amount) internal {
-    uint256 haloBal = IERC20(rewardsTokenAddress).balanceOf(address(this));
-    require(_amount <= haloBal, 'Not enough HALO HALO tokens in the contract');
+  /// @param _amount amount of reward tokens
+  function safeRewardTokenTransfer(address _to, uint256 _amount) internal {
+    uint256 rewardTokenBalance =
+      IERC20(rewardsTokenAddress).balanceOf(address(this));
+    require(
+      _amount <= rewardTokenBalance,
+      'Not enough rewards tokens in the contract'
+    );
     IERC20(rewardsTokenAddress).transfer(_to, _amount);
-    claimedHaloHalo[_to] = claimedHaloHalo[_to].add(_amount);
+    claimedRewardsToken[_to] = claimedRewardsToken[_to].add(_amount);
   }
 
   /// @notice calculates the unclaimed rewards for last timestamp
