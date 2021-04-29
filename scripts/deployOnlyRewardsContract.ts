@@ -20,7 +20,6 @@ const deployOnlyRewards = async () => {
   const BPTAddress = '0x37f80ac90235ce0d3911952d0ce49071a0ffdb1e'
 
   const startingRewards = ethers.utils.parseEther('7500000')
-  const epochLength = 60
   const minterLpRewardsRatio = 0.4 * BPS
   const ammLpRewardsRatio = 0.4 * BPS
   const vestingRewardsRatio = 0.2 * BPS
@@ -38,7 +37,6 @@ const deployOnlyRewards = async () => {
   const rewardsContract = await RewardsContract.deploy(
     haloTokenContractAddress,
     startingRewards,
-    epochLength,
     minterLpRewardsRatio, //in bps, multiplied by 10^4
     ammLpRewardsRatio, //in bps, multiplied by 10^4
     vestingRewardsRatio, //in bps, multiplied by 10^4

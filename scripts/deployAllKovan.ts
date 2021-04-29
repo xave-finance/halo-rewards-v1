@@ -43,7 +43,6 @@ const deployAllKovan = async () => {
    * Deploy Rewards contract
    */
   const startingRewards = ethers.utils.parseEther('7500000')
-  const epochLength = 60
   const minterLpRewardsRatio = 0.4 * BPS
   const ammLpRewardsRatio = 0.4 * BPS
   const vestingRewardsRatio = 0.2 * BPS
@@ -60,7 +59,6 @@ const deployAllKovan = async () => {
   const rewardsContract = await Rewards.deploy(
     haloTokenContract.address,
     startingRewards,
-    epochLength,
     minterLpRewardsRatio, //in bps, multiplied by 10^4
     ammLpRewardsRatio, //in bps, multiplied by 10^4
     vestingRewardsRatio, //in bps, multiplied by 10^4

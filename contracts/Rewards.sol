@@ -106,7 +106,7 @@ contract Rewards is Ownable {
   /// @notice rewards allocated for the first month
   uint256 public immutable startingRewards;
   /// @notice length of a month = 30*24*60*60
-  uint256 public immutable epochLength;
+  uint256 private constant epochLength = 5*24*60*60;
   /// @notice percentage of rewards allocated to minter Lps
   uint256 public minterLpRewardsRatio; //in bps, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to minter Amm Lps
@@ -151,7 +151,6 @@ contract Rewards is Ownable {
   /****************************************
    *           PUBLIC FUNCTIONS           *
    ****************************************/
-
   function monthlyHalo() public view returns (uint256) {
     return startingRewards.mul(sumExp(1, nMonths())).div(DECIMALS);
   }
@@ -191,7 +190,6 @@ contract Rewards is Ownable {
   /// @dev initiates the contract with predefined params
   /// @param _haloTokenAddress address of the halo erc20 token
   /// @param _startingRewards rewards allocated for the first month
-  /// @param _epochLength length of a month = 30*24*60*60
   /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
   /// @param _vestingRewardsRatio percentage of rewards allocated to stakers in bps
   /// @param _genesisBlock timestamp of rewards genesis
@@ -200,7 +198,6 @@ contract Rewards is Ownable {
   constructor(
     address _haloTokenAddress,
     uint256 _startingRewards,
-    uint256 _epochLength,
     uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
     uint256 _vestingRewardsRatio, //in bps, multiplied by 10^4
     uint256 _genesisBlock,
