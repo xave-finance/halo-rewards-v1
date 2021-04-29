@@ -357,9 +357,9 @@ describe('Rewards Contract', async () => {
        * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
        * */
 
-      // expect(Number(pool.accHaloPerShare)).to.be.greaterThanOrEqual(
-      //   beforeAccHaloPerShare
-      // )
+      expect(Number(pool.accHaloPerShare)).to.be.greaterThanOrEqual(
+        beforeAccHaloPerShare
+      )
 
       await time.advanceBlock()
 
