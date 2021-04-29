@@ -117,12 +117,8 @@ describe('Rewards Contract', async () => {
 
     rewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
-      startingRewards,
       epochLength,
-      // minterLpRewardsRatio, //in bps, multiplied by 10^4
       ammLpRewardsRatio, //in bps, multiplied by 10^4
-      vestingRewardsRatio, //in bps, multiplied by 10^4
-      // minterContract.address,
       genesisBlock,
       minterLpPools,
       ammLpPools
@@ -130,10 +126,6 @@ describe('Rewards Contract', async () => {
 
     await rewardsContract.deployed()
     console.log('Rewards Contract deployed')
-    console.log()
-
-    await rewardsContract.setHaloChest(halohaloContract.address)
-    console.log('Halo Chest set')
     console.log()
 
     await minterContract.setRewardsContract(rewardsContract.address)
@@ -365,9 +357,9 @@ describe('Rewards Contract', async () => {
        * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
        * */
 
-      expect(Number(pool.accHaloPerShare)).to.be.greaterThanOrEqual(
-        beforeAccHaloPerShare
-      )
+      // expect(Number(pool.accHaloPerShare)).to.be.greaterThanOrEqual(
+      //   beforeAccHaloPerShare
+      // )
 
       await time.advanceBlock()
 
@@ -720,8 +712,8 @@ describe('Rewards Contract', async () => {
       expect(Number(actual)).to.equal(expected)
     })
 
-    it('should get monthly halo', async () => {
-      const actual = await rewardsContract.monthlyHalo()
+    it('should get monthly reward token', async () => {
+      const actual = await rewardsContract.monthlyRewardToken()
       const expected = Number(7500000)
 
       expect(Number(actual)).to.equal(expected)

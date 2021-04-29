@@ -158,7 +158,7 @@ contract Rewards is Ownable {
    *           PUBLIC FUNCTIONS           *
    ****************************************/
 
-  function monthlyHalo() public view returns (uint256) {
+  function monthlyRewardToken() public view returns (uint256) {
     return epochRewardAmount.mul(sumExp(1, nMonths())).div(DECIMALS);
   }
 
@@ -166,9 +166,9 @@ contract Rewards is Ownable {
     return epochRewardAmount.mul(exp(1, nMonths() + 1)).div(DECIMALS);
   }
 
-  function accHalo(uint256 diffTime) public view returns (uint256) {
+  function accRewardToken(uint256 diffTime) public view returns (uint256) {
     require(diffTime > 0, 'Invalid diff time');
-    uint256 accMonthlyHalo = monthlyHalo();
+    uint256 accMonthlyHalo = monthlyRewardToken();
     return (diffTime.mul(thisMonthsReward()).div(DECIMALS)).add(accMonthlyHalo);
   }
 
@@ -178,7 +178,7 @@ contract Rewards is Ownable {
 
   function unclaimed(uint256 diffTime) public view returns (uint256) {
     require(diffTime > 0, 'Invalid diff time');
-    uint256 _accHalo = accHalo(diffTime);
+    uint256 _accHalo = accRewardToken(diffTime);
     return (_accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
   }
 
