@@ -77,6 +77,9 @@ contract Rewards is Ownable {
     uint256 lastRewardBlock
   );
   event VestedRewardsReleasedEvent(uint256 amount, uint256 timestamp);
+
+  event DepositEpochReward(address indexed sender, uint256 amount);
+
   event RewardsManagerAddressChanged(
     address indexed sender,
     address indexed rewardsManagerAddress
@@ -626,6 +629,10 @@ contract Rewards is Ownable {
     return minterLpRewardsRatio;
   }
 
+  function getEpochRewardAmount() public view returns (uint256) {
+    return epochRewardAmount;
+  }
+
   function getRewardsManagerAddress() public view returns (address) {
     return rewardsManagerAddress;
   }
@@ -776,6 +783,21 @@ contract Rewards is Ownable {
     genesisBlock = _genesisBlock;
   }
 
+  function depositEpochRewardAmount(uint256 _epochRewardAmount)
+    public
+    onlyRewardsManager
+  {
+    epochRewardAmount = _epochRewardAmount;
+
+    IERC20(rewardsTokenAddress).transferFrom(
+      msg.sender,
+      address(this),
+      epochRewardAmount
+    );
+
+    emit DepositEpochReward(msg.sender, epochRewardAmount);
+  }
+
   /****************************************
    *               MODIFIERS              *
    ****************************************/
@@ -789,6 +811,14 @@ contract Rewards is Ownable {
     require(
       msg.sender == minterContract,
       'Only minter contract can call this function'
+    );
+    _;
+  }
+
+  modifier onlyRewardsManager() {
+    require(
+      msg.sender == rewardsManagerAddress,
+      'Only rewards manager contract can call this function'
     );
     _;
   }
