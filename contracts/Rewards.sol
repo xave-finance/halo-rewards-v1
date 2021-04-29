@@ -77,6 +77,10 @@ contract Rewards is Ownable {
     uint256 lastRewardBlock
   );
   event VestedRewardsReleasedEvent(uint256 amount, uint256 timestamp);
+  event RewardsManagerAddressChanged(
+    address indexed sender,
+    address indexed rewardsManagerAddress
+  );
 
   /****************************************
    *                VARIABLES              *
@@ -99,12 +103,14 @@ contract Rewards is Ownable {
     uint256 accHaloPerShare; // Accumulated HALO per share, times 10^18.
   }
 
+  /// @notice address of the Rewards Manager
+  address public rewardsManagerAddress;
   /// @notice address of the reward erc20 token
   address public immutable rewardsTokenAddress;
   /// @notice block number of rewards genesis
   uint256 public genesisBlock;
   /// @notice rewards allocated for the first month
-  uint256 public startingRewards;
+  uint256 public epochRewardAmount;
   /// @notice length of a month = 30*24*60*60
   uint256 public immutable epochLength;
   /// @notice percentage of rewards allocated to minter Lps
@@ -150,11 +156,11 @@ contract Rewards is Ownable {
    ****************************************/
 
   function monthlyHalo() public view returns (uint256) {
-    return startingRewards.mul(sumExp(1, nMonths())).div(DECIMALS);
+    return epochRewardAmount.mul(sumExp(1, nMonths())).div(DECIMALS);
   }
 
   function thisMonthsReward() public view returns (uint256) {
-    return startingRewards.mul(exp(1, nMonths() + 1)).div(DECIMALS);
+    return epochRewardAmount.mul(exp(1, nMonths() + 1)).div(DECIMALS);
   }
 
   function accHalo(uint256 diffTime) public view returns (uint256) {
@@ -620,6 +626,10 @@ contract Rewards is Ownable {
     return minterLpRewardsRatio;
   }
 
+  function getRewardsManagerAddress() public view returns (address) {
+    return rewardsManagerAddress;
+  }
+
   /****************************************
    *            ADMIN FUNCTIONS            *
    ****************************************/
@@ -695,6 +705,11 @@ contract Rewards is Ownable {
   /// @param _minter address of the minter contract
   function setMinterContractAddress(address _minter) public onlyOwner {
     minterContract = _minter;
+  }
+
+  function setRewardsManagerAddress(address _rewardsManager) public onlyOwner {
+    rewardsManagerAddress = _rewardsManager;
+    emit RewardsManagerAddressChanged(msg.sender, _rewardsManager);
   }
 
   /// @notice add a minter lp pool
