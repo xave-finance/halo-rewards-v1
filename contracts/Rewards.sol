@@ -37,7 +37,7 @@ contract Rewards is Ownable {
   uint256 public constant DECIMALS = 10**18;
   /// @notice utility constant
   uint256 public constant BPS = 10**4;
-  uint256 public constant REWARD_PER_BLOCK = 29;
+  uint256 public constant REWARD_PER_BLOCK = 29 * 10**18;
   address private constant NULL_ADDRESS = address(0);
 
   using SafeMath for uint256;
@@ -105,8 +105,8 @@ contract Rewards is Ownable {
   uint256 public genesisBlock;
   /// @notice rewards allocated for the first month
   uint256 public immutable startingRewards;
-  /// @notice length of a month = 30*24*60*60
-  uint256 private constant epochLength = 5*24*60*60;
+  /// number of blocks per month
+  uint256 private constant epochLength = 30*24*60*5;
   /// @notice percentage of rewards allocated to minter Lps
   uint256 public minterLpRewardsRatio; //in bps, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to minter Amm Lps
@@ -176,7 +176,8 @@ contract Rewards is Ownable {
   }
 
   function nMonths() public view returns (uint256) {
-    return (now.sub(genesisBlock)).div(epochLength);
+    uint256 current = block.number;
+    return current.sub(current).mul(DECIMALS).div(epochLength);
   }
 
   function diffTime() public view returns (uint256) {
@@ -206,7 +207,6 @@ contract Rewards is Ownable {
   ) public {
     haloTokenAddress = _haloTokenAddress;
     startingRewards = _startingRewards;
-    epochLength = _epochLength;
     ammLpRewardsRatio = _ammLpRewardsRatio;
     vestingRewardsRatio = _vestingRewardsRatio;
     genesisBlock = _genesisBlock;
@@ -928,7 +928,7 @@ contract Rewards is Ownable {
   /// @return unclaimed rewards since last update
   function calcReward(uint256 _from) public view returns (uint256) {
     uint256 delta = block.number.sub(_from);
-    return delta.mul(REWARD_PER_BLOCK).mul(BPS);
+    return delta.mul(REWARD_PER_BLOCK); //.mul(BPS);
   }
 
   function exp(uint256 m, uint256 n) internal pure returns (uint256) {

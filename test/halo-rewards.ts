@@ -13,7 +13,6 @@ let ubeContract
 let haloTokenContract
 let halohaloContract
 const genesisBlock = 0
-let epochLength
 const DECIMALS = 10 ** 18
 const BPS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
@@ -24,7 +23,7 @@ let addr2
 let addrs
 
 const sleepTime = 5000
-const expectedHALORewardPerBlock = 290000
+const expectedHALORewardPerBlock = ethers.BigNumber.from('29000000000000000000')
 
 describe('Rewards Contract', async () => {
   before(async () => {
@@ -106,7 +105,6 @@ describe('Rewards Contract', async () => {
     const startingRewards = ethers.utils.parseEther('7500000')
 
     // Average block 12 seconds or 5 per minute
-    epochLength = 30 * 24 * 60 * 5
     console.log('BPS = ', BPS)
 
     const ammLpRewardsRatio = 0.4 * BPS
@@ -118,11 +116,8 @@ describe('Rewards Contract', async () => {
     rewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
       startingRewards,
-      epochLength,
-      // minterLpRewardsRatio, //in bps, multiplied by 10^4
       ammLpRewardsRatio, //in bps, multiplied by 10^4
       vestingRewardsRatio, //in bps, multiplied by 10^4
-      // minterContract.address,
       genesisBlock,
       minterLpPools,
       ammLpPools
@@ -710,21 +705,33 @@ describe('Rewards Contract', async () => {
   })
 
   describe('Rewards helper functions', () => {
-    it('should calc rewards', async () => {
+    it('should get delta of months', async () => {
+      await time.advanceBlock()
+      const actual = await rewardsContract.nMonths()
+      expect(Number(actual)).to.equal(1)
+    })
+
+    it.only('should calc rewards', async () => {
       const currentBlock = await ethers.provider.getBlockNumber()
       console.log(`Current block ${currentBlock}`)
 
       const actual = await rewardsContract.calcReward(currentBlock - 1)
-      const expected = Number(290000)
+      const expected = ethers.BigNumber.from('29000000000000000000')
 
-      expect(Number(actual)).to.equal(expected)
+      // //expect(actual).to.equal(expected)
+      expect(actual).to.equal(expected);
     })
 
     it('should get monthly halo', async () => {
       const actual = await rewardsContract.monthlyHalo()
-      const expected = Number(7500000)
+      const expected = ethers.BigNumber.from(29000000000000000000) //ethers.utils.parseEther('29000000000000000000')
 
-      expect(Number(actual)).to.equal(expected)
+      // e = 290 000 000 000 000 000 000 000
+      // 29 000 000 000 000 000 000
+      // 29 000 000 000 000 000 000
+      expect(actual).to.equal(expected);
+
+      //expect(actual).should.be.bignumber.equal(expected)
     })
   })
 })
