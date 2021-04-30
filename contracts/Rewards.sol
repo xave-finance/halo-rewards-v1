@@ -105,7 +105,7 @@ contract Rewards is Ownable {
   uint256 public genesisBlock;
   /// @notice rewards allocated for the first period
   uint256 public immutable startingRewards;
-  /// est number of blocks per month
+  // est number of blocks per month
   uint256 private constant epochLength = 30*24*60*5;
 
   /// @notice percentage of rewards allocated to minter Lps
@@ -152,13 +152,13 @@ contract Rewards is Ownable {
   /****************************************
    *           PUBLIC FUNCTIONS           *
    ****************************************/
-  function monthlyHalo() public view returns (uint256) {
-    return startingRewards.mul(epochLength).div(DECIMALS);
-  }
+  // function monthlyHalo() public view returns (uint256) {
+  //   return startingRewards.mul(epochLength).div(DECIMALS);
+  // }
 
-  function thisMonthsReward() public view returns (uint256) {
-    return startingRewards.mul(exp(1, nMonths() + 1)).div(DECIMALS);
-  }
+  // function thisMonthsReward() public view returns (uint256) {
+  //   return startingRewards.mul(epoch).div(DECIMALS);
+  // }
 
   // function accHalo(uint256 diffTime) public view returns (uint256) {
   //   require(diffTime > 0, 'Invalid diff time');
@@ -166,9 +166,19 @@ contract Rewards is Ownable {
   //   return (diffTime.mul(thisMonthsReward()).div(DECIMALS)).add(accMonthlyHalo);
   // }
 
+  /// @notice calculates the unclaimed rewards for last timestamp
+  /// @dev calculates the unclaimed rewards for last timestamp
+  /// @param _from last timestamp when rewards were updated
+  /// @return unclaimed rewards since last update
+  function calcReward(uint256 _from) public view returns (uint256) {
+    require(block.number > _from, "Can not be in the past");
+    uint256 delta = block.number.sub(_from);
+    return delta.mul(REWARD_PER_BLOCK).mul(BPS);
+  }
+
   function unclaimed() public view returns (uint256) {
-    uint256 delta = block.number.sub(lastHaloVestRewardBlock);
-    return delta.mul(REWARD_PER_BLOCK).mul(vestingRewardsRatio).div(BPS).sub(vestingRewardsDebt);
+    uint256 rewards = calcReward(lastHaloVestRewardBlock);
+    return rewards.mul(vestingRewardsRatio).div(BPS).sub(vestingRewardsDebt);
   }
 
   // function unclaimed(uint256 diffTime) public view returns (uint256) {
@@ -177,10 +187,10 @@ contract Rewards is Ownable {
   //   return (_accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
   // }
 
-  function nMonths() public view returns (uint256) {
-    uint256 current = block.number;
-    return current.sub(current).mul(100).mul(DECIMALS).div(epochLength);
-  }
+  // function nMonths() public view returns (uint256) {
+  //   uint256 current = block.number;
+  //   return current.sub(current).mul(100).mul(DECIMALS).div(epochLength);
+  // }
 
   // function diffTime() public view returns (uint256) {
   //   return
@@ -788,7 +798,7 @@ contract Rewards is Ownable {
     // uint256 _accHalo = accHalo(_diffTime);
     uint256 _unclaimed = unclaimed();
 
-    vestingRewardsDebt = _accHalo.mul(vestingRewardsRatio).div(BPS);
+    vestingRewardsDebt = _unclaimed.mul(vestingRewardsRatio).div(BPS);
     lastHaloVestRewardBlock = block.number;
     safeHaloTransfer(haloChestContract, _unclaimed);
     emit VestedRewardsReleasedEvent(_unclaimed, block.number);
@@ -925,32 +935,23 @@ contract Rewards is Ownable {
     claimedHalo[_to] = claimedHalo[_to].add(_amount);
   }
 
-  /// @notice calculates the unclaimed rewards for last timestamp
-  /// @dev calculates the unclaimed rewards for last timestamp
-  /// @param _from last timestamp when rewards were updated
-  /// @return unclaimed rewards since last update
-  function calcReward(uint256 _from) public view returns (uint256) {
-    uint256 delta = block.number.sub(_from);
-    return delta.mul(REWARD_PER_BLOCK); //.mul(BPS);
-  }
+  // function exp(uint256 m, uint256 n) internal pure returns (uint256) {
+  //   uint256 x = DECIMALS;
+  //   for (uint256 i = 0; i < n; i++) {
+  //     x = x.mul(m).div(DECIMALS);
+  //   }
+  //   return x;
+  // }
 
-  function exp(uint256 m, uint256 n) internal pure returns (uint256) {
-    uint256 x = DECIMALS;
-    for (uint256 i = 0; i < n; i++) {
-      x = x.mul(m).div(DECIMALS);
-    }
-    return x;
-  }
-
-  function sumExp(uint256 m, uint256 n) internal pure returns (uint256) {
-    uint256 x = DECIMALS;
-    uint256 s;
-    for (uint256 i = 0; i < n; i++) {
-      x = x.mul(m).div(DECIMALS);
-      s = s.add(x);
-    }
-    return s;
-  }
+  // function sumExp(uint256 m, uint256 n) internal pure returns (uint256) {
+  //   uint256 x = DECIMALS;
+  //   uint256 s;
+  //   for (uint256 i = 0; i < n; i++) {
+  //     x = x.mul(m).div(DECIMALS);
+  //     s = s.add(x);
+  //   }
+  //   return s;
+  // }
 
   function addToAmmLpPoolsAddresses(address _lpAddress) internal {
     bool exists = false;

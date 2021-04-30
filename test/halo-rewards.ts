@@ -705,7 +705,7 @@ describe('Rewards Contract', async () => {
   })
 
   describe('Rewards helper functions', () => {
-    it('should get delta of months', async () => {
+    it.only('should get delta of months', async () => {
       await time.advanceBlock()
       const actual = await rewardsContract.nMonths()
       expect(Number(actual)).to.equal(1)
@@ -717,7 +717,7 @@ describe('Rewards Contract', async () => {
       expect(Number(actual)).to.equal(Number(7500000))
     })
 
-    it('should calc rewards', async () => {
+    it.only('should calc rewards', async () => {
       const currentBlock = await ethers.provider.getBlockNumber()
       console.log(`Current block ${currentBlock}`)
       // await time.advanceBlock()
@@ -726,15 +726,6 @@ describe('Rewards Contract', async () => {
       const expected = ethers.BigNumber.from('29000000000000000000')
 
       // //expect(actual).to.equal(expected)
-      expect(actual).to.equal(expected);
-    })
-
-    it('should get monthly halo', async () => {
-      const actual = await rewardsContract.monthlyHalo()
-      const expected = ethers.BigNumber.from('29000000000000000000') //ethers.utils.parseEther('29000000000000000000')
-
-      // e = 290 000 000 000 000 000 000 000
-      // 29 000 000 000 000 000 000
       expect(actual).to.equal(expected);
     })
   })
