@@ -103,10 +103,11 @@ contract Rewards is Ownable {
   address public immutable haloTokenAddress;
   /// @notice block number of rewards genesis
   uint256 public genesisBlock;
-  /// @notice rewards allocated for the first month
+  /// @notice rewards allocated for the first period
   uint256 public immutable startingRewards;
-  /// number of blocks per month
+  /// est number of blocks per month
   uint256 private constant epochLength = 30*24*60*5;
+
   /// @notice percentage of rewards allocated to minter Lps
   uint256 public minterLpRewardsRatio; //in bps, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to minter Amm Lps
@@ -152,40 +153,41 @@ contract Rewards is Ownable {
    *           PUBLIC FUNCTIONS           *
    ****************************************/
   function monthlyHalo() public view returns (uint256) {
-    return startingRewards.mul(sumExp(1, nMonths())).div(DECIMALS);
+    return startingRewards.mul(epochLength).div(DECIMALS);
   }
 
   function thisMonthsReward() public view returns (uint256) {
     return startingRewards.mul(exp(1, nMonths() + 1)).div(DECIMALS);
   }
 
-  function accHalo(uint256 diffTime) public view returns (uint256) {
-    require(diffTime > 0, 'Invalid diff time');
-    uint256 accMonthlyHalo = monthlyHalo();
-    return (diffTime.mul(thisMonthsReward()).div(DECIMALS)).add(accMonthlyHalo);
-  }
+  // function accHalo(uint256 diffTime) public view returns (uint256) {
+  //   require(diffTime > 0, 'Invalid diff time');
+  //   uint256 accMonthlyHalo = monthlyHalo();
+  //   return (diffTime.mul(thisMonthsReward()).div(DECIMALS)).add(accMonthlyHalo);
+  // }
 
   function unclaimed() public view returns (uint256) {
-    return unclaimed(diffTime());
+    uint256 delta = block.number.sub(lastHaloVestRewardBlock);
+    return delta.mul(REWARD_PER_BLOCK).mul(vestingRewardsRatio).div(BPS).sub(vestingRewardsDebt);
   }
 
-  function unclaimed(uint256 diffTime) public view returns (uint256) {
-    require(diffTime > 0, 'Invalid diff time');
-    uint256 _accHalo = accHalo(diffTime);
-    return (_accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
-  }
+  // function unclaimed(uint256 diffTime) public view returns (uint256) {
+  //   require(diffTime > 0, 'Invalid diff time');
+  //   uint256 _accHalo = accHalo(diffTime);
+  //   return (_accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
+  // }
 
   function nMonths() public view returns (uint256) {
     uint256 current = block.number;
-    return current.sub(current).mul(DECIMALS).div(epochLength);
+    return current.sub(current).mul(100).mul(DECIMALS).div(epochLength);
   }
 
-  function diffTime() public view returns (uint256) {
-    return
-      (now.sub(genesisBlock.add(epochLength.mul(nMonths()))).mul(DECIMALS)).div(
-        epochLength
-      );
-  }
+  // function diffTime() public view returns (uint256) {
+  //   return
+  //     (now.sub(genesisBlock.add(epochLength.mul(nMonths()))).mul(DECIMALS)).div(
+  //       epochLength
+  //     );
+  // }
 
   /// @notice initiates the contract with predefined params
   /// @dev initiates the contract with predefined params
@@ -556,7 +558,7 @@ contract Rewards is Ownable {
   /// @dev view function to check unclaimed rewards for stakers since last withdrawal to vesting contract
   /// @return unclaimed rewards for stakers
   function getUnclaimedVestingRewards() public view returns (uint256) {
-    uint256 _unclaimed = unclaimed(diffTime());
+    uint256 _unclaimed = unclaimed();
     return _unclaimed;
   }
 
@@ -776,17 +778,18 @@ contract Rewards is Ownable {
       block.number > lastHaloVestRewardBlock,
       'block.number<lastHaloVestRewardBlock'
     );
-    uint256 _diffTime = diffTime();
+    // uint256 _diffTime = diffTime();
 
-    require(
-      _diffTime < epochLength.mul(DECIMALS),
-      '_diffTime > epochLength.mul(DECIMALS)'
-    );
+    // require(
+    //   _diffTime < epochLength.mul(DECIMALS),
+    //   '_diffTime > epochLength.mul(DECIMALS)'
+    // );
 
-    uint256 _accHalo = accHalo(_diffTime);
-    uint256 _unclaimed = unclaimed(_diffTime);
+    // uint256 _accHalo = accHalo(_diffTime);
+    uint256 _unclaimed = unclaimed();
 
     vestingRewardsDebt = _accHalo.mul(vestingRewardsRatio).div(BPS);
+    lastHaloVestRewardBlock = block.number;
     safeHaloTransfer(haloChestContract, _unclaimed);
     emit VestedRewardsReleasedEvent(_unclaimed, block.number);
   }
