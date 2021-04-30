@@ -166,14 +166,14 @@ contract Rewards is Ownable {
   //   return (diffTime.mul(thisMonthsReward()).div(DECIMALS)).add(accMonthlyHalo);
   // }
 
-  /// @notice calculates the unclaimed rewards for last timestamp
-  /// @dev calculates the unclaimed rewards for last timestamp
-  /// @param _from last timestamp when rewards were updated
+  /// @notice calculates the unclaimed rewards for last block
+  /// @dev calculates the unclaimed rewards for last block
+  /// @param _from last block when rewards were updated
   /// @return unclaimed rewards since last update
   function calcReward(uint256 _from) public view returns (uint256) {
     require(block.number > _from, "Can not be in the past");
     uint256 delta = block.number.sub(_from);
-    return delta.mul(REWARD_PER_BLOCK).mul(BPS);
+    return delta.mul(REWARD_PER_BLOCK);
   }
 
   function unclaimed() public view returns (uint256) {
@@ -234,7 +234,6 @@ contract Rewards is Ownable {
     }
   }
 
-  ///
   /// Updates accHaloPerShare and last reward update timestamp.
   /// Calculation:
   /// For each second, the total amount of rewards is fixed among all the current users who have staked LP tokens in the contract
@@ -251,9 +250,10 @@ contract Rewards is Ownable {
   /// @param _lpAddress address of the amm lp token
   function updateAmmRewardPool(address _lpAddress) public {
     PoolInfo storage pool = ammLpPools[_lpAddress];
-    if (block.number <= pool.lastRewardBlock) {
-      return;
-    }
+    // if (block.number <= pool.lastRewardBlock) {
+    //   return;
+    // }
+    require(block.number > pool.lastRewardBlock, "Can not be in the past");
     uint256 lpSupply = IERC20(_lpAddress).balanceOf(address(this));
     if (lpSupply == 0) {
       pool.lastRewardBlock = block.number;
