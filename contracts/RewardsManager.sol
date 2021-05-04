@@ -15,10 +15,10 @@ contract RewardsManager is Ownable {
   address private haloHaloContract;
 
   using SafeMath for uint256;
-  uint256 public constant BPS = 10**4;
+  uint256 public constant BASIS_POINTS = 10**4;
 
   constructor(
-    uint256 _initialVestingRatio, //in bps, multiplied by 10^4
+    uint256 _initialVestingRatio, //in BASIS_POINTS, multiplied by 10^4
     address _rewardsContract,
     address _haloHaloContract,
     IERC20 _halo
@@ -40,7 +40,7 @@ contract RewardsManager is Ownable {
       "amount is less than this contract's halohalo balance"
     );
 
-    uint256 currentVestedRewards = _amount.mul(vestingRatio).div(BPS);
+    uint256 currentVestedRewards = _amount.mul(vestingRatio).div(BASIS_POINTS);
     uint256 currentRewardsReleased = _amount.sub(currentVestedRewards);
 
     // Transfer to rewards contract
