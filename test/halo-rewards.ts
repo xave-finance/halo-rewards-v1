@@ -250,7 +250,7 @@ describe('Rewards Contract', async () => {
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
-      expect(Number(await rewardsContract.getMinterLpRewardsRatio())).to.equal(
+      expect(ethers.BigNumber.from(await rewardsContract.getMinterLpRewardsRatio())).to.equal(
         0
       )
     })
@@ -350,7 +350,7 @@ describe('Rewards Contract', async () => {
       )
 
       console.log(
-        Number(await collateralERC20Contract.balanceOf(minterContract.address))
+        ethers.BigNumber.from(await collateralERC20Contract.balanceOf(minterContract.address))
       )
 
       console.log(
@@ -360,7 +360,6 @@ describe('Rewards Contract', async () => {
         `Halo per share on minter pool ${Number(pool.accHaloPerShare)}`
       )
 
-      // // expect(Number(pool.accHaloPerShare)).to.equal(Number(12760))
       // /**
       //  * Expect current pool.accHaloPerShare to be greaterThanOrEqualTo the previous pool.accHaloShare
       //  * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
@@ -425,7 +424,7 @@ describe('Rewards Contract', async () => {
       )
 
       // calculate expected HALO rewards balance
-      const expectedUnclaimedHaloRewardsBal = Number(0)
+      const expectedUnclaimedHaloRewardsBal = ethers.BigNumber.from(0)
 
       // assert that expected and actual are equal
       expect(actualUnclaimedHaloRewardBal).to.equal(
