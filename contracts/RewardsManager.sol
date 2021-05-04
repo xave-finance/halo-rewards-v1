@@ -5,7 +5,6 @@ import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import './HaloHalo.sol';
-import 'hardhat/console.sol';
 
 contract RewardsManager is Ownable {
   IERC20 public halo;
@@ -43,10 +42,11 @@ contract RewardsManager is Ownable {
 
     uint256 currentVestedRewards = _amount.mul(vestingRatio).div(BPS);
     uint256 currentRewardsReleased = _amount.sub(currentVestedRewards);
-    // Transfer to halohalo contract
-    transferToHaloHaloContract(currentVestedRewards);
+
     // Transfer to rewards contract
     convertAndTransferToRewardsContract(currentRewardsReleased);
+    // Transfer to halohalo contract
+    transferToHaloHaloContract(currentVestedRewards);
   }
 
   /****************************************
@@ -90,13 +90,11 @@ contract RewardsManager is Ownable {
   }
 
   function convertAndTransferToRewardsContract(uint256 _amount) internal {
-    console.log('AMOUNT: ', _amount);
     halo.approve(haloHaloContract, _amount);
     halohalo.enter(_amount);
     uint256 currentHaloHaloBalance = halohalo.balanceOf(address(this));
 
     require(currentHaloHaloBalance > 0, 'No HALOHALO in contract');
-    console.log(currentHaloHaloBalance);
 
     halohalo.transfer(rewardsContract, currentHaloHaloBalance);
     ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);

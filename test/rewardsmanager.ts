@@ -11,23 +11,21 @@ let rewardsManagerContract
 let addrs
 let collateralERC20Contract
 let lpTokenContract
+let epochLength
 
 // Number constants
 const genesisBlock = 0
-
-let epochLength
 const BASIS_POINTS = 10 ** 4
-epochLength = 30 * 24 * 60 * 5
-console.log('BASIS_POINTS = ', BASIS_POINTS)
-
 const ammLpRewardsRatio = 0.4 * BASIS_POINTS
 const vestingRewardsRatio = 0.2 * BASIS_POINTS
 const changedVestingRewardsRatio = 0.33 * BASIS_POINTS
 const releasedRewardsRatio = 0.8 * BASIS_POINTS // 80% of the released rewards
 const expectedHaloHaloPrice = parseEther('1.25')
 const RELEASED_HALO_REWARDS = parseEther('10000') // got from the previous contract
+epochLength = 30 * 24 * 60 * 5
+console.log('BASIS_POINTS = ', BASIS_POINTS)
 
-describe('HALOHALO Contract', async () => {
+describe('Rewards Manager', async () => {
   before(async () => {
     ;[...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
@@ -266,6 +264,7 @@ describe('HALOHALO Contract', async () => {
         releasedRewardsRatio
       ).div(BASIS_POINTS)
 
+      // Simulate release through minting
       await haloTokenContract.mint(
         rewardsManagerContract.address,
         RELEASED_HALO_REWARDS
@@ -281,7 +280,7 @@ describe('HALOHALO Contract', async () => {
         RELEASED_HALO_REWARDS
       )
 
-      // Release rewards and check events and their args
+      // Release rewards then check events and their args
       await expect(
         rewardsManagerContract.releaseEpochRewards(RELEASED_HALO_REWARDS),
         'Rewards was not distributed'
@@ -323,16 +322,7 @@ describe('HALOHALO Contract', async () => {
         .mul(await halohaloContract.totalSupply())
         .div(await haloTokenContract.balanceOf(halohaloContract.address))
 
-      console.log('Total: ', Number(await halohaloContract.totalSupply()))
-      console.log(
-        'Total Halo: ',
-        Number(await haloTokenContract.balanceOf(halohaloContract.address))
-      )
-      console.log(
-        'Halo Price: ',
-        Number(await halohaloContract.getCurrentHaloHaloPrice())
-      )
-
+      // Simulate release through minting
       await haloTokenContract.mint(
         rewardsManagerContract.address,
         RELEASED_HALO_REWARDS
@@ -361,7 +351,8 @@ describe('HALOHALO Contract', async () => {
       await expect(
         rewardsManagerContract
           .connect(addrs[1])
-          .releaseEpochRewards(RELEASED_HALO_REWARDS)
+          .releaseEpochRewards(RELEASED_HALO_REWARDS),
+        'Function called even if the caller is not the owner'
       ).to.be.reverted
     })
   })
