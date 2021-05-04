@@ -36,7 +36,7 @@ contract Rewards is Ownable {
   /// @notice utility constant
   uint256 public constant DECIMALS = 10**18;
   /// @notice utility constant
-  uint256 public constant BPS = 10**4;
+  uint256 public constant BASIS_POINTS = 10**4;
   uint256 public constant REWARD_PER_BLOCK = 29 * 10**18;
   address private constant NULL_ADDRESS = address(0);
 
@@ -178,13 +178,13 @@ contract Rewards is Ownable {
 
   function unclaimed() public view returns (uint256) {
     uint256 rewards = calcReward(lastHaloVestRewardBlock);
-    return rewards.mul(vestingRewardsRatio).div(BPS).sub(vestingRewardsDebt);
+    return rewards.mul(vestingRewardsRatio).div(BASIS_POINTS).sub(vestingRewardsDebt);
   }
 
   // function unclaimed(uint256 diffTime) public view returns (uint256) {
   //   require(diffTime > 0, 'Invalid diff time');
   //   uint256 _accHalo = accHalo(diffTime);
-  //   return (_accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
+  //   return (_accHalo.mul(vestingRewardsRatio).div(BASIS_POINTS)).sub(vestingRewardsDebt);
   // }
 
   // function nMonths() public view returns (uint256) {
@@ -221,6 +221,11 @@ contract Rewards is Ownable {
     startingRewards = _startingRewards;
     ammLpRewardsRatio = _ammLpRewardsRatio;
     vestingRewardsRatio = _vestingRewardsRatio;
+
+    if (_genesisBlock == 0) {
+      _genesisBlock = block.number;
+    }
+
     genesisBlock = _genesisBlock;
     lastHaloVestRewardBlock = genesisBlock;
     for (uint8 i = 0; i < _minterLpPools.length; i++) {
@@ -266,7 +271,7 @@ contract Rewards is Ownable {
         .mul(ammLpRewardsRatio)
         .mul(pool.allocPoint)
         .div(totalAmmLpAllocs)
-        .div(BPS);
+        .div(BASIS_POINTS);
 
     pool.accHaloPerShare = pool.accHaloPerShare.add(
       haloReward.mul(DECIMALS).div(lpSupply)
@@ -318,10 +323,10 @@ contract Rewards is Ownable {
     uint256 totalRewards = calcReward(pool.lastRewardBlock);
     uint256 haloReward =
       totalRewards
-        .mul(minterLpRewardsRatio) // 4000 (0*4 ** BPS)
+        .mul(minterLpRewardsRatio) // 4000 (0*4 ** BASIS_POINTS)
         .mul(pool.allocPoint) // 10
         .div(totalMinterLpAllocs) //
-        .div(BPS);
+        .div(BASIS_POINTS);
 
     pool.accHaloPerShare = pool.accHaloPerShare.add(
       haloReward.mul(DECIMALS).div(minterCollateralSupply)
@@ -798,7 +803,7 @@ contract Rewards is Ownable {
     // uint256 _accHalo = accHalo(_diffTime);
     uint256 _unclaimed = unclaimed();
 
-    vestingRewardsDebt = _unclaimed.mul(vestingRewardsRatio).div(BPS);
+    vestingRewardsDebt = _unclaimed.mul(vestingRewardsRatio).div(BASIS_POINTS);
     lastHaloVestRewardBlock = block.number;
     safeHaloTransfer(haloChestContract, _unclaimed);
     emit VestedRewardsReleasedEvent(_unclaimed, block.number);
