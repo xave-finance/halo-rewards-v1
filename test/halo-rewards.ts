@@ -26,7 +26,7 @@ let addrs
 const sleepTime = 5000
 const expectedHALORewardPerBlock = 290000
 
-describe('Rewards Contract', async () => {
+describe.skip('Rewards Contract', async () => {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')

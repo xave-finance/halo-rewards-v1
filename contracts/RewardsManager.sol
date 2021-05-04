@@ -27,6 +27,7 @@ contract RewardsManager is Ownable {
     vestingRatio = _initialVestingRatio;
     rewardsContract = _rewardsContract;
     haloHaloContract = _haloHaloContract;
+    halohalo = HaloHalo(haloHaloContract);
     halo = _halo;
   }
 
@@ -34,17 +35,14 @@ contract RewardsManager is Ownable {
   event ReleasedRewardsToRewardsContractEvent(uint256 currentReleasedRewards);
 
   function releaseEpochRewards(uint256 _amount) external onlyOwner {
-    uint256 currentHaloHaloBalance =
-      IERC20(haloHaloContract).balanceOf(address(this));
-    console.log('Current HaloHaloBalance: ', currentHaloHaloBalance);
-
-    if (currentHaloHaloBalance > 0) {
-      transferToHaloHaloContract(currentHaloHaloBalance);
-    }
+    uint256 currentHaloHaloBalance = halo.balanceOf(address(this));
+    require(
+      _amount >= currentHaloHaloBalance,
+      "amount is less than this contract's halohalo balance"
+    );
 
     uint256 currentVestedRewards = _amount.mul(vestingRatio).div(BPS);
     uint256 currentRewardsReleased = _amount.sub(currentVestedRewards);
-
     // Transfer to halohalo contract
     transferToHaloHaloContract(currentVestedRewards);
     // Transfer to rewards contract
@@ -64,6 +62,7 @@ contract RewardsManager is Ownable {
 
   function setHaloHaloContract(address _haloHaloContract) external onlyOwner {
     haloHaloContract = _haloHaloContract;
+    halohalo = HaloHalo(haloHaloContract);
   }
 
   /****************************************
@@ -86,14 +85,19 @@ contract RewardsManager is Ownable {
    ****************************************/
 
   function transferToHaloHaloContract(uint256 _amount) internal {
-    halo.transferFrom(msg.sender, haloHaloContract, _amount);
+    halo.transfer(haloHaloContract, _amount);
     SentVestedRewardsEvent(_amount);
   }
 
   function convertAndTransferToRewardsContract(uint256 _amount) internal {
+    console.log('AMOUNT: ', _amount);
+    halo.approve(haloHaloContract, _amount);
     halohalo.enter(_amount);
     uint256 currentHaloHaloBalance = halohalo.balanceOf(address(this));
+
     require(currentHaloHaloBalance > 0, 'No HALOHALO in contract');
+    console.log(currentHaloHaloBalance);
+
     halohalo.transfer(rewardsContract, currentHaloHaloBalance);
     ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
   }
