@@ -34,10 +34,12 @@ contract RewardsManager is Ownable {
   event ReleasedRewardsToRewardsContractEvent(uint256 currentReleasedRewards);
 
   function releaseEpochRewards(uint256 _amount) external onlyOwner {
-    uint256 currentHaloHaloBalance = halo.balanceOf(address(this));
+    halo.transferFrom(msg.sender, address(this), _amount);
+
+    uint256 currentHaloBalance = halo.balanceOf(address(this));
     require(
-      _amount >= currentHaloHaloBalance,
-      "amount is less than this contract's halohalo balance"
+      _amount >= currentHaloBalance,
+      "amount is less than this contract's HALO balance"
     );
 
     uint256 currentVestedRewards = _amount.mul(vestingRatio).div(BASIS_POINTS);

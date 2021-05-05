@@ -265,15 +265,9 @@ describe('Rewards Manager', async () => {
       ).div(BASIS_POINTS)
 
       // Simulate release through minting
-      await haloTokenContract.mint(
-        rewardsManagerContract.address,
-        RELEASED_HALO_REWARDS
-      )
-
-      expect(
-        await haloTokenContract.balanceOf(rewardsManagerContract.address),
-        'HALO was not sent to the Rewards Manager Contract'
-      ).to.equal(RELEASED_HALO_REWARDS)
+      await expect(
+        haloTokenContract.mint(addrs[0].address, RELEASED_HALO_REWARDS)
+      ).to.not.be.reverted
 
       await haloTokenContract.approve(
         rewardsManagerContract.address,
@@ -323,15 +317,14 @@ describe('Rewards Manager', async () => {
         .div(await haloTokenContract.balanceOf(halohaloContract.address))
 
       // Simulate release through minting
-      await haloTokenContract.mint(
+      await expect(
+        haloTokenContract.mint(addrs[0].address, RELEASED_HALO_REWARDS)
+      ).to.not.be.reverted
+
+      await haloTokenContract.approve(
         rewardsManagerContract.address,
         RELEASED_HALO_REWARDS
       )
-
-      expect(
-        await haloTokenContract.balanceOf(rewardsManagerContract.address),
-        'HALO was not sent to the Rewards Manager Contract'
-      ).to.equal(RELEASED_HALO_REWARDS)
 
       // Release rewards and check events and their args
       await expect(
