@@ -152,20 +152,6 @@ contract Rewards is Ownable {
   /****************************************
    *           PUBLIC FUNCTIONS           *
    ****************************************/
-  // function monthlyHalo() public view returns (uint256) {
-  //   return startingRewards.mul(epochLength).div(DECIMALS);
-  // }
-
-  // function thisMonthsReward() public view returns (uint256) {
-  //   return startingRewards.mul(epoch).div(DECIMALS);
-  // }
-
-  // function accHalo(uint256 diffTime) public view returns (uint256) {
-  //   require(diffTime > 0, 'Invalid diff time');
-  //   uint256 accMonthlyHalo = monthlyHalo();
-  //   return (diffTime.mul(thisMonthsReward()).div(DECIMALS)).add(accMonthlyHalo);
-  // }
-
   /// @notice calculates the unclaimed rewards for last block
   /// @dev calculates the unclaimed rewards for last block
   /// @param _from last block when rewards were updated
@@ -180,24 +166,6 @@ contract Rewards is Ownable {
     uint256 rewards = calcReward(lastHaloVestRewardBlock);
     return rewards.mul(vestingRewardsRatio).div(BASIS_POINTS).sub(vestingRewardsDebt);
   }
-
-  // function unclaimed(uint256 diffTime) public view returns (uint256) {
-  //   require(diffTime > 0, 'Invalid diff time');
-  //   uint256 _accHalo = accHalo(diffTime);
-  //   return (_accHalo.mul(vestingRewardsRatio).div(BASIS_POINTS)).sub(vestingRewardsDebt);
-  // }
-
-  // function nMonths() public view returns (uint256) {
-  //   uint256 current = block.number;
-  //   return current.sub(current).mul(100).mul(DECIMALS).div(epochLength);
-  // }
-
-  // function diffTime() public view returns (uint256) {
-  //   return
-  //     (now.sub(genesisBlock.add(epochLength.mul(nMonths()))).mul(DECIMALS)).div(
-  //       epochLength
-  //     );
-  // }
 
   /// @notice initiates the contract with predefined params
   /// @dev initiates the contract with predefined params
@@ -793,14 +761,7 @@ contract Rewards is Ownable {
       block.number > lastHaloVestRewardBlock,
       'block.number<lastHaloVestRewardBlock'
     );
-    // uint256 _diffTime = diffTime();
 
-    // require(
-    //   _diffTime < epochLength.mul(DECIMALS),
-    //   '_diffTime > epochLength.mul(DECIMALS)'
-    // );
-
-    // uint256 _accHalo = accHalo(_diffTime);
     uint256 _unclaimed = unclaimed();
 
     vestingRewardsDebt = _unclaimed.mul(vestingRewardsRatio).div(BASIS_POINTS);
@@ -939,24 +900,6 @@ contract Rewards is Ownable {
     IERC20(haloTokenAddress).transfer(_to, _amount);
     claimedHalo[_to] = claimedHalo[_to].add(_amount);
   }
-
-  // function exp(uint256 m, uint256 n) internal pure returns (uint256) {
-  //   uint256 x = DECIMALS;
-  //   for (uint256 i = 0; i < n; i++) {
-  //     x = x.mul(m).div(DECIMALS);
-  //   }
-  //   return x;
-  // }
-
-  // function sumExp(uint256 m, uint256 n) internal pure returns (uint256) {
-  //   uint256 x = DECIMALS;
-  //   uint256 s;
-  //   for (uint256 i = 0; i < n; i++) {
-  //     x = x.mul(m).div(DECIMALS);
-  //     s = s.add(x);
-  //   }
-  //   return s;
-  // }
 
   function addToAmmLpPoolsAddresses(address _lpAddress) internal {
     bool exists = false;
