@@ -206,7 +206,7 @@ contract Rewards is Ownable {
     vestingRewardsRatio = _vestingRewardsRatio;
 
     if (_genesisBlock == 0) {
-      _genesisBlock = block.number;
+      genesisBlock = block.number;
     }
 
     genesisBlock = _genesisBlock;
