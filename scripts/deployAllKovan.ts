@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat'
 
-const BPS = 10 ** 4
+const BASIS_POINTS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
 
 const deployAllKovan = async () => {
@@ -43,9 +43,9 @@ const deployAllKovan = async () => {
    * Deploy Rewards contract
    */
   const startingRewards = ethers.utils.parseEther('7500000')
-  const minterLpRewardsRatio = 0.4 * BPS
-  const ammLpRewardsRatio = 0.4 * BPS
-  const vestingRewardsRatio = 0.2 * BPS
+  const minterLpRewardsRatio = 0.4 * BASIS_POINTS
+  const ammLpRewardsRatio = 0.4 * BASIS_POINTS
+  const vestingRewardsRatio = 0.2 * BASIS_POINTS
   const genesisBlock = await ethers.provider.getBlockNumber()
   const minterLpPools = [[collateralERC20Contract.address, 10]]
 
@@ -59,9 +59,9 @@ const deployAllKovan = async () => {
   const rewardsContract = await Rewards.deploy(
     haloTokenContract.address,
     startingRewards,
-    minterLpRewardsRatio, //in bps, multiplied by 10^4
-    ammLpRewardsRatio, //in bps, multiplied by 10^4
-    vestingRewardsRatio, //in bps, multiplied by 10^4
+    minterLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
+    ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
+    vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
     minterContract.address,
     genesisBlock,
     minterLpPools,

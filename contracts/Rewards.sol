@@ -109,11 +109,11 @@ contract Rewards is Ownable {
   uint256 private constant epochLength = 30*24*60*5;
 
   /// @notice percentage of rewards allocated to minter Lps
-  uint256 public minterLpRewardsRatio; //in bps, multiply fraction by 10^4
+  uint256 public minterLpRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to minter Amm Lps
-  uint256 public ammLpRewardsRatio; //in bps, multiply fraction by 10^4
+  uint256 public ammLpRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to stakers
-  uint256 public vestingRewardsRatio; //in bps, multiply fraction by 10^4
+  uint256 public vestingRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
   /// @notice total alloc points for amm lps
   uint256 public totalAmmLpAllocs; //total allocation points for all amm lps (the ratio defines percentage of rewards to a particular amm lp)
   /// @notice total alloc points for minter lps
@@ -171,16 +171,16 @@ contract Rewards is Ownable {
   /// @dev initiates the contract with predefined params
   /// @param _haloTokenAddress address of the halo erc20 token
   /// @param _startingRewards rewards allocated for the first month
-  /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
-  /// @param _vestingRewardsRatio percentage of rewards allocated to stakers in bps
+  /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in BASIS_POINTS
+  /// @param _vestingRewardsRatio percentage of rewards allocated to stakers in BASIS_POINTS
   /// @param _genesisBlock timestamp of rewards genesis
   /// @param _minterLpPools info of whitelisted minter Lp pools at genesis
   /// @param _ammLpPools info of whitelisted amm Lp pools at genesis
   constructor(
     address _haloTokenAddress,
     uint256 _startingRewards,
-    uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
-    uint256 _vestingRewardsRatio, //in bps, multiplied by 10^4
+    uint256 _ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
+    uint256 _vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
     uint256 _genesisBlock,
     Pool[] memory _minterLpPools,
     Pool[] memory _ammLpPools
