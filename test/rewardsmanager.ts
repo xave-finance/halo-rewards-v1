@@ -109,21 +109,13 @@ describe('Rewards Manager', async () => {
     it('Halohalo should be deployed', async () => {
       expect(await halohaloContract.symbol()).to.equal('HALOHALO')
       expect(await halohaloContract.name()).to.equal('HaloHalo')
+      expect(await changedHaloHaloContract.symbol()).to.equal('HALOHALO')
+      expect(await changedHaloHaloContract.name()).to.equal('HaloHalo')
     })
 
     it('Lptoken should be deployed', async () => {
       expect(await lpTokenContract.symbol()).to.equal('LPT')
       expect(await lpTokenContract.name()).to.equal('LpToken')
-    })
-
-    it('HaloToken should be deployed', async () => {
-      expect(await haloTokenContract.symbol()).to.equal('HALO')
-      expect(await haloTokenContract.name()).to.equal('Halo')
-    })
-
-    it('Halohalo should be deployed', async () => {
-      expect(await halohaloContract.symbol()).to.equal('HALOHALO')
-      expect(await halohaloContract.name()).to.equal('HaloHalo')
     })
 
     it('Rewards Contract should be deployed', async () => {
@@ -142,6 +134,29 @@ describe('Rewards Manager', async () => {
       ).to.equal(true)
       expect(
         await rewardsContract.isValidMinterLp(lpTokenContract.address)
+      ).to.equal(false)
+
+      expect(
+        await changedRewardsContract.getTotalPoolAllocationPoints()
+      ).to.equal(10)
+      expect(
+        await changedRewardsContract.getTotalMinterLpAllocationPoints()
+      ).to.equal(10)
+      expect(
+        await changedRewardsContract.isValidAmmLp(lpTokenContract.address)
+      ).to.equal(true)
+      expect(
+        await changedRewardsContract.isValidAmmLp(
+          collateralERC20Contract.address
+        )
+      ).to.equal(false)
+      expect(
+        await changedRewardsContract.isValidMinterLp(
+          collateralERC20Contract.address
+        )
+      ).to.equal(true)
+      expect(
+        await changedRewardsContract.isValidMinterLp(lpTokenContract.address)
       ).to.equal(false)
     })
 
