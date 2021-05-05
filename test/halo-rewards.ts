@@ -28,7 +28,6 @@ const expectedHALORewardPerBlock = ethers.BigNumber.from('29000000000000000000')
 describe('Rewards Contract', async () => {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
-    genesisBlock = await ethers.provider.getBlockNumber()
     console.log('===================Deploying Contracts=====================')
 
     const CollateralERC20 = await ethers.getContractFactory('CollateralERC20')
@@ -114,6 +113,7 @@ describe('Rewards Contract', async () => {
     const minterLpPools = [[collateralERC20Contract.address, 10]]
     const ammLpPools = [[lpTokenContract.address, 10]]
 
+    genesisBlock = await ethers.provider.getBlockNumber()
     rewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
       startingRewards,
