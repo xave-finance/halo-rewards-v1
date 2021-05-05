@@ -1,7 +1,6 @@
 import { formatEther, parseEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { BigNumber } from '@ethersproject/bignumber'
 
 let haloTokenContract
 let halohaloContract
