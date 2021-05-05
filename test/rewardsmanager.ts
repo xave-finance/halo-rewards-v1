@@ -1,6 +1,7 @@
 import { formatEther, parseEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+import { BigNumber } from '@ethersproject/bignumber'
 
 let haloTokenContract
 let halohaloContract
@@ -12,6 +13,7 @@ let addrs
 let collateralERC20Contract
 let lpTokenContract
 let epochLength
+let epoch0VestedRewards
 
 // Number constants
 const genesisBlock = 0
@@ -20,9 +22,12 @@ const ammLpRewardsRatio = 0.4 * BASIS_POINTS
 const vestingRewardsRatio = 0.2 * BASIS_POINTS
 const changedVestingRewardsRatio = 0.33 * BASIS_POINTS
 const releasedRewardsRatio = 0.8 * BASIS_POINTS // 80% of the released rewards
-const expectedHaloHaloPrice = parseEther('1.25')
+const epoch0ExpectedHaloHaloPrice = parseEther('1')
+const epoch1ExpectedHaloHaloPrice = parseEther('1.25')
+const epoch1ExpectedHaloHaloPriceEther = 1.25
 const RELEASED_HALO_REWARDS = parseEther('10000') // got from the previous contract
 epochLength = 30 * 24 * 60 * 5
+const DECIMALS = 10 ** 18
 console.log('BASIS_POINTS = ', BASIS_POINTS)
 
 describe('Rewards Manager', async () => {
@@ -270,10 +275,10 @@ describe('Rewards Manager', async () => {
   })
 
   describe('Released HALO will be distributed 80% to the rewards contract converted to DESRT and 20% will be vested to the halohalo contract', async () => {
-    it('Release rewards to be distributed when 1 HALOHALO = 1 HALO', async () => {
-      const expectedVestedRewards = RELEASED_HALO_REWARDS.mul(
-        vestingRewardsRatio
-      ).div(BASIS_POINTS)
+    it('Release rewards in Epoch 0, HALOHALO priced to one at the end', async () => {
+      epoch0VestedRewards = RELEASED_HALO_REWARDS.mul(vestingRewardsRatio).div(
+        BASIS_POINTS
+      )
 
       const expectedHaloHalo = RELEASED_HALO_REWARDS.mul(
         releasedRewardsRatio
@@ -294,13 +299,11 @@ describe('Rewards Manager', async () => {
         rewardsManagerContract.releaseEpochRewards(RELEASED_HALO_REWARDS),
         'Rewards was not distributed'
       )
-        .to.emit(rewardsManagerContract, 'SentVestedRewardsEvent')
-        .withArgs(expectedVestedRewards)
         .to.emit(
           rewardsManagerContract,
           'ReleasedRewardsToRewardsContractEvent'
         )
-        .withArgs(RELEASED_HALO_REWARDS.sub(expectedVestedRewards)).to.not.be
+        .withArgs(RELEASED_HALO_REWARDS.sub(epoch0VestedRewards)).to.not.be
         .reverted
 
       expect(
@@ -308,28 +311,23 @@ describe('Rewards Manager', async () => {
         `Current HaloHalo is not equal to ${formatEther(expectedHaloHalo)}`
       ).to.equal(expectedHaloHalo)
 
-      // it is equal to RELEASED_HALO_REWARDS since 80% in HALO is entered in the halohalo contract and 20% is vested in the halohalo contract
       expect(
-        await haloTokenContract.balanceOf(halohaloContract.address),
-        `Total HALO (vested + entered) is not equal to ${RELEASED_HALO_REWARDS}`
-      ).to.equal(RELEASED_HALO_REWARDS)
+        await haloTokenContract.balanceOf(rewardsManagerContract.address),
+        `Total Epoch 0 vested rewards that remaind in the rewards contract manager is not equal to ${epoch0VestedRewards}`
+      ).to.equal(epoch0VestedRewards)
+
+      expect(
+        await halohaloContract.getCurrentHaloHaloPrice(),
+        'HALOHALO price is not 1 HALO'
+      ).to.equal(epoch0ExpectedHaloHaloPrice)
     })
 
-    it(`Release rewards to be distributed when 1 HALOHALO =  ${formatEther(
-      expectedHaloHaloPrice
-    )} HALO`, async () => {
-      expect(await halohaloContract.getCurrentHaloHaloPrice()).to.equal(
-        expectedHaloHaloPrice
-      )
-
-      const expectedVestedRewards = RELEASED_HALO_REWARDS.mul(
-        vestingRewardsRatio
-      ).div(BASIS_POINTS)
-
-      const expectedHaloHalo = RELEASED_HALO_REWARDS.mul(releasedRewardsRatio)
-        .div(BASIS_POINTS)
-        .mul(await halohaloContract.totalSupply())
-        .div(await haloTokenContract.balanceOf(halohaloContract.address))
+    it(`Release rewards in Epoch 1, HALOHALO priced to ${formatEther(
+      epoch1ExpectedHaloHaloPrice
+    )} at the end `, async () => {
+      const expectedHaloHalo = RELEASED_HALO_REWARDS.mul(
+        releasedRewardsRatio
+      ).div(epoch1ExpectedHaloHaloPriceEther * BASIS_POINTS)
 
       // Simulate release through minting
       await expect(
@@ -347,12 +345,17 @@ describe('Rewards Manager', async () => {
         'Rewards was not distributed'
       )
         .to.emit(rewardsManagerContract, 'SentVestedRewardsEvent')
-        .withArgs(expectedVestedRewards)
+        .withArgs(epoch0VestedRewards)
         .to.emit(
           rewardsManagerContract,
           'ReleasedRewardsToRewardsContractEvent'
         )
         .withArgs(expectedHaloHalo).to.not.be.reverted
+
+      expect(
+        await halohaloContract.getCurrentHaloHaloPrice(),
+        `HALOHALO price is not ${epoch1ExpectedHaloHaloPrice} HALO`
+      ).to.equal(epoch1ExpectedHaloHaloPrice)
     })
 
     it('fails if the caller is not the owner', async () => {
