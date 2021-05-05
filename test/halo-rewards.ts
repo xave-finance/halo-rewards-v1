@@ -114,6 +114,7 @@ describe('Rewards Contract', async () => {
     const ammLpPools = [[lpTokenContract.address, 10]]
 
     genesisBlock = await ethers.provider.getBlockNumber()
+    console.log(`current EVM block number ${genesisBlock}`)
     rewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
       startingRewards,
@@ -123,6 +124,9 @@ describe('Rewards Contract', async () => {
       minterLpPools,
       ammLpPools
     )
+
+    const _genesisBlock = await rewardsContract.genesisBlock()
+    console.log(`contract genesis block number ${_genesisBlock}`)
 
     await rewardsContract.deployed()
     console.log(`Rewards Contract deployed to ${rewardsContract.address} at block number ${genesisBlock}`)
