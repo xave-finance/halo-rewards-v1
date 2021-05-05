@@ -1,5 +1,6 @@
 import { time } from '@openzeppelin/test-helpers'
 
+import { parseEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
@@ -12,6 +13,7 @@ let minterContract
 let ubeContract
 let haloTokenContract
 let halohaloContract
+let rewardsManager
 let genesisBlock = 0
 const DECIMALS = 10 ** 18
 const BASIS_POINTS = 10 ** 4
@@ -24,6 +26,8 @@ let addrs
 
 const sleepTime = 5000
 const expectedHALORewardPerBlock = ethers.BigNumber.from('29000000000000000000')
+
+const RELEASED_HALO_REWARDS = parseEther('10000')
 
 describe('Rewards Contract', async () => {
   before(async () => {
@@ -122,6 +126,31 @@ describe('Rewards Contract', async () => {
       minterLpPools,
       ammLpPools
     )
+
+    const RewardsManager = await ethers.getContractFactory('RewardsManager')
+    rewardsManager = await RewardsManager.deploy(
+      vestingRewardsRatio,
+      rewardsContract.address,
+      halohaloContract.address,
+      haloTokenContract.address
+    )
+
+    /** Mint HALO to deployer */
+    await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
+    console.log(`
+      Minted ${RELEASED_HALO_REWARDS} HALO Tokens to deployer
+    `)
+
+    await haloTokenContract.approve(
+      rewardsManager.address,
+      RELEASED_HALO_REWARDS
+    )
+
+    /** Release Epoch Rewards */
+    await rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS)
+    console.log(`
+      Released Epoch Rewards
+    `)
 
     const _genesisBlock = await rewardsContract.genesisBlock()
     console.log(`contract genesis block number ${_genesisBlock}`)
@@ -434,7 +463,11 @@ describe('Rewards Contract', async () => {
     })
 
     it('Should have correct amount of HALO token balance', async () => {
-      const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
+      /** Withdraw unclaimed pool rewards */
+      await rewardsContract.withdrawUnclaimedPoolRewards(lpTokenContract.address)
+
+      // const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
+      const actualHaloBal = await halohaloContract.balanceOf(owner.address)
       const expectedHaloBal = ethers.BigNumber.from('23200000000000000000')
       expect(actualHaloBal).to.equal(expectedHaloBal)
     })

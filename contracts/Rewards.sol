@@ -462,6 +462,7 @@ contract Rewards is Ownable {
 
     uint256 _unclaimed =
       user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+    console.log('withdrawUnclaimedMinterLpRewards _unclaimed:', _unclaimed);
     safeRewardTokenTransfer(_account, _unclaimed);
 
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
