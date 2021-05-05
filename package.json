@@ -7,6 +7,7 @@
     "deploy:kovan": "npx hardhat run scripts/deployAllKovan.ts --network \"kovan\"",
     "deploy:halo-kovan": "npx hardhat run scripts/deployHalo.ts --network \"kovan\"",
     "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployOnlyRewardsContract.ts --network \"kovan\"",
+    "deploy:bscTestnet": "npx hardhat run scripts/deployAllBSCTestnet.ts --network \"bscTestnet\"",
     "node": "npx hardhat node"
   },
   "devDependencies": {
