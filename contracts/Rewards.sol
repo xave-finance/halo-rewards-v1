@@ -162,11 +162,6 @@ contract Rewards is Ownable {
     return delta.mul(REWARD_PER_BLOCK);
   }
 
-  // function unclaimed() public view returns (uint256) {
-  //   uint256 rewards = calcReward(lastHaloVestRewardBlock);
-  //   return rewards.mul(vestingRewardsRatio).div(BASIS_POINTS).sub(vestingRewardsDebt);
-  // }
-
   function unclaimed() public view returns (uint256) {
     console.log(
       'Rewards.unclaimed: lastHaloVestRewardBlock == %s',
