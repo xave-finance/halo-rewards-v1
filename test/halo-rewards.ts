@@ -116,10 +116,8 @@ describe('Rewards Contract', async () => {
     genesisBlock = await ethers.provider.getBlockNumber()
     console.log(`current EVM block number ${genesisBlock}`)
     rewardsContract = await RewardsContract.deploy(
-      haloTokenContract.address,
-      startingRewards,
+      halohaloContract.address,
       ammLpRewardsRatio, //in bps, multiplied by 10^4
-      vestingRewardsRatio, //in bps, multiplied by 10^4
       genesisBlock,
       minterLpPools,
       ammLpPools
@@ -132,10 +130,6 @@ describe('Rewards Contract', async () => {
 
     await rewardsContract.deployed()
     console.log(`Rewards Contract deployed to ${rewardsContract.address} at block number ${genesisBlock}`)
-    console.log()
-
-    await rewardsContract.setHaloChest(halohaloContract.address)
-    console.log('Halo Chest set')
     console.log()
 
     await minterContract.setRewardsContract(rewardsContract.address)

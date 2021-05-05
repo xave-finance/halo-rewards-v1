@@ -30,8 +30,8 @@ import 'hardhat/console.sol';
 /// ============================
 ///
 /// @title Rewards
-/// @notice Rewards for participation in the halo ecosystem.
-/// @dev Rewards for participation in the halo ecosystem.
+/// @notice Rewards for participation in the HALODAO ecosystem.
+/// @dev Rewards for participation in the HALODAO ecosystem.
 contract Rewards is Ownable {
   /// @notice utility constant
   uint256 public constant DECIMALS = 10**18;
@@ -78,6 +78,13 @@ contract Rewards is Ownable {
   );
   event VestedRewardsReleasedEvent(uint256 amount, uint256 timestamp);
 
+  event DepositEpochReward(address indexed sender, uint256 amount);
+
+  event RewardsManagerAddressChanged(
+    address indexed sender,
+    address indexed rewardsManagerAddress
+  );
+
   /****************************************
    *                VARIABLES              *
    ****************************************/
@@ -99,16 +106,17 @@ contract Rewards is Ownable {
     uint256 accHaloPerShare; // Accumulated HALO per share, times 10^18.
   }
 
-  /// @notice address of the halo erc20 token
-  address public immutable haloTokenAddress;
+  /// @notice address of the Rewards Manager
+  address public rewardsManagerAddress;
+  /// @notice address of the reward erc20 token
+  address public immutable rewardsTokenAddress;
   /// @notice block number of rewards genesis
   uint256 public genesisBlock;
-  /// @notice rewards allocated for the first period
-  uint256 public immutable startingRewards;
   // est number of blocks per month
-  uint256 private constant epochLength = 30*24*60*5;
+  uint256 private constant epochLength = 30 * 24 * 60 * 5;
 
-  /// @notice percentage of rewards allocated to minter Lps
+  /// @notice rewards allocated for the first month
+  uint256 public epochRewardAmount;
   uint256 public minterLpRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to minter Amm Lps
   uint256 public ammLpRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
@@ -125,9 +133,6 @@ contract Rewards is Ownable {
   /// @notice address of the minter contract
   address public minterContract;
 
-  /// @notice address of the staking contract
-  address public haloChestContract;
-
   /// @notice timestamp of last allocation of rewards to stakers
   uint256 public lastHaloVestRewardBlock;
 
@@ -140,7 +145,7 @@ contract Rewards is Ownable {
   /// @notice info of minter Lps
   mapping(address => mapping(address => UserInfo)) public minterLpUserInfo;
 
-  mapping(address => uint256) public claimedHalo;
+  mapping(address => uint256) public claimedRewardsToken;
 
   /****************************************
    *          PRIVATE VARIABLES            *
@@ -157,7 +162,7 @@ contract Rewards is Ownable {
   /// @param _from last block when rewards were updated
   /// @return unclaimed rewards since last update
   function calcReward(uint256 _from) public view returns (uint256) {
-    require(block.number > _from, "Can not be in the past");
+    require(block.number > _from, 'Can not be in the past');
     uint256 delta = block.number.sub(_from);
     return delta.mul(REWARD_PER_BLOCK);
   }
@@ -179,31 +184,20 @@ contract Rewards is Ownable {
 
   /// @notice initiates the contract with predefined params
   /// @dev initiates the contract with predefined params
-  /// @param _haloTokenAddress address of the halo erc20 token
-  /// @param _startingRewards rewards allocated for the first month
-  /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in BASIS_POINTS
-  /// @param _vestingRewardsRatio percentage of rewards allocated to stakers in BASIS_POINTS
+  /// @param _rewardsTokenAddress This is currently the HALO HALO token
+  /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
   /// @param _genesisBlock timestamp of rewards genesis
   /// @param _minterLpPools info of whitelisted minter Lp pools at genesis
   /// @param _ammLpPools info of whitelisted amm Lp pools at genesis
   constructor(
-    address _haloTokenAddress,
-    uint256 _startingRewards,
-    uint256 _ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
-    uint256 _vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
+    address _rewardsTokenAddress,
+    uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
     uint256 _genesisBlock,
     Pool[] memory _minterLpPools,
     Pool[] memory _ammLpPools
   ) public {
-    haloTokenAddress = _haloTokenAddress;
-    startingRewards = _startingRewards;
+    rewardsTokenAddress = _rewardsTokenAddress;
     ammLpRewardsRatio = _ammLpRewardsRatio;
-    vestingRewardsRatio = _vestingRewardsRatio;
-
-    if (_genesisBlock == 0) {
-      genesisBlock = block.number;
-    }
-
     genesisBlock = _genesisBlock;
     lastHaloVestRewardBlock = genesisBlock;
     for (uint8 i = 0; i < _minterLpPools.length; i++) {
@@ -236,7 +230,7 @@ contract Rewards is Ownable {
     // if (block.number <= pool.lastRewardBlock) {
     //   return;
     // }
-    require(block.number > pool.lastRewardBlock, "Can not be in the past");
+    require(block.number > pool.lastRewardBlock, 'Can not be in the past');
     uint256 lpSupply = IERC20(_lpAddress).balanceOf(address(this));
     if (lpSupply == 0) {
       pool.lastRewardBlock = block.number;
@@ -244,7 +238,7 @@ contract Rewards is Ownable {
     }
 
     uint256 totalRewards = calcReward(pool.lastRewardBlock);
-    uint256 haloReward =
+    uint256 tokenReward =
       totalRewards
         .mul(ammLpRewardsRatio)
         .mul(pool.allocPoint)
@@ -252,7 +246,7 @@ contract Rewards is Ownable {
         .div(BASIS_POINTS);
 
     pool.accHaloPerShare = pool.accHaloPerShare.add(
-      haloReward.mul(DECIMALS).div(lpSupply)
+      tokenReward.mul(DECIMALS).div(lpSupply)
     );
 
     pool.lastRewardBlock = block.number;
@@ -299,7 +293,7 @@ contract Rewards is Ownable {
     }
 
     uint256 totalRewards = calcReward(pool.lastRewardBlock);
-    uint256 haloReward =
+    uint256 tokenReward =
       totalRewards
         .mul(minterLpRewardsRatio) // 4000 (0*4 ** BASIS_POINTS)
         .mul(pool.allocPoint) // 10
@@ -307,7 +301,7 @@ contract Rewards is Ownable {
         .div(BASIS_POINTS);
 
     pool.accHaloPerShare = pool.accHaloPerShare.add(
-      haloReward.mul(DECIMALS).div(minterCollateralSupply)
+      tokenReward.mul(DECIMALS).div(minterCollateralSupply)
     );
 
     pool.lastRewardBlock = block.number;
@@ -335,14 +329,7 @@ contract Rewards is Ownable {
       'Error: AMM Pool Address not allowed'
     );
 
-    PoolInfo storage pool = ammLpPools[_lpAddress];
-    UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
-
     updateAmmRewardPool(_lpAddress);
-
-    if (user.amount > 0) {
-      withdrawUnclaimedRewards(user, pool, msg.sender);
-    }
 
     IERC20(_lpAddress).transferFrom(
       address(msg.sender),
@@ -366,13 +353,11 @@ contract Rewards is Ownable {
   function withdrawPoolTokens(address _lpAddress, uint256 _amount) public {
     //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lp
 
-    PoolInfo storage pool = ammLpPools[_lpAddress];
     UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
 
     require(user.amount >= _amount, 'Error: Not enough balance');
 
     updateAmmRewardPool(_lpAddress);
-    withdrawUnclaimedRewards(user, pool, msg.sender);
 
     subtractAmountUpdateRewardDebtForUserForPoolTokens(
       _lpAddress,
@@ -400,14 +385,7 @@ contract Rewards is Ownable {
       'Error: Collateral type not allowed'
     );
 
-    PoolInfo storage pool = minterLpPools[_collateralAddress];
-    UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
-
     updateMinterRewardPool(_collateralAddress);
-
-    if (user.amount > 0) {
-      withdrawUnclaimedRewards(user, pool, _account);
-    }
 
     addAmountUpdateRewardDebtAndForMinter(
       _collateralAddress,
@@ -434,13 +412,11 @@ contract Rewards is Ownable {
   ) public onlyMinter() requireMinter() {
     //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
 
-    PoolInfo storage pool = minterLpPools[_collateralAddress];
     UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
     require(user.amount >= _amount, 'Error: Not enough balance');
 
     updateMinterRewardPool(_collateralAddress);
-    withdrawUnclaimedRewards(user, pool, _account);
 
     subtractAmountUpdateRewardDebtAndForMinter(
       _collateralAddress,
@@ -463,7 +439,11 @@ contract Rewards is Ownable {
     UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
 
     updateAmmRewardPool(_lpAddress);
-    withdrawUnclaimedRewards(user, pool, msg.sender);
+
+    uint256 _unclaimed =
+      user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+    safeRewardTokenTransfer(msg.sender, _unclaimed);
+
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
   }
 
@@ -479,7 +459,11 @@ contract Rewards is Ownable {
     UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
     updateMinterRewardPool(_collateralAddress);
-    withdrawUnclaimedRewards(user, pool, _account);
+
+    uint256 _unclaimed =
+      user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
+    safeRewardTokenTransfer(_account, _unclaimed);
+
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
   }
 
@@ -595,15 +579,15 @@ contract Rewards is Ownable {
     return minterLpPools[_collateralAddress];
   }
 
-  /// @dev get total claimed halo by user
+  /// @dev get total claimed reward token by user
   /// @param _account address of the user
-  /// @return total claimed halo by user
+  /// @return total claimed reward token by user
   function getTotalRewardsClaimedByUser(address _account)
     public
     view
     returns (uint256)
   {
-    return claimedHalo[_account];
+    return claimedRewardsToken[_account];
   }
 
   /// @dev get all whitelisted AMM LM pool addresses
@@ -629,6 +613,14 @@ contract Rewards is Ownable {
 
   function getMinterLpRewardsRatio() public view returns (uint256) {
     return minterLpRewardsRatio;
+  }
+
+  function getEpochRewardAmount() public view returns (uint256) {
+    return epochRewardAmount;
+  }
+
+  function getRewardsManagerAddress() public view returns (address) {
+    return rewardsManagerAddress;
   }
 
   /****************************************
@@ -708,6 +700,11 @@ contract Rewards is Ownable {
     minterContract = _minter;
   }
 
+  function setRewardsManagerAddress(address _rewardsManager) public onlyOwner {
+    rewardsManagerAddress = _rewardsManager;
+    emit RewardsManagerAddressChanged(msg.sender, _rewardsManager);
+  }
+
   /// @notice add a minter lp pool
   /// @dev add a minter lp pool
   /// @param _collateralAddress address of the collateral
@@ -764,36 +761,27 @@ contract Rewards is Ownable {
     minterLpPools[_collateralAddress].whitelisted = false;
   }
 
-  /// @notice releases unclaimed vested rewards for stakers for extra bonus
-  /// @dev releases unclaimed vested rewards for stakers for extra bonus
-  function releaseVestedRewards() public onlyOwner {
-    require(
-      block.number > lastHaloVestRewardBlock,
-      'block.number<lastHaloVestRewardBlock'
-    );
-
-    uint256 _unclaimed = unclaimed();
-
-    vestingRewardsDebt = _unclaimed.mul(vestingRewardsRatio).div(BASIS_POINTS);
-    lastHaloVestRewardBlock = block.number;
-    safeHaloTransfer(haloChestContract, _unclaimed);
-    emit VestedRewardsReleasedEvent(_unclaimed, block.number);
-  }
-
-  /// @notice sets the address of the halochest contract
-  /// @dev set the address of the halochest contract
-  /// @param _haloChest address of the halochest contract
-  function setHaloChest(address _haloChest) public onlyOwner {
-    require(_haloChest != address(0), 'Set to valid address');
-    haloChestContract = _haloChest;
-  }
-
   /// @notice set genesis timestamp
   /// @dev set genesis timestamp
   /// @param _genesisBlock genesis timestamp
   function setGenesisBlock(uint256 _genesisBlock) public onlyOwner {
     require(block.number < genesisBlock, 'Already initialized');
     genesisBlock = _genesisBlock;
+  }
+
+  function depositEpochRewardAmount(uint256 _epochRewardAmount)
+    public
+    onlyRewardsManager
+  {
+    epochRewardAmount = _epochRewardAmount;
+
+    IERC20(rewardsTokenAddress).transferFrom(
+      msg.sender,
+      address(this),
+      epochRewardAmount
+    );
+
+    emit DepositEpochReward(msg.sender, epochRewardAmount);
   }
 
   /****************************************
@@ -809,6 +797,14 @@ contract Rewards is Ownable {
     require(
       msg.sender == minterContract,
       'Only minter contract can call this function'
+    );
+    _;
+  }
+
+  modifier onlyRewardsManager() {
+    require(
+      msg.sender == rewardsManagerAddress,
+      'Only rewards manager contract can call this function'
     );
     _;
   }
@@ -891,24 +887,28 @@ contract Rewards is Ownable {
   /// @param pool instance of the PoolInfo struct
   /// @param account user address
   function withdrawUnclaimedRewards(
-    UserInfo storage user,
-    PoolInfo storage pool,
+    UserInfo memory user,
+    PoolInfo memory pool,
     address account
-  ) internal {
+  ) external {
     uint256 _unclaimed =
       user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
-    safeHaloTransfer(account, _unclaimed);
+    safeRewardTokenTransfer(account, _unclaimed);
   }
 
-  /// @notice transfer halo to users
-  /// @dev transfer halo to users
+  /// @notice transfer reward token to users
+  /// @dev transfer reward token to users
   /// @param _to address of the recipient
-  /// @param _amount amount of halo tokens
-  function safeHaloTransfer(address _to, uint256 _amount) internal {
-    uint256 haloBal = IERC20(haloTokenAddress).balanceOf(address(this));
-    require(_amount <= haloBal, 'Not enough HALO tokens in the contract');
-    IERC20(haloTokenAddress).transfer(_to, _amount);
-    claimedHalo[_to] = claimedHalo[_to].add(_amount);
+  /// @param _amount amount of reward tokens
+  function safeRewardTokenTransfer(address _to, uint256 _amount) internal {
+    uint256 rewardTokenBalance =
+      IERC20(rewardsTokenAddress).balanceOf(address(this));
+    require(
+      _amount <= rewardTokenBalance,
+      'Not enough rewards tokens in the contract'
+    );
+    IERC20(rewardsTokenAddress).transfer(_to, _amount);
+    claimedRewardsToken[_to] = claimedRewardsToken[_to].add(_amount);
   }
 
   function addToAmmLpPoolsAddresses(address _lpAddress) internal {
