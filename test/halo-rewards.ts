@@ -128,6 +128,8 @@ describe('Rewards Contract', async () => {
     const _genesisBlock = await rewardsContract.genesisBlock()
     console.log(`contract genesis block number ${_genesisBlock}`)
 
+    expect(_genesisBlock).to.be.equal(genesisBlock)
+
     await rewardsContract.deployed()
     console.log(`Rewards Contract deployed to ${rewardsContract.address} at block number ${genesisBlock}`)
     console.log()
@@ -727,7 +729,7 @@ describe('Rewards Contract', async () => {
   
     it('should get unclaimed rewards', async () => {
       const actual = await rewardsContract.unclaimed()
-      const expected = ethers.BigNumber.from('243600000000000000000')
+      const expected = ethers.BigNumber.from('174000000000000000000')
   
       expect(actual).to.equal(expected);
     })
