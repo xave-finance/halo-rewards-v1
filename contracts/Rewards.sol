@@ -36,8 +36,8 @@ contract Rewards is Ownable {
   /// @notice utility constant
   uint256 public constant DECIMALS = 10**18;
   /// @notice utility constant
-  uint256 public constant BPS = 10**4;
-  uint256 public constant REWARD_PER_BLOCK = 29;
+  uint256 public constant BASIS_POINTS = 10**4;
+  uint256 public constant REWARD_PER_BLOCK = 29 * 10**18;
   address private constant NULL_ADDRESS = address(0);
 
   using SafeMath for uint256;
@@ -103,16 +103,17 @@ contract Rewards is Ownable {
   address public immutable haloTokenAddress;
   /// @notice block number of rewards genesis
   uint256 public genesisBlock;
-  /// @notice rewards allocated for the first month
+  /// @notice rewards allocated for the first period
   uint256 public immutable startingRewards;
-  /// @notice length of a month = 30*24*60*60
-  uint256 public immutable epochLength;
+  // est number of blocks per month
+  uint256 private constant epochLength = 30*24*60*5;
+
   /// @notice percentage of rewards allocated to minter Lps
-  uint256 public minterLpRewardsRatio; //in bps, multiply fraction by 10^4
+  uint256 public minterLpRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to minter Amm Lps
-  uint256 public ammLpRewardsRatio; //in bps, multiply fraction by 10^4
+  uint256 public ammLpRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to stakers
-  uint256 public vestingRewardsRatio; //in bps, multiply fraction by 10^4
+  uint256 public vestingRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
   /// @notice total alloc points for amm lps
   uint256 public totalAmmLpAllocs; //total allocation points for all amm lps (the ratio defines percentage of rewards to a particular amm lp)
   /// @notice total alloc points for minter lps
@@ -151,67 +152,58 @@ contract Rewards is Ownable {
   /****************************************
    *           PUBLIC FUNCTIONS           *
    ****************************************/
-
-  function monthlyHalo() public view returns (uint256) {
-    return startingRewards.mul(sumExp(1, nMonths())).div(DECIMALS);
-  }
-
-  function thisMonthsReward() public view returns (uint256) {
-    return startingRewards.mul(exp(1, nMonths() + 1)).div(DECIMALS);
-  }
-
-  function accHalo(uint256 diffTime) public view returns (uint256) {
-    require(diffTime > 0, 'Invalid diff time');
-    uint256 accMonthlyHalo = monthlyHalo();
-    return (diffTime.mul(thisMonthsReward()).div(DECIMALS)).add(accMonthlyHalo);
+  /// @notice calculates the unclaimed rewards for last block
+  /// @dev calculates the unclaimed rewards for last block
+  /// @param _from last block when rewards were updated
+  /// @return unclaimed rewards since last update
+  function calcReward(uint256 _from) public view returns (uint256) {
+    require(block.number > _from, "Can not be in the past");
+    uint256 delta = block.number.sub(_from);
+    return delta.mul(REWARD_PER_BLOCK);
   }
 
   function unclaimed() public view returns (uint256) {
-    return unclaimed(diffTime());
-  }
-
-  function unclaimed(uint256 diffTime) public view returns (uint256) {
-    require(diffTime > 0, 'Invalid diff time');
-    uint256 _accHalo = accHalo(diffTime);
-    return (_accHalo.mul(vestingRewardsRatio).div(BPS)).sub(vestingRewardsDebt);
-  }
-
-  function nMonths() public view returns (uint256) {
-    return (now.sub(genesisBlock)).div(epochLength);
-  }
-
-  function diffTime() public view returns (uint256) {
-    return
-      (now.sub(genesisBlock.add(epochLength.mul(nMonths()))).mul(DECIMALS)).div(
-        epochLength
+    console.log(
+      'Rewards.unclaimed: lastHaloVestRewardBlock == %s',
+      lastHaloVestRewardBlock
+    );
+    uint256 rewards = calcReward(lastHaloVestRewardBlock);
+    console.log('Rewards.unclaimed: rewards == %s', rewards);
+    uint256 unclaimedRewards =
+      rewards.mul(vestingRewardsRatio).div(BASIS_POINTS).sub(
+        vestingRewardsDebt
       );
+    console.log('Rewards returnval == %s', unclaimedRewards);
+    return unclaimedRewards;
   }
 
   /// @notice initiates the contract with predefined params
   /// @dev initiates the contract with predefined params
   /// @param _haloTokenAddress address of the halo erc20 token
   /// @param _startingRewards rewards allocated for the first month
-  /// @param _epochLength length of a month = 30*24*60*60
-  /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
-  /// @param _vestingRewardsRatio percentage of rewards allocated to stakers in bps
+  /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in BASIS_POINTS
+  /// @param _vestingRewardsRatio percentage of rewards allocated to stakers in BASIS_POINTS
   /// @param _genesisBlock timestamp of rewards genesis
   /// @param _minterLpPools info of whitelisted minter Lp pools at genesis
   /// @param _ammLpPools info of whitelisted amm Lp pools at genesis
   constructor(
     address _haloTokenAddress,
     uint256 _startingRewards,
-    uint256 _epochLength,
-    uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
-    uint256 _vestingRewardsRatio, //in bps, multiplied by 10^4
+    uint256 _ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
+    uint256 _vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
     uint256 _genesisBlock,
     Pool[] memory _minterLpPools,
     Pool[] memory _ammLpPools
   ) public {
     haloTokenAddress = _haloTokenAddress;
     startingRewards = _startingRewards;
-    epochLength = _epochLength;
     ammLpRewardsRatio = _ammLpRewardsRatio;
     vestingRewardsRatio = _vestingRewardsRatio;
+
+    if (_genesisBlock == 0) {
+      genesisBlock = block.number;
+    }
+
     genesisBlock = _genesisBlock;
     lastHaloVestRewardBlock = genesisBlock;
     for (uint8 i = 0; i < _minterLpPools.length; i++) {
@@ -225,7 +217,6 @@ contract Rewards is Ownable {
     }
   }
 
-  ///
   /// Updates accHaloPerShare and last reward update timestamp.
   /// Calculation:
   /// For each second, the total amount of rewards is fixed among all the current users who have staked LP tokens in the contract
@@ -242,9 +233,10 @@ contract Rewards is Ownable {
   /// @param _lpAddress address of the amm lp token
   function updateAmmRewardPool(address _lpAddress) public {
     PoolInfo storage pool = ammLpPools[_lpAddress];
-    if (block.number <= pool.lastRewardBlock) {
-      return;
-    }
+    // if (block.number <= pool.lastRewardBlock) {
+    //   return;
+    // }
+    require(block.number > pool.lastRewardBlock, "Can not be in the past");
     uint256 lpSupply = IERC20(_lpAddress).balanceOf(address(this));
     if (lpSupply == 0) {
       pool.lastRewardBlock = block.number;
@@ -257,7 +249,7 @@ contract Rewards is Ownable {
         .mul(ammLpRewardsRatio)
         .mul(pool.allocPoint)
         .div(totalAmmLpAllocs)
-        .div(BPS);
+        .div(BASIS_POINTS);
 
     pool.accHaloPerShare = pool.accHaloPerShare.add(
       haloReward.mul(DECIMALS).div(lpSupply)
@@ -309,10 +301,10 @@ contract Rewards is Ownable {
     uint256 totalRewards = calcReward(pool.lastRewardBlock);
     uint256 haloReward =
       totalRewards
-        .mul(minterLpRewardsRatio) // 4000 (0*4 ** BPS)
+        .mul(minterLpRewardsRatio) // 4000 (0*4 ** BASIS_POINTS)
         .mul(pool.allocPoint) // 10
         .div(totalMinterLpAllocs) //
-        .div(BPS);
+        .div(BASIS_POINTS);
 
     pool.accHaloPerShare = pool.accHaloPerShare.add(
       haloReward.mul(DECIMALS).div(minterCollateralSupply)
@@ -559,7 +551,7 @@ contract Rewards is Ownable {
   /// @dev view function to check unclaimed rewards for stakers since last withdrawal to vesting contract
   /// @return unclaimed rewards for stakers
   function getUnclaimedVestingRewards() public view returns (uint256) {
-    uint256 _unclaimed = unclaimed(diffTime());
+    uint256 _unclaimed = unclaimed();
     return _unclaimed;
   }
 
@@ -779,17 +771,11 @@ contract Rewards is Ownable {
       block.number > lastHaloVestRewardBlock,
       'block.number<lastHaloVestRewardBlock'
     );
-    uint256 _diffTime = diffTime();
 
-    require(
-      _diffTime < epochLength.mul(DECIMALS),
-      '_diffTime > epochLength.mul(DECIMALS)'
-    );
+    uint256 _unclaimed = unclaimed();
 
-    uint256 _accHalo = accHalo(_diffTime);
-    uint256 _unclaimed = unclaimed(_diffTime);
-
-    vestingRewardsDebt = _accHalo.mul(vestingRewardsRatio).div(BPS);
+    vestingRewardsDebt = _unclaimed.mul(vestingRewardsRatio).div(BASIS_POINTS);
+    lastHaloVestRewardBlock = block.number;
     safeHaloTransfer(haloChestContract, _unclaimed);
     emit VestedRewardsReleasedEvent(_unclaimed, block.number);
   }
@@ -923,33 +909,6 @@ contract Rewards is Ownable {
     require(_amount <= haloBal, 'Not enough HALO tokens in the contract');
     IERC20(haloTokenAddress).transfer(_to, _amount);
     claimedHalo[_to] = claimedHalo[_to].add(_amount);
-  }
-
-  /// @notice calculates the unclaimed rewards for last timestamp
-  /// @dev calculates the unclaimed rewards for last timestamp
-  /// @param _from last timestamp when rewards were updated
-  /// @return unclaimed rewards since last update
-  function calcReward(uint256 _from) public view returns (uint256) {
-    uint256 delta = block.number.sub(_from);
-    return delta.mul(REWARD_PER_BLOCK).mul(BPS);
-  }
-
-  function exp(uint256 m, uint256 n) internal pure returns (uint256) {
-    uint256 x = DECIMALS;
-    for (uint256 i = 0; i < n; i++) {
-      x = x.mul(m).div(DECIMALS);
-    }
-    return x;
-  }
-
-  function sumExp(uint256 m, uint256 n) internal pure returns (uint256) {
-    uint256 x = DECIMALS;
-    uint256 s;
-    for (uint256 i = 0; i < n; i++) {
-      x = x.mul(m).div(DECIMALS);
-      s = s.add(x);
-    }
-    return s;
   }
 
   function addToAmmLpPoolsAddresses(address _lpAddress) internal {

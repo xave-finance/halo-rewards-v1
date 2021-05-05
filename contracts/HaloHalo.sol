@@ -9,7 +9,7 @@ import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
   using SafeMath for uint256;
   IERC20 public halo;
-  uint256 public constant DECIMALS = 10**18;
+  uint256 public constant DECIMALS = 1e18;
   uint256 public genesisTimestamp;
 
   // Define the Halo token contract

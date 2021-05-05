@@ -12,19 +12,18 @@ let minterContract
 let ubeContract
 let haloTokenContract
 let halohaloContract
-const genesisBlock = 0
-let epochLength
+let genesisBlock = 0
 const DECIMALS = 10 ** 18
-const BPS = 10 ** 4
+const BASIS_POINTS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
-const minterLpRewardsRatio = 0.4 * BPS
+const minterLpRewardsRatio = 0.4 * BASIS_POINTS
 let owner
 let addr1
 let addr2
 let addrs
 
 const sleepTime = 5000
-const expectedHALORewardPerBlock = 290000
+const expectedHALORewardPerBlock = ethers.BigNumber.from('29000000000000000000')
 
 describe('Rewards Contract', async () => {
   before(async () => {
@@ -37,7 +36,7 @@ describe('Rewards Contract', async () => {
       'collateral ERC20'
     )
     await collateralERC20Contract.deployed()
-    console.log('collateralERC20 deployed')
+    console.log(`collateralERC20 deployed at ${collateralERC20Contract.address}`)
 
     await collateralERC20Contract.mint(
       owner.address,
@@ -51,7 +50,8 @@ describe('Rewards Contract', async () => {
     lpTokenContract2 = await LpToken.deploy('LpToken 2', 'LPT')
     await lpTokenContract.deployed()
     await lpTokenContract2.deployed()
-    console.log('lptoken deployed')
+    console.log(`lptoken deployed at ${lpTokenContract.address}`)
+    console.log(`lptoken 2 deployed at ${lpTokenContract2.address}`)
 
     await lpTokenContract.mint(
       owner.address,
@@ -105,31 +105,33 @@ describe('Rewards Contract', async () => {
     const RewardsContract = await ethers.getContractFactory('Rewards')
     const startingRewards = ethers.utils.parseEther('7500000')
 
-    // Average block 12 seconds or 5 per minute
-    epochLength = 30 * 24 * 60 * 5
-    console.log('BPS = ', BPS)
+    console.log(`BASIS_POINTS = ${BASIS_POINTS}`)
 
-    const ammLpRewardsRatio = 0.4 * BPS
-    const vestingRewardsRatio = 0.2 * BPS
+    const ammLpRewardsRatio = 0.4 * BASIS_POINTS
+    const vestingRewardsRatio = 0.2 * BASIS_POINTS
 
     const minterLpPools = [[collateralERC20Contract.address, 10]]
     const ammLpPools = [[lpTokenContract.address, 10]]
 
+    genesisBlock = await ethers.provider.getBlockNumber()
+    console.log(`current EVM block number ${genesisBlock}`)
     rewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
       startingRewards,
-      epochLength,
-      // minterLpRewardsRatio, //in bps, multiplied by 10^4
       ammLpRewardsRatio, //in bps, multiplied by 10^4
       vestingRewardsRatio, //in bps, multiplied by 10^4
-      // minterContract.address,
       genesisBlock,
       minterLpPools,
       ammLpPools
     )
 
+    const _genesisBlock = await rewardsContract.genesisBlock()
+    console.log(`contract genesis block number ${_genesisBlock}`)
+
+    expect(_genesisBlock).to.be.equal(genesisBlock)
+
     await rewardsContract.deployed()
-    console.log('Rewards Contract deployed')
+    console.log(`Rewards Contract deployed to ${rewardsContract.address} at block number ${genesisBlock}`)
     console.log()
 
     await rewardsContract.setHaloChest(halohaloContract.address)
@@ -254,7 +256,7 @@ describe('Rewards Contract', async () => {
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
-      expect(Number(await rewardsContract.getMinterLpRewardsRatio())).to.equal(
+      expect(ethers.BigNumber.from(await rewardsContract.getMinterLpRewardsRatio())).to.equal(
         0
       )
     })
@@ -309,6 +311,8 @@ describe('Rewards Contract', async () => {
         collateralERC20Contract.address
       )
 
+      expect(depositMinterTxn).not.to.be.null
+
       let pool = await rewardsContract.minterLpPools(
         collateralERC20Contract.address
       )
@@ -334,22 +338,25 @@ describe('Rewards Contract', async () => {
 
       const reward = await rewardsContract.calcReward(pool.lastRewardBlock)
       console.log(`Current reward per block ${Number(reward)}`)
-      expect(Number(reward)).to.equal(expectedHALORewardPerBlock)
+      expect(ethers.BigNumber.from(reward)).to.equal(expectedHALORewardPerBlock)
 
       // Check value of poo.accHaloPerShare ebefore next update
-      const beforeAccHaloPerShare = Number(pool.accHaloPerShare)
+      const beforeAccHaloPerShare = ethers.BigNumber.from(pool.accHaloPerShare)
+      let expectedAccHaloPerShare = ethers.BigNumber.from('1276000000000000000')
+      expect(beforeAccHaloPerShare).to.be.equal(expectedAccHaloPerShare)
 
       // this function needs to be called so that rewards state is updated and then becomes claimable
       const updateMinterTxn = await rewardsContract.updateMinterRewardPool(
         collateralERC20Contract.address
       )
+      expect(updateMinterTxn).not.to.be.null
 
       pool = await rewardsContract.minterLpPools(
         collateralERC20Contract.address
       )
 
       console.log(
-        Number(await collateralERC20Contract.balanceOf(minterContract.address))
+        ethers.BigNumber.from(await collateralERC20Contract.balanceOf(minterContract.address))
       )
 
       console.log(
@@ -359,15 +366,13 @@ describe('Rewards Contract', async () => {
         `Halo per share on minter pool ${Number(pool.accHaloPerShare)}`
       )
 
-      // expect(Number(pool.accHaloPerShare)).to.equal(Number(12760))
-      /**
-       * Expect current pool.accHaloPerShare to be greaterThanOrEqualTo the previous pool.accHaloShare
-       * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
-       * */
+      // /**
+      //  * Expect current pool.accHaloPerShare to be greaterThanOrEqualTo the previous pool.accHaloShare
+      //  * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
+      //  * */
 
-      expect(Number(pool.accHaloPerShare)).to.be.greaterThanOrEqual(
-        beforeAccHaloPerShare
-      )
+      expectedAccHaloPerShare = ethers.BigNumber.from('1508000000000000000')
+      expect(ethers.BigNumber.from(pool.accHaloPerShare)).to.be.equal(expectedAccHaloPerShare)
 
       await time.advanceBlock()
 
@@ -376,10 +381,10 @@ describe('Rewards Contract', async () => {
         owner.address
       )
 
-      // calculate expected HALO rewards balance
-      const expectedUnclaimedHaloRewardsBal = Number(232000)
+      // // calculate expected HALO rewards balance
+      const expectedUnclaimedHaloRewardsBal = ethers.BigNumber.from('23200000000000000000')
 
-      expect(Number(actualUnclaimedHaloRewardBal)).to.equal(
+      expect(actualUnclaimedHaloRewardBal).to.equal(
         expectedUnclaimedHaloRewardsBal
       )
     })
@@ -391,6 +396,8 @@ describe('Rewards Contract', async () => {
         ethers.utils.parseEther('100'),
         collateralERC20Contract.address
       )
+
+      expect(withdrawlMinterTxn).not.to.be.null
 
       await time.advanceBlock()
 
@@ -424,7 +431,7 @@ describe('Rewards Contract', async () => {
       )
 
       // calculate expected HALO rewards balance
-      const expectedUnclaimedHaloRewardsBal = Number(0)
+      const expectedUnclaimedHaloRewardsBal = ethers.BigNumber.from(0)
 
       // assert that expected and actual are equal
       expect(actualUnclaimedHaloRewardBal).to.equal(
@@ -434,8 +441,8 @@ describe('Rewards Contract', async () => {
 
     it('Should have correct amount of HALO token balance', async () => {
       const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
-      const expectedHaloBal = Number(232000)
-      expect(Number(actualHaloBal)).to.equal(expectedHaloBal)
+      const expectedHaloBal = ethers.BigNumber.from('23200000000000000000')
+      expect(actualHaloBal).to.equal(expectedHaloBal)
     })
   })
 
@@ -464,17 +471,8 @@ describe('Rewards Contract', async () => {
 
       expect(updateTxTs).to.not.be.null
 
-      const actualUnclaimedHaloPoolRewards = Math.round(
-        +ethers.utils.formatEther(
-          await rewardsContract.getUnclaimedPoolRewardsByUserByPool(
-            lpTokenContract.address,
-            owner.address
-          )
-        )
-      )
-
-      const expectedUnclaimedHaloPoolRewards = Number(0)
-
+      const actualUnclaimedHaloPoolRewards = await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address)
+      const expectedUnclaimedHaloPoolRewards = ethers.BigNumber.from('23200000000000000000')
       expect(actualUnclaimedHaloPoolRewards).to.equal(
         expectedUnclaimedHaloPoolRewards
       )
@@ -503,8 +501,7 @@ describe('Rewards Contract', async () => {
         )
       )
 
-      const expectedUnclaimedHaloPoolRewards = Number(0)
-
+      const expectedUnclaimedHaloPoolRewards = ethers.BigNumber.from(0)
       expect(actualUnclaimedHaloPoolRewards).to.equal(
         expectedUnclaimedHaloPoolRewards
       )
@@ -512,8 +509,8 @@ describe('Rewards Contract', async () => {
 
     it('Should have correct amount of HALO token balance', async () => {
       const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
-      const expectedBal = Number(580000)
-      expect(Number(actualHaloBal)).to.equal(expectedBal)
+      const expectedBal = ethers.BigNumber.from('58000000000000000000')
+      expect(actualHaloBal).to.equal(expectedBal)
     })
   })
 
@@ -710,21 +707,31 @@ describe('Rewards Contract', async () => {
   })
 
   describe('Rewards helper functions', () => {
-    it('should calc rewards', async () => {
+    it('should calc rewards for one block', async () => {
       const currentBlock = await ethers.provider.getBlockNumber()
       console.log(`Current block ${currentBlock}`)
-
+  
       const actual = await rewardsContract.calcReward(currentBlock - 1)
-      const expected = Number(290000)
-
-      expect(Number(actual)).to.equal(expected)
+      const expected = ethers.BigNumber.from('29000000000000000000')
+  
+      expect(actual).to.equal(expected);
     })
-
-    it('should get monthly halo', async () => {
-      const actual = await rewardsContract.monthlyHalo()
-      const expected = Number(7500000)
-
-      expect(Number(actual)).to.equal(expected)
+  
+    it('should calc rewards for two blocks', async () => {
+      const currentBlock = await ethers.provider.getBlockNumber()
+      console.log(`Current block ${currentBlock}`)
+  
+      const actual = await rewardsContract.calcReward(currentBlock - 2)
+      const expected = ethers.BigNumber.from('58000000000000000000')
+  
+      expect(actual).to.equal(expected);
+    })
+  
+    it('should get unclaimed rewards', async () => {
+      const actual = await rewardsContract.unclaimed()
+      const expected = ethers.BigNumber.from('174000000000000000000')
+  
+      expect(actual).to.equal(expected);
     })
   })
 })

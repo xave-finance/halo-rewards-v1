@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat'
-import { parseEther, formatEther } from 'ethers/lib/utils'
+import { formatEther } from 'ethers/lib/utils'
 
 const deployOnlyRewards = async () => {
   // We get the contract to deploy
@@ -10,7 +10,7 @@ const deployOnlyRewards = async () => {
   console.log('Deployer balance:', formatEther(await deployer.getBalance()))
 
   // Rewards constants
-  const BPS = 10 ** 4
+  const BASIS_POINTS = 10 ** 4
   const INITIAL_MINT = 10 ** 6
   const RewardsContract = await ethers.getContractFactory('Rewards')
 
@@ -20,10 +20,9 @@ const deployOnlyRewards = async () => {
   const BPTAddress = '0x37f80ac90235ce0d3911952d0ce49071a0ffdb1e'
 
   const startingRewards = ethers.utils.parseEther('7500000')
-  const epochLength = 60
-  const minterLpRewardsRatio = 0.4 * BPS
-  const ammLpRewardsRatio = 0.4 * BPS
-  const vestingRewardsRatio = 0.2 * BPS
+  const minterLpRewardsRatio = 0.4 * BASIS_POINTS
+  const ammLpRewardsRatio = 0.4 * BASIS_POINTS
+  const vestingRewardsRatio = 0.2 * BASIS_POINTS
   const genesisBlock = await ethers.provider.getBlockNumber()
   const minterLpPools = [[dummyCollateralAddress, 10]]
   const ammLpPools = [[BPTAddress, 10]]
@@ -38,10 +37,9 @@ const deployOnlyRewards = async () => {
   const rewardsContract = await RewardsContract.deploy(
     haloTokenContractAddress,
     startingRewards,
-    epochLength,
-    minterLpRewardsRatio, //in bps, multiplied by 10^4
-    ammLpRewardsRatio, //in bps, multiplied by 10^4
-    vestingRewardsRatio, //in bps, multiplied by 10^4
+    minterLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
+    ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
+    vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
     minterContractAddress,
     genesisBlock,
     minterLpPools,
