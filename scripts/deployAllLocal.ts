@@ -52,7 +52,6 @@ const deployAllLocal = async () => {
    * Deploy Rewards contract
    */
   const startingRewards = ethers.utils.parseEther('7500000')
-  const minterLpRewardsRatio = 0.4 * BPS
   const ammLpRewardsRatio = 0.4 * BPS
   const vestingRewardsRatio = 0.2 * BPS
   const genesisBlock = await ethers.provider.getBlockNumber()
@@ -65,10 +64,8 @@ const deployAllLocal = async () => {
   const rewardsContract = await Rewards.deploy(
     haloTokenContract.address,
     startingRewards,
-    minterLpRewardsRatio, //in bps, multiplied by 10^4
     ammLpRewardsRatio, //in bps, multiplied by 10^4
     vestingRewardsRatio, //in bps, multiplied by 10^4
-    minterContract.address,
     genesisBlock,
     minterLpPools,
     ammLpPools
