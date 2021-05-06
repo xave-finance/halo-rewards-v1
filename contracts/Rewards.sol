@@ -37,7 +37,7 @@ contract Rewards is Ownable {
   uint256 public constant DECIMALS = 10**18;
   /// @notice utility constant
   uint256 public constant BASIS_POINTS = 10**4;
-  uint256 public constant REWARD_PER_BLOCK = 29 * 10**18;
+  uint256 public rewardPerBlock;
   address private constant NULL_ADDRESS = address(0);
 
   using SafeMath for uint256;
@@ -164,7 +164,7 @@ contract Rewards is Ownable {
   function calcReward(uint256 _from) public view returns (uint256) {
     require(block.number > _from, 'Can not be in the past');
     uint256 delta = block.number.sub(_from);
-    return delta.mul(REWARD_PER_BLOCK);
+    return delta.mul(rewardPerBlock);
   }
 
   function unclaimed() public view returns (uint256) {
@@ -775,6 +775,9 @@ contract Rewards is Ownable {
       epochRewardAmount
     );
 
+    /// @dev Set rewardPerBlock based on value of recalculateRewardPerBlock
+    // rewardPerBlock = recalculateRewardPerBlock();
+
     emit DepositEpochReward(msg.sender, epochRewardAmount);
   }
 
@@ -873,7 +876,7 @@ contract Rewards is Ownable {
 
     user.amount = user.amount.sub(_amount);
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-  }x
+  }
 
   /// @notice transfer reward token to users
   /// @dev transfer reward token to users
