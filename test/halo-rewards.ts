@@ -12,6 +12,7 @@ let minterContract
 let ubeContract
 let haloTokenContract
 let halohaloContract
+let recalculateRewardPerBlockTestContract
 let genesisBlock = 0
 const DECIMALS = 10 ** 18
 const BASIS_POINTS = 10 ** 4
@@ -748,34 +749,76 @@ describe('Rewards Contract', async () => {
 
       expect(actual).to.equal(expected)
     })
+  })
 
-    it('returns epoch rewards amount properly', async () => {
-      expect(
-        Number(await rewardsContract.recalculateRewardsPerBlock(6264000))
-      ).to.equal(29)
+  describe('Get rewards per block ', async () => {
+    before(async () => {
+      const recalculateRewardPerBlockTest = await ethers.getContractFactory(
+        'RecalculateRewardsPerBlockTest'
+      )
 
+      recalculateRewardPerBlockTestContract = await recalculateRewardPerBlockTest.deploy()
+
+      await recalculateRewardPerBlockTestContract.deployed()
+    })
+
+    it('calculates the reward per block accurately given the epoch reward amount', async () => {
       expect(
         Number(
-          await rewardsContract.recalculateRewardsPerBlock2(6264000, 5, 30)
+          await recalculateRewardPerBlockTestContract.recalculateRewardUsingEpochRewardAmountTest(
+            6264000
+          )
         )
       ).to.equal(29)
 
       expect(
-        Number(await rewardsContract.recalculateRewardsPerBlock(6264000))
-      ).to.equal(123)
+        Number(
+          await recalculateRewardPerBlockTestContract.recalculateRewardPerBlockTest(
+            6264000,
+            5,
+            30
+          )
+        )
+      ).to.equal(29)
+    })
 
+    it('will fail if wrong values are plugged in the contract', async () => {
       expect(
         Number(
-          await rewardsContract.recalculateRewardsPerBlock2(6264000, 5, 30)
+          await recalculateRewardPerBlockTestContract.recalculateRewardUsingEpochRewardAmountTest(
+            6264000
+          )
         )
       ).to.not.equal(123)
 
-      await expect(
-        rewardsContract.recalculateRewardsPerBlock2(6264000, 0, 30)
-      ).to.be.revertedWith('blocksPerMin cannot be zero')
+      expect(
+        Number(
+          await recalculateRewardPerBlockTestContract.recalculateRewardPerBlockTest(
+            6264000,
+            5,
+            30
+          )
+        )
+      ).to.not.equal(123)
+    })
 
+    it('does not allow blocksPerMin to be zero', async () => {
       await expect(
-        rewardsContract.recalculateRewardsPerBlock2(6264000, 5, 0)
+        recalculateRewardPerBlockTestContract.recalculateRewardPerBlockTest(
+          6264000,
+          0,
+          30
+        )
+      ).to.be.revertedWith('blocksPerMin cannot be zero')
+    })
+
+    it('does not allow epochLengthInDays to be zero', async () => {
+      await expect(
+        recalculateRewardPerBlockTestContract.recalculateRewardPerBlockTest(
+          6264000,
+          5,
+          0
+        )
       ).to.be.revertedWith('epochLengthInDays cannot be zero')
     })
   })

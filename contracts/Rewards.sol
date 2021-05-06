@@ -945,7 +945,7 @@ contract Rewards is Ownable {
     returns (uint256)
   {
     // 5 blocks per minute * 60 min * 24 hours * 30 days
-    uint256 rewardPerBlock = _epochRewardAmount / 216000;
+    uint256 rewardPerBlock = _epochRewardAmount.div(216000);
 
     return rewardPerBlock;
   }
@@ -960,30 +960,8 @@ contract Rewards is Ownable {
 
     //60 min * 24 hours = 1440
     uint256 rewardPerBlock =
-      _epochRewardAmount / (_blocksPerMin * _epochLengthInDays * 1440);
+      _epochRewardAmount.div(_blocksPerMin.mul(_epochLengthInDays).mul(1440));
 
     return rewardPerBlock;
-  }
-
-  // Inherting internal functions to test, this will be deleted
-  function recalculateRewardsPerBlock(uint256 _epochRewardAmount)
-    public
-    view
-    returns (uint256)
-  {
-    return recalculateRewardPerBlock(_epochRewardAmount);
-  }
-
-  function recalculateRewardsPerBlock2(
-    uint256 _epochRewardAmount,
-    uint256 _blocksPerMin,
-    uint256 _epochLengthInDays
-  ) public view returns (uint256) {
-    return
-      recalculateRewardPerBlock(
-        _epochRewardAmount,
-        _blocksPerMin,
-        _epochLengthInDays
-      );
   }
 }
