@@ -168,17 +168,11 @@ contract Rewards is Ownable {
   }
 
   function unclaimed() public view returns (uint256) {
-    console.log(
-      'Rewards.unclaimed: lastHaloVestRewardBlock == %s',
-      lastHaloVestRewardBlock
-    );
     uint256 rewards = calcReward(lastHaloVestRewardBlock);
-    console.log('Rewards.unclaimed: rewards == %s', rewards);
     uint256 unclaimedRewards =
       rewards.mul(vestingRewardsRatio).div(BASIS_POINTS).sub(
         vestingRewardsDebt
       );
-    console.log('Rewards returnval == %s', unclaimedRewards);
     return unclaimedRewards;
   }
 
@@ -462,7 +456,6 @@ contract Rewards is Ownable {
 
     uint256 _unclaimed =
       user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
-    console.log('withdrawUnclaimedMinterLpRewards _unclaimed:', _unclaimed);
     safeRewardTokenTransfer(_account, _unclaimed);
 
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
@@ -880,22 +873,7 @@ contract Rewards is Ownable {
 
     user.amount = user.amount.sub(_amount);
     user.rewardDebt = user.amount.mul(pool.accHaloPerShare).div(DECIMALS);
-  }
-
-  /// @notice withdraw unclaimed rewards
-  /// @dev withdraw unclaimed rewards
-  /// @param user instance of the UserInfo struct
-  /// @param pool instance of the PoolInfo struct
-  /// @param account user address
-  function withdrawUnclaimedRewards(
-    UserInfo memory user,
-    PoolInfo memory pool,
-    address account
-  ) external {
-    uint256 _unclaimed =
-      user.amount.mul(pool.accHaloPerShare).div(DECIMALS).sub(user.rewardDebt);
-    safeRewardTokenTransfer(account, _unclaimed);
-  }
+  }x
 
   /// @notice transfer reward token to users
   /// @dev transfer reward token to users

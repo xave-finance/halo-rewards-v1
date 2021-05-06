@@ -152,6 +152,10 @@ describe('Rewards Contract', async () => {
       Released Epoch Rewards
     `)
 
+    console.log(`
+      Rewards Contract DSRT Token Balance: ${Number(await halohaloContract.balanceOf(rewardsContract.address))}
+    `)
+
     const _genesisBlock = await rewardsContract.genesisBlock()
     console.log(`contract genesis block number ${_genesisBlock}`)
 
@@ -463,9 +467,6 @@ describe('Rewards Contract', async () => {
     })
 
     it('Should have correct amount of HALO token balance', async () => {
-      /** Withdraw unclaimed pool rewards */
-      await rewardsContract.withdrawUnclaimedPoolRewards(lpTokenContract.address)
-
       // const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
       const actualHaloBal = await halohaloContract.balanceOf(owner.address)
       const expectedHaloBal = ethers.BigNumber.from('23200000000000000000')
@@ -535,9 +536,18 @@ describe('Rewards Contract', async () => {
     })
 
     it('Should have correct amount of HALO token balance', async () => {
-      const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
+      /** Deposit pool tokens */
+      await rewardsContract.depositPoolTokens(
+        lpTokenContract.address,
+        RELEASED_HALO_REWARDS,
+      )
+
+      /** Withdraw unclaimed pool rewards */
+      await rewardsContract.withdrawUnclaimedPoolRewards(lpTokenContract.address)
+
+      const actualHaloHaloBal = await halohaloContract.balanceOf(owner.address)
       const expectedBal = ethers.BigNumber.from('58000000000000000000')
-      expect(actualHaloBal).to.equal(expectedBal)
+      expect(actualHaloHaloBal).to.equal(expectedBal)
     })
   })
 
