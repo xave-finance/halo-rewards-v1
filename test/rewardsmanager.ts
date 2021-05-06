@@ -25,8 +25,8 @@ const epoch0ExpectedHaloHaloPrice = parseEther('1')
 const epoch1ExpectedHaloHaloPrice = parseEther('1.25')
 const epoch1ExpectedHaloHaloPriceEther = 1.25
 const RELEASED_HALO_REWARDS = parseEther('10000') // got from the previous contract
+const zeroAddress = '0x0000000000000000000000000000000000000000'
 epochLength = 30 * 24 * 60 * 5
-const DECIMALS = 10 ** 18
 console.log('BASIS_POINTS = ', BASIS_POINTS)
 
 describe('Rewards Manager', async () => {
@@ -213,6 +213,16 @@ describe('Rewards Manager', async () => {
       ).to.be.reverted
     })
 
+    it('can not set the vesting ratio if vesting ratio is equal to zero', async () => {
+      expect(await rewardsManagerContract.getVestingRatio()).to.equal(
+        vestingRewardsRatio
+      )
+      await expect(
+        rewardsManagerContract.setVestingRatio(0),
+        'Vesting ratio is not zero'
+      ).to.be.revertedWith('Vesting ratio cannot be zero!')
+    })
+
     it('can set the rewards contract if the caller is the owner', async () => {
       expect(await rewardsManagerContract.getRewardsContract()).to.equal(
         rewardsContract.address
@@ -240,6 +250,17 @@ describe('Rewards Manager', async () => {
           .setRewardsContract(changedRewardsContract.address),
         'Function called even if the caller is not the owner'
       ).to.be.reverted
+    })
+
+    it('can not set the rewards contract if address parameter is address(0)', async () => {
+      expect(await rewardsManagerContract.getRewardsContract()).to.equal(
+        rewardsContract.address
+      )
+
+      await expect(
+        rewardsManagerContract.setRewardsContract(zeroAddress),
+        'Address is not address(0)'
+      ).to.be.revertedWith('Rewards contract cannot be empty!')
     })
 
     it('can set the halohalo contract if the caller is the owner', async () => {
@@ -270,6 +291,17 @@ describe('Rewards Manager', async () => {
           .setHaloHaloContract(changedHaloHaloContract.address),
         'Function called even if the caller is not the owner'
       ).to.be.reverted
+    })
+
+    it('can not set the halohalo contract if the address parameter is address(0)', async () => {
+      expect(await rewardsManagerContract.getHaloHaloContract()).to.equal(
+        halohaloContract.address
+      )
+
+      await expect(
+        rewardsManagerContract.setHaloHaloContract(zeroAddress),
+        'Address is not address(0)'
+      ).to.be.revertedWith('Halohalo contract cannot be empty!')
     })
   })
 

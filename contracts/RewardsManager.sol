@@ -53,14 +53,23 @@ contract RewardsManager is Ownable {
    *            ADMIN FUNCTIONS           *
    ****************************************/
   function setVestingRatio(uint256 _newVestingRatio) external onlyOwner {
+    require(_newVestingRatio > 0, 'Vesting ratio cannot be zero!');
     vestingRatio = _newVestingRatio;
   }
 
   function setRewardsContract(address _rewardsContract) external onlyOwner {
+    require(
+      _rewardsContract != address(0),
+      'Rewards contract cannot be empty!'
+    );
     rewardsContract = _rewardsContract;
   }
 
   function setHaloHaloContract(address _haloHaloContract) external onlyOwner {
+    require(
+      _haloHaloContract != address(0),
+      'Halohalo contract cannot be empty!'
+    );
     haloHaloContract = _haloHaloContract;
     halohalo = HaloHalo(haloHaloContract);
   }
