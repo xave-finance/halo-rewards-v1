@@ -37,7 +37,7 @@ contract Rewards is Ownable {
   uint256 public constant DECIMALS = 10**18;
   /// @notice utility constant
   uint256 public constant BASIS_POINTS = 10**4;
-  uint256 public constant REWARD_PER_BLOCK = 29 * 10**18;
+  uint256 public rewardPerBlock;
   address private constant NULL_ADDRESS = address(0);
 
   using SafeMath for uint256;
@@ -774,6 +774,9 @@ contract Rewards is Ownable {
       address(this),
       epochRewardAmount
     );
+
+    /// @dev Set rewardPerBlock based on value of recalculateRewardPerBlock
+    // rewardPerBlock = recalculateRewardPerBlock();
 
     emit DepositEpochReward(msg.sender, epochRewardAmount);
   }
