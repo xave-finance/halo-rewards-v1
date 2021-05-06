@@ -474,6 +474,35 @@ describe('Rewards Contract', async () => {
     })
   })
 
+  describe('As an admin, I allocate the monthly epoch reward then epochRewardAmount is set', async () => {
+    it('Calling depositEpochRewardAmout will fail if sender is not Rewards Manager contract', async () => {
+      const EPOCH_REWARD_AMOUNT = 10000 * 0.8
+      await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT))
+        .to.be.reverted
+    })
+
+    /**
+     * This flow needs to be followed first:
+     * https://app.diagrams.net/#G1bbH7UmfMyCAqtfniTJXGMItGWS-AaOOR
+     * Specifically Rewards Manager uses Rewards.depositEpochRewardAmount()
+     */
+    // it('Epoch Reward Amount is set to the value provided if sender is Rewards Manager contract', async () => {
+    //   const EPOCH_REWARD_AMOUNT = 10000
+    //   await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
+    //   await haloTokenContract.approve(
+    //     rewardsManager.address,
+    //     RELEASED_HALO_REWARDS
+    //   )
+
+    //   await rewardsContract.setRewardsManagerAddress(owner.address)
+    //   console.log(`Rewards token balance of Deployer: ${Number(await haloTokenContract.balanceOf(owner.address))}`)
+    //   await rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS)
+    //   console.log(`Rewards token balance of Rewards Contract:: ${Number(await halohaloContract.balanceOf(rewardsContract.address))}`)
+    //   await expect(rewardsContract.depositEpochRewardAmount(RELEASED_HALO_REWARDS))
+    //     .to.be.not.reverted
+    // })
+  })
+
   describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', () => {
     it('I earn the correct number of HALO tokens per time interval on depositing LPT', async () => {
       // deposit LP tokens to Rewards contract
