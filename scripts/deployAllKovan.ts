@@ -59,10 +59,8 @@ const deployAllKovan = async () => {
   const rewardsContract = await Rewards.deploy(
     haloTokenContract.address,
     startingRewards,
-    minterLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
     ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
     vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
-    minterContract.address,
     genesisBlock,
     minterLpPools,
     ammLpPools
