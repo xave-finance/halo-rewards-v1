@@ -106,7 +106,7 @@ contract Rewards is Ownable {
   /// @notice rewards allocated for the first period
   uint256 public immutable startingRewards;
   // est number of blocks per month
-  uint256 private constant epochLength = 30*24*60*5;
+  uint256 private constant epochLength = 30 * 24 * 60 * 5;
 
   /// @notice percentage of rewards allocated to minter Lps
   uint256 public minterLpRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
@@ -157,7 +157,7 @@ contract Rewards is Ownable {
   /// @param _from last block when rewards were updated
   /// @return unclaimed rewards since last update
   function calcReward(uint256 _from) public view returns (uint256) {
-    require(block.number > _from, "Can not be in the past");
+    require(block.number > _from, 'Can not be in the past');
     uint256 delta = block.number.sub(_from);
     return delta.mul(REWARD_PER_BLOCK);
   }
@@ -236,7 +236,7 @@ contract Rewards is Ownable {
     // if (block.number <= pool.lastRewardBlock) {
     //   return;
     // }
-    require(block.number > pool.lastRewardBlock, "Can not be in the past");
+    require(block.number > pool.lastRewardBlock, 'Can not be in the past');
     uint256 lpSupply = IERC20(_lpAddress).balanceOf(address(this));
     if (lpSupply == 0) {
       pool.lastRewardBlock = block.number;
@@ -937,5 +937,53 @@ contract Rewards is Ownable {
         break;
       }
     }
+  }
+
+  function recalculateRewardPerBlock(uint256 _epochRewardAmount)
+    internal
+    pure
+    returns (uint256)
+  {
+    // 5 blocks per minute * 60 min * 24 hours * 30 days
+    uint256 rewardPerBlock = _epochRewardAmount / 216000;
+
+    return rewardPerBlock;
+  }
+
+  function recalculateRewardPerBlock(
+    uint256 _epochRewardAmount,
+    uint256 _blocksPerMin,
+    uint256 _epochLengthInDays
+  ) internal pure returns (uint256) {
+    require(_blocksPerMin > 0, 'blocksPerMin cannot be zero');
+    require(_epochLengthInDays > 0, 'epochLengthInDays cannot be zero');
+
+    //60 min * 24 hours = 1440
+    uint256 rewardPerBlock =
+      _epochRewardAmount / (_blocksPerMin * _epochLengthInDays * 1440);
+
+    return rewardPerBlock;
+  }
+
+  // Inherting internal functions to test, this will be deleted
+  function recalculateRewardsPerBlock(uint256 _epochRewardAmount)
+    public
+    view
+    returns (uint256)
+  {
+    return recalculateRewardPerBlock(_epochRewardAmount);
+  }
+
+  function recalculateRewardsPerBlock2(
+    uint256 _epochRewardAmount,
+    uint256 _blocksPerMin,
+    uint256 _epochLengthInDays
+  ) public view returns (uint256) {
+    return
+      recalculateRewardPerBlock(
+        _epochRewardAmount,
+        _blocksPerMin,
+        _epochLengthInDays
+      );
   }
 }
