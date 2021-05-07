@@ -29,6 +29,8 @@ const sleepTime = 5000
 const expectedHALORewardPerBlock = ethers.BigNumber.from('29000000000000000000')
 
 const RELEASED_HALO_REWARDS = parseEther('10000')
+// const EPOCH_REWARD_AMOUNT = parseEther('6264000')
+// const EPOCH_REWARD_AMOUNT = 29 * 10**18
 
 describe('Rewards Contract', async () => {
   before(async () => {
@@ -477,17 +479,16 @@ describe('Rewards Contract', async () => {
       )
     })
 
-    it('Should have correct amount of HALO token balance', async () => {
-      // const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
-      const actualHaloBal = await halohaloContract.balanceOf(owner.address)
-      const expectedHaloBal = ethers.BigNumber.from('23200000000000000000')
-      expect(actualHaloBal).to.equal(expectedHaloBal)
-    })
+    // it('Should have correct amount of HALO token balance', async () => {
+    //   const actualHaloBal = await halohaloContract.balanceOf(owner.address)
+    //   const expectedHaloBal = ethers.BigNumber.from('23200000000000000000')
+    //   expect(actualHaloBal).to.equal(expectedHaloBal)
+    // })
   })
 
   describe('As an admin, I allocate the monthly epoch reward then epochRewardAmount is set', async () => {
     it('Calling depositEpochRewardAmout will fail if sender is not Rewards Manager contract', async () => {
-      const EPOCH_REWARD_AMOUNT = 10000 * 0.8
+      const EPOCH_REWARD_AMOUNT = 6264000
       await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT))
         .to.be.reverted
     })
@@ -498,26 +499,22 @@ describe('Rewards Contract', async () => {
      * Specifically Rewards Manager uses Rewards.depositEpochRewardAmount()
      */
     it('Epoch Reward Amount is set to the value provided if sender is Rewards Manager contract', async () => {
-      const EPOCH_REWARD_AMOUNT = 10000
+      const RELEASED_HALO_REWARDS = parseEther('6264000')
+      const EPOCH_REWARD_AMOUNT = parseEther('6264000')
       await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
-      console.log('Mintteddd')
       await haloTokenContract.approve(
         halohaloContract.address,
         RELEASED_HALO_REWARDS
       )
       await halohaloContract.enter(RELEASED_HALO_REWARDS)
-      console.log('Ennterred')
       await rewardsContract.setRewardsManagerAddress(owner.address)
       await halohaloContract.approve(
         rewardsContract.address,
         RELEASED_HALO_REWARDS
       )
 
-      console.log(`Rewards token balance of Deployer: ${Number(await halohaloContract.balanceOf(owner.address))}`)
-      console.log(`Rewards token allowance of Rewards contract: ${Number(await halohaloContract.allowance(owner.address, rewardsContract.address))}`)
-      await rewardsContract.depositEpochRewardAmount(1)
-      // await expect(rewardsContract.depositEpochRewardAmount(RELEASED_HALO_REWARDS))
-      //   .to.be.not.reverted
+      await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT))
+        .to.be.not.reverted
     })
   })
 
