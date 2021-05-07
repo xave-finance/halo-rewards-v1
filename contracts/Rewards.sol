@@ -920,4 +920,31 @@ contract Rewards is Ownable {
       }
     }
   }
+
+  function recalculateRewardPerBlock(uint256 _epochRewardAmount)
+    internal
+    pure
+    returns (uint256)
+  {
+    // 5 blocks per minute * 60 min * 24 hours * 30 days
+    uint256 rewardPerBlock =
+      recalculateRewardPerBlock(_epochRewardAmount, 5, 30);
+
+    return rewardPerBlock;
+  }
+
+  function recalculateRewardPerBlock(
+    uint256 _epochRewardAmount,
+    uint256 _blocksPerMin,
+    uint256 _epochLengthInDays
+  ) internal pure returns (uint256) {
+    require(_blocksPerMin > 0, 'blocksPerMin cannot be zero');
+    require(_epochLengthInDays > 0, 'epochLengthInDays cannot be zero');
+
+    //60 min * 24 hours = 1440
+    uint256 rewardPerBlock =
+      _epochRewardAmount.div(_blocksPerMin.mul(_epochLengthInDays).mul(1440));
+
+    return rewardPerBlock;
+  }
 }

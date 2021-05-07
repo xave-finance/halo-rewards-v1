@@ -14,6 +14,7 @@ let ubeContract
 let haloTokenContract
 let halohaloContract
 let rewardsManager
+let recalculateRewardPerBlockTestContract
 let genesisBlock = 0
 const DECIMALS = 10 ** 18
 const BASIS_POINTS = 10 ** 4
@@ -40,7 +41,9 @@ describe('Rewards Contract', async () => {
       'collateral ERC20'
     )
     await collateralERC20Contract.deployed()
-    console.log(`collateralERC20 deployed at ${collateralERC20Contract.address}`)
+    console.log(
+      `collateralERC20 deployed at ${collateralERC20Contract.address}`
+    )
 
     await collateralERC20Contract.mint(
       owner.address,
@@ -162,7 +165,9 @@ describe('Rewards Contract', async () => {
     expect(_genesisBlock).to.be.equal(genesisBlock)
 
     await rewardsContract.deployed()
-    console.log(`Rewards Contract deployed to ${rewardsContract.address} at block number ${genesisBlock}`)
+    console.log(
+      `Rewards Contract deployed to ${rewardsContract.address} at block number ${genesisBlock}`
+    )
     console.log()
 
     await minterContract.setRewardsContract(rewardsContract.address)
@@ -283,9 +288,9 @@ describe('Rewards Contract', async () => {
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
-      expect(ethers.BigNumber.from(await rewardsContract.getMinterLpRewardsRatio())).to.equal(
-        0
-      )
+      expect(
+        ethers.BigNumber.from(await rewardsContract.getMinterLpRewardsRatio())
+      ).to.equal(0)
     })
 
     it('Set MinterLpRewards ratio and verify if ratio is correct', async () => {
@@ -383,7 +388,9 @@ describe('Rewards Contract', async () => {
       )
 
       console.log(
-        ethers.BigNumber.from(await collateralERC20Contract.balanceOf(minterContract.address))
+        ethers.BigNumber.from(
+          await collateralERC20Contract.balanceOf(minterContract.address)
+        )
       )
 
       console.log(
@@ -399,7 +406,9 @@ describe('Rewards Contract', async () => {
       //  * */
 
       expectedAccHaloPerShare = ethers.BigNumber.from('1508000000000000000')
-      expect(ethers.BigNumber.from(pool.accHaloPerShare)).to.be.equal(expectedAccHaloPerShare)
+      expect(ethers.BigNumber.from(pool.accHaloPerShare)).to.be.equal(
+        expectedAccHaloPerShare
+      )
 
       await time.advanceBlock()
 
@@ -409,7 +418,9 @@ describe('Rewards Contract', async () => {
       )
 
       // // calculate expected HALO rewards balance
-      const expectedUnclaimedHaloRewardsBal = ethers.BigNumber.from('23200000000000000000')
+      const expectedUnclaimedHaloRewardsBal = ethers.BigNumber.from(
+        '23200000000000000000'
+      )
 
       expect(actualUnclaimedHaloRewardBal).to.equal(
         expectedUnclaimedHaloRewardsBal
@@ -528,8 +539,13 @@ describe('Rewards Contract', async () => {
 
       expect(updateTxTs).to.not.be.null
 
-      const actualUnclaimedHaloPoolRewards = await rewardsContract.getUnclaimedPoolRewardsByUserByPool(lpTokenContract.address, owner.address)
-      const expectedUnclaimedHaloPoolRewards = ethers.BigNumber.from('23200000000000000000')
+      const actualUnclaimedHaloPoolRewards = await rewardsContract.getUnclaimedPoolRewardsByUserByPool(
+        lpTokenContract.address,
+        owner.address
+      )
+      const expectedUnclaimedHaloPoolRewards = ethers.BigNumber.from(
+        '23200000000000000000'
+      )
       expect(actualUnclaimedHaloPoolRewards).to.equal(
         expectedUnclaimedHaloPoolRewards
       )
@@ -768,28 +784,80 @@ describe('Rewards Contract', async () => {
     it('should calc rewards for one block', async () => {
       const currentBlock = await ethers.provider.getBlockNumber()
       console.log(`Current block ${currentBlock}`)
-  
+
       const actual = await rewardsContract.calcReward(currentBlock - 1)
       const expected = ethers.BigNumber.from('29000000000000000000')
-  
-      expect(actual).to.equal(expected);
+
+      expect(actual).to.equal(expected)
     })
-  
+
     it('should calc rewards for two blocks', async () => {
       const currentBlock = await ethers.provider.getBlockNumber()
       console.log(`Current block ${currentBlock}`)
-  
+
       const actual = await rewardsContract.calcReward(currentBlock - 2)
       const expected = ethers.BigNumber.from('58000000000000000000')
-  
-      expect(actual).to.equal(expected);
+
+      expect(actual).to.equal(expected)
     })
-  
+
     it('should get unclaimed rewards', async () => {
       const actual = await rewardsContract.unclaimed()
       const expected = ethers.BigNumber.from('174000000000000000000')
-  
-      expect(actual).to.equal(expected);
+
+      expect(actual).to.equal(expected)
+    })
+  })
+
+  describe('Get rewards per block ', async () => {
+    before(async () => {
+      const recalculateRewardPerBlockTest = await ethers.getContractFactory(
+        'RecalculateRewardsPerBlockTest'
+      )
+
+      recalculateRewardPerBlockTestContract = await recalculateRewardPerBlockTest.deploy()
+
+      await recalculateRewardPerBlockTestContract.deployed()
+    })
+
+    it('calculates the reward per block accurately given the epoch reward amount', async () => {
+      expect(
+        Number(
+          await recalculateRewardPerBlockTestContract.recalculateRewardUsingEpochRewardAmountTest(
+            6264000
+          )
+        )
+      ).to.equal(29)
+
+      expect(
+        Number(
+          await recalculateRewardPerBlockTestContract.recalculateRewardPerBlockTest(
+            6264000,
+            5,
+            30
+          )
+        )
+      ).to.equal(29)
+    })
+
+    it('does not allow blocksPerMin to be zero', async () => {
+      await expect(
+        recalculateRewardPerBlockTestContract.recalculateRewardPerBlockTest(
+          6264000,
+          0,
+          30
+        )
+      ).to.be.revertedWith('blocksPerMin cannot be zero')
+    })
+
+    it('does not allow epochLengthInDays to be zero', async () => {
+      await expect(
+        recalculateRewardPerBlockTestContract.recalculateRewardPerBlockTest(
+          6264000,
+          5,
+          0
+        )
+      ).to.be.revertedWith('epochLengthInDays cannot be zero')
     })
   })
 })

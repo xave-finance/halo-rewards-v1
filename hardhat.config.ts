@@ -45,6 +45,14 @@ const config: HardhatUserConfig = {
     localhost: {
       chainId: 1337,
       url: 'http://127.0.0.1:8545/'
+    },
+    bscTestnet: {
+      url: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+      chainId: 97,
+      gasPrice: 20000000000,
+      accounts: {
+        mnemonic: MNEMONIC_SEED
+      }
     }
   }
 }
