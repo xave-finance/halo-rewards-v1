@@ -497,21 +497,28 @@ describe('Rewards Contract', async () => {
      * https://app.diagrams.net/#G1bbH7UmfMyCAqtfniTJXGMItGWS-AaOOR
      * Specifically Rewards Manager uses Rewards.depositEpochRewardAmount()
      */
-    // it('Epoch Reward Amount is set to the value provided if sender is Rewards Manager contract', async () => {
-    //   const EPOCH_REWARD_AMOUNT = 10000
-    //   await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
-    //   await haloTokenContract.approve(
-    //     rewardsManager.address,
-    //     RELEASED_HALO_REWARDS
-    //   )
+    it('Epoch Reward Amount is set to the value provided if sender is Rewards Manager contract', async () => {
+      const EPOCH_REWARD_AMOUNT = 10000
+      await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
+      console.log('Mintteddd')
+      await haloTokenContract.approve(
+        halohaloContract.address,
+        RELEASED_HALO_REWARDS
+      )
+      await halohaloContract.enter(RELEASED_HALO_REWARDS)
+      console.log('Ennterred')
+      await rewardsContract.setRewardsManagerAddress(owner.address)
+      await halohaloContract.approve(
+        rewardsContract.address,
+        RELEASED_HALO_REWARDS
+      )
 
-    //   await rewardsContract.setRewardsManagerAddress(owner.address)
-    //   console.log(`Rewards token balance of Deployer: ${Number(await haloTokenContract.balanceOf(owner.address))}`)
-    //   await rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS)
-    //   console.log(`Rewards token balance of Rewards Contract:: ${Number(await halohaloContract.balanceOf(rewardsContract.address))}`)
-    //   await expect(rewardsContract.depositEpochRewardAmount(RELEASED_HALO_REWARDS))
-    //     .to.be.not.reverted
-    // })
+      console.log(`Rewards token balance of Deployer: ${Number(await halohaloContract.balanceOf(owner.address))}`)
+      console.log(`Rewards token allowance of Rewards contract: ${Number(await halohaloContract.allowance(owner.address, rewardsContract.address))}`)
+      await rewardsContract.depositEpochRewardAmount(1)
+      // await expect(rewardsContract.depositEpochRewardAmount(RELEASED_HALO_REWARDS))
+      //   .to.be.not.reverted
+    })
   })
 
   describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', () => {

@@ -775,8 +775,7 @@ contract Rewards is Ownable {
       epochRewardAmount
     );
 
-    /// @dev Set rewardPerBlock based on value of recalculateRewardPerBlock
-    // rewardPerBlock = recalculateRewardPerBlock();
+    rewardPerBlock = recalculateRewardPerBlock(_epochRewardAmount);
 
     emit DepositEpochReward(msg.sender, epochRewardAmount);
   }
