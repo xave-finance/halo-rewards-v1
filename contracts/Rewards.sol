@@ -121,7 +121,6 @@ contract Rewards is Ownable {
   /// @notice percentage of rewards allocated to minter Amm Lps
   uint256 public ammLpRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
   /// @notice percentage of rewards allocated to stakers
-  uint256 public vestingRewardsRatio; //in BASIS_POINTS, multiply fraction by 10^4
   /// @notice total alloc points for amm lps
   uint256 public totalAmmLpAllocs; //total allocation points for all amm lps (the ratio defines percentage of rewards to a particular amm lp)
   /// @notice total alloc points for minter lps
@@ -165,15 +164,6 @@ contract Rewards is Ownable {
     require(block.number > _from, 'Can not be in the past');
     uint256 delta = block.number.sub(_from);
     return delta.mul(rewardPerBlock);
-  }
-
-  function unclaimed() public view returns (uint256) {
-    uint256 rewards = calcReward(lastHaloVestRewardBlock);
-    uint256 unclaimedRewards =
-      rewards.mul(vestingRewardsRatio).div(BASIS_POINTS).sub(
-        vestingRewardsDebt
-      );
-    return unclaimedRewards;
   }
 
   /// @notice initiates the contract with predefined params
@@ -523,14 +513,6 @@ contract Rewards is Ownable {
       (user.amount.mul(pool.accHaloPerShare).div(DECIMALS)).sub(
         user.rewardDebt
       );
-  }
-
-  /// @notice unclaimed rewards for stakers
-  /// @dev view function to check unclaimed rewards for stakers since last withdrawal to vesting contract
-  /// @return unclaimed rewards for stakers
-  function getUnclaimedVestingRewards() public view returns (uint256) {
-    uint256 _unclaimed = unclaimed();
-    return _unclaimed;
   }
 
   /// @dev checks if an amm lp address is whitelisted

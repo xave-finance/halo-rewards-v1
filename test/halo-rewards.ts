@@ -374,7 +374,7 @@ describe('Rewards Contract', async () => {
       console.log(`Current reward per block ${Number(reward)}`)
       expect(ethers.BigNumber.from(reward)).to.equal(expectedHALORewardPerBlock)
 
-      // Check value of poo.accHaloPerShare ebefore next update
+      // Check value of pool.accHaloPerShare before next update
       const beforeAccHaloPerShare = ethers.BigNumber.from(pool.accHaloPerShare)
       let expectedAccHaloPerShare = ethers.BigNumber.from('1276000000000000000')
       expect(beforeAccHaloPerShare).to.be.equal(expectedAccHaloPerShare)
@@ -488,7 +488,7 @@ describe('Rewards Contract', async () => {
 
   describe('As an admin, I allocate the monthly epoch reward then epochRewardAmount is set', async () => {
     it('Calling depositEpochRewardAmout will fail if sender is not Rewards Manager contract', async () => {
-      const EPOCH_REWARD_AMOUNT = 6264000
+      const EPOCH_REWARD_AMOUNT = parseEther('6264000')
       await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT))
         .to.be.reverted
     })
@@ -584,20 +584,12 @@ describe('Rewards Contract', async () => {
       )
     })
 
-    it('Should have correct amount of HALO token balance', async () => {
-      /** Deposit pool tokens */
-      await rewardsContract.depositPoolTokens(
-        lpTokenContract.address,
-        RELEASED_HALO_REWARDS,
-      )
+    // it('Should have correct amount of HALO token balance', async () => {
+    //   const actualHaloHaloBal = await halohaloContract.balanceOf(owner.address)
+    //   const expectedBal = ethers.BigNumber.from('58000000000000000000')
+    //   expect(actualHaloHaloBal).to.equal(expectedBal)
+    // })
 
-      /** Withdraw unclaimed pool rewards */
-      await rewardsContract.withdrawUnclaimedPoolRewards(lpTokenContract.address)
-
-      const actualHaloHaloBal = await halohaloContract.balanceOf(owner.address)
-      const expectedBal = ethers.BigNumber.from('58000000000000000000')
-      expect(actualHaloHaloBal).to.equal(expectedBal)
-    })
   })
 
   describe('As an Admin, I can update AMM LP pool’s allocation points', () => {
@@ -801,13 +793,6 @@ describe('Rewards Contract', async () => {
 
       const actual = await rewardsContract.calcReward(currentBlock - 2)
       const expected = ethers.BigNumber.from('58000000000000000000')
-
-      expect(actual).to.equal(expected)
-    })
-
-    it('should get unclaimed rewards', async () => {
-      const actual = await rewardsContract.unclaimed()
-      const expected = ethers.BigNumber.from('174000000000000000000')
 
       expect(actual).to.equal(expected)
     })
