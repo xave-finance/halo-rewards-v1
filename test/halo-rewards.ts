@@ -782,26 +782,6 @@ describe('Rewards Contract', async () => {
       ).to.equal(29)
     })
 
-    it('will fail if wrong values are plugged in the contract', async () => {
-      expect(
-        Number(
-          await recalculateRewardPerBlockTestContract.recalculateRewardUsingEpochRewardAmountTest(
-            6264000
-          )
-        )
-      ).to.not.equal(123)
-
-      expect(
-        Number(
-          await recalculateRewardPerBlockTestContract.recalculateRewardPerBlockTest(
-            6264000,
-            5,
-            30
-          )
-        )
-      ).to.not.equal(123)
-    })
-
     it('does not allow blocksPerMin to be zero', async () => {
       await expect(
         recalculateRewardPerBlockTestContract.recalculateRewardPerBlockTest(

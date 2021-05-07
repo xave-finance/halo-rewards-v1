@@ -945,7 +945,8 @@ contract Rewards is Ownable {
     returns (uint256)
   {
     // 5 blocks per minute * 60 min * 24 hours * 30 days
-    uint256 rewardPerBlock = _epochRewardAmount.div(216000);
+    uint256 rewardPerBlock =
+      recalculateRewardPerBlock(_epochRewardAmount, 5, 30);
 
     return rewardPerBlock;
   }
