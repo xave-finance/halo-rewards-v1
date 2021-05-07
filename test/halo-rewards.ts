@@ -288,6 +288,46 @@ describe('Rewards Contract', async () => {
     })
   })
 
+  describe('As an admin, I allocate the monthly epoch reward then epochRewardAmount is set', async () => {
+    it('Calling depositEpochRewardAmout will fail if sender is not Rewards Manager contract', async () => {
+      const EPOCH_REWARD_AMOUNT = parseEther('6264000')
+      await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT))
+        .to.be.reverted
+    })
+
+    /**
+     * This flow needs to be followed first:
+     * https://app.diagrams.net/#G1bbH7UmfMyCAqtfniTJXGMItGWS-AaOOR
+     * Specifically Rewards Manager uses Rewards.depositEpochRewardAmount()
+     */
+    it('Epoch Reward Amount is set to the value provided if sender is Rewards Manager contract', async () => {
+      const RELEASED_HALO_REWARDS = parseEther('6264000')
+      const EPOCH_REWARD_AMOUNT = parseEther('6264000')
+      
+      /** Stimulate allocating HALO tokens for Epoch Reward Amount */
+      await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
+      await haloTokenContract.approve(
+        halohaloContract.address,
+        RELEASED_HALO_REWARDS
+      )
+      await halohaloContract.enter(RELEASED_HALO_REWARDS)
+      await rewardsContract.setRewardsManagerAddress(owner.address)
+      await halohaloContract.approve(
+        rewardsContract.address,
+        RELEASED_HALO_REWARDS
+      )
+
+      await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT),
+        'Deposit Epoch Reward Call failed')
+          .to.emit(
+            halohaloContract,
+            'transferFrom'
+          )
+          .withArgs(owner.address, rewardsContract.address, EPOCH_REWARD_AMOUNT)
+          .to.not.be.reverted
+    })
+  })
+
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
       expect(
@@ -484,38 +524,6 @@ describe('Rewards Contract', async () => {
     //   const expectedHaloBal = ethers.BigNumber.from('23200000000000000000')
     //   expect(actualHaloBal).to.equal(expectedHaloBal)
     // })
-  })
-
-  describe('As an admin, I allocate the monthly epoch reward then epochRewardAmount is set', async () => {
-    it('Calling depositEpochRewardAmout will fail if sender is not Rewards Manager contract', async () => {
-      const EPOCH_REWARD_AMOUNT = parseEther('6264000')
-      await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT))
-        .to.be.reverted
-    })
-
-    /**
-     * This flow needs to be followed first:
-     * https://app.diagrams.net/#G1bbH7UmfMyCAqtfniTJXGMItGWS-AaOOR
-     * Specifically Rewards Manager uses Rewards.depositEpochRewardAmount()
-     */
-    it('Epoch Reward Amount is set to the value provided if sender is Rewards Manager contract', async () => {
-      const RELEASED_HALO_REWARDS = parseEther('6264000')
-      const EPOCH_REWARD_AMOUNT = parseEther('6264000')
-      await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
-      await haloTokenContract.approve(
-        halohaloContract.address,
-        RELEASED_HALO_REWARDS
-      )
-      await halohaloContract.enter(RELEASED_HALO_REWARDS)
-      await rewardsContract.setRewardsManagerAddress(owner.address)
-      await halohaloContract.approve(
-        rewardsContract.address,
-        RELEASED_HALO_REWARDS
-      )
-
-      await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT))
-        .to.be.not.reverted
-    })
   })
 
   describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', () => {
