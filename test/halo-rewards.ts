@@ -514,14 +514,6 @@ describe('Rewards Contract', async () => {
     })
   })
 
-  // TODO: Sending vesting rewards inside halohalo
-  describe.skip('Earn vesting rewards by staking HALO inside halohalo', () => {
-    it('Send unclaimed vested rewards to Halohalo', async () => {
-      const currVestedHalo = await rewardsContract.getUnclaimedVestingRewards()
-      await expect(rewardsContract.releaseVestedRewards()).to.not.be.reverted
-    })
-  })
-
   describe('As an Admin, I can update AMM LP pool’s allocation points', () => {
     const maxAllocationPoints = Number(10)
 
