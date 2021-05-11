@@ -29,8 +29,6 @@ const sleepTime = 5000
 const expectedHALORewardPerBlock = ethers.BigNumber.from('29000000000000000000')
 
 const RELEASED_HALO_REWARDS = parseEther('10000')
-// const EPOCH_REWARD_AMOUNT = parseEther('6264000')
-// const EPOCH_REWARD_AMOUNT = 29 * 10**18
 
 describe('Rewards Contract', async () => {
   before(async () => {
@@ -404,6 +402,7 @@ describe('Rewards Contract', async () => {
       await time.advanceBlock()
       console.log('\t Done sleeping. Updating Minter Rewards')
 
+
       const nextBlock = await ethers.provider.getBlockNumber()
       console.log(`Next block ${nextBlock}`)
 
@@ -416,7 +415,7 @@ describe('Rewards Contract', async () => {
 
       // Check value of pool.accHaloPerShare before next update
       const beforeAccHaloPerShare = ethers.BigNumber.from(pool.accHaloPerShare)
-      let expectedAccHaloPerShare = ethers.BigNumber.from('1276000000000000000')
+      let expectedAccHaloPerShare = ethers.BigNumber.from('2320000000000000000')
       expect(beforeAccHaloPerShare).to.be.equal(expectedAccHaloPerShare)
 
       // this function needs to be called so that rewards state is updated and then becomes claimable
@@ -447,7 +446,7 @@ describe('Rewards Contract', async () => {
       //  * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
       //  * */
 
-      expectedAccHaloPerShare = ethers.BigNumber.from('1508000000000000000')
+      expectedAccHaloPerShare = ethers.BigNumber.from('2552000000000000000')
       expect(ethers.BigNumber.from(pool.accHaloPerShare)).to.be.equal(
         expectedAccHaloPerShare
       )
