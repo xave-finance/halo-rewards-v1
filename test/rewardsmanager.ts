@@ -71,7 +71,6 @@ describe('Rewards Manager', async () => {
     rewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
       startingRewards,
-      epochLength,
       ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
       vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
       genesisBlock,
@@ -82,7 +81,6 @@ describe('Rewards Manager', async () => {
     changedRewardsContract = await RewardsContract.deploy(
       haloTokenContract.address,
       startingRewards,
-      epochLength,
       ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
       vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
       genesisBlock,
