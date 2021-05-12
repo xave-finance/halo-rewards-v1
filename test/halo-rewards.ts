@@ -416,7 +416,7 @@ describe('Rewards Contract', async () => {
 
       // Check value of pool.accHaloPerShare before next update
       const beforeAccHaloPerShare = ethers.BigNumber.from(pool.accHaloPerShare)
-      let expectedAccHaloPerShare = ethers.BigNumber.from('2320000000000000000')
+      let expectedAccHaloPerShare = ethers.BigNumber.from('2436000000000000000')
       expect(beforeAccHaloPerShare).to.be.equal(expectedAccHaloPerShare)
 
       // this function needs to be called so that rewards state is updated and then becomes claimable
@@ -447,7 +447,7 @@ describe('Rewards Contract', async () => {
       //  * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
       //  * */
 
-      expectedAccHaloPerShare = ethers.BigNumber.from('2552000000000000000')
+      expectedAccHaloPerShare = ethers.BigNumber.from('2668000000000000000')
       expect(ethers.BigNumber.from(pool.accHaloPerShare)).to.be.equal(
         expectedAccHaloPerShare
       )
