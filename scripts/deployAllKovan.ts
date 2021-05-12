@@ -57,10 +57,8 @@ const deployAllKovan = async () => {
 
   const Rewards = await ethers.getContractFactory('Rewards')
   const rewardsContract = await Rewards.deploy(
-    haloTokenContract.address,
-    startingRewards,
-    ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
-    vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
+    HaloHaloContract.address,
+    ammLpRewardsRatio, //in bps, multiplied by 10^4
     genesisBlock,
     minterLpPools,
     ammLpPools
@@ -74,10 +72,6 @@ const deployAllKovan = async () => {
     ethers.utils.parseEther((40 * INITIAL_MINT).toString())
   )
   console.log('Minted initial HALO for Rewards contract')
-
-  // Set Reward's Halo Chest Contract
-  await rewardsContract.setHaloChest(HaloHaloContract.address)
-  console.log('Done setting Halo Chest contract address')
 }
 
 deployAllKovan()
