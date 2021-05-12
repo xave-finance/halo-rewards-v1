@@ -18,3 +18,5 @@ node_modules
 cache
 artifacts
 
+coverage.json
+coverage

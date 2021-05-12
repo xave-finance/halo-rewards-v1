@@ -919,8 +919,8 @@ contract Rewards is Ownable {
     uint256 _blocksPerMin,
     uint256 _epochLengthInDays
   ) internal pure returns (uint256) {
-    require(_blocksPerMin > 0, 'blocksPerMin cannot be zero');
-    require(_epochLengthInDays > 0, 'epochLengthInDays cannot be zero');
+    require(_blocksPerMin > 0, 'blocksPerMin can not be zero');
+    require(_epochLengthInDays > 0, 'epochLengthInDays can not be zero');
 
     //60 min * 24 hours = 1440
     uint256 rewardPerBlock =

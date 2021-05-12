@@ -843,7 +843,7 @@ describe('Rewards Contract', async () => {
           0,
           30
         )
-      ).to.be.revertedWith('blocksPerMin cannot be zero')
+      ).to.be.revertedWith('blocksPerMin can not be zero')
     })
 
     it('does not allow epochLengthInDays to be zero', async () => {
@@ -853,7 +853,7 @@ describe('Rewards Contract', async () => {
           5,
           0
         )
-      ).to.be.revertedWith('epochLengthInDays cannot be zero')
+      ).to.be.revertedWith('epochLengthInDays can not be zero')
     })
   })
 })
