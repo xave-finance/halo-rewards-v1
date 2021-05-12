@@ -150,6 +150,7 @@ describe('Rewards Contract', async () => {
     )
 
     /** Release Epoch Rewards */
+    await rewardsContract.setRewardsManagerAddress(rewardsManager.address)
     await rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS)
     console.log(`
       Released Epoch Rewards
