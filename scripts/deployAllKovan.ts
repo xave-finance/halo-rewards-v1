@@ -42,10 +42,7 @@ const deployAllKovan = async () => {
   /**
    * Deploy Rewards contract
    */
-  const startingRewards = ethers.utils.parseEther('7500000')
-  const minterLpRewardsRatio = 0.4 * BASIS_POINTS
   const ammLpRewardsRatio = 0.4 * BASIS_POINTS
-  const vestingRewardsRatio = 0.2 * BASIS_POINTS
   const genesisBlock = await ethers.provider.getBlockNumber()
   const minterLpPools = [[collateralERC20Contract.address, 10]]
 
