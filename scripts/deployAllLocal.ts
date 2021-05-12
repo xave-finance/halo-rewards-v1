@@ -51,9 +51,7 @@ const deployAllLocal = async () => {
   /**
    * Deploy Rewards contract
    */
-  const startingRewards = ethers.utils.parseEther('7500000')
   const ammLpRewardsRatio = 0.4 * BPS
-  const vestingRewardsRatio = 0.2 * BPS
   const genesisBlock = await ethers.provider.getBlockNumber()
   const minterLpPools = [[collateralERC20Contract.address, 10]]
 
