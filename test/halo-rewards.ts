@@ -321,7 +321,7 @@ describe('Rewards Contract', async () => {
         'Deposit Epoch Reward Call failed')
           .to.emit(
             halohaloContract,
-            'transferFrom'
+            'Transfer'
           )
           .withArgs(owner.address, rewardsContract.address, EPOCH_REWARD_AMOUNT)
           .to.not.be.reverted
@@ -845,4 +845,7 @@ describe('Rewards Contract', async () => {
       ).to.be.revertedWith('epochLengthInDays can not be zero')
     })
   })
+})
+describe('Rewards #depositEpochRewardAmount', async () => {
+  
 })
