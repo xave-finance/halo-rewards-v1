@@ -134,7 +134,6 @@ describe('Rewards Contract', async () => {
     const ammLpRewardsRatio = 0.4 * BASIS_POINTS
     const vestingRewardsRatio = 0.2 * BASIS_POINTS
 
-    //const minterLpPools = [[collateralERC20Contract.address, 10]]
     const minterLpPools = []
     const ammLpPools = [[lpTokenContract.address, 10]]
 
@@ -265,9 +264,6 @@ describe('Rewards Contract', async () => {
 
     it('Rewards Contract should be deployed', async () => {
       expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10)
-      // expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
-      //   10
-      // )
       expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
         0
       )
@@ -277,9 +273,6 @@ describe('Rewards Contract', async () => {
       expect(
         await rewardsContract.isValidAmmLp(collateralERC20Contract.address)
       ).to.equal(false)
-      // expect(
-      //   await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
-      // ).to.equal(true)
       expect(
         await rewardsContract.isValidMinterLp(lpTokenContract.address)
       ).to.equal(false)
@@ -350,11 +343,6 @@ describe('Rewards Contract', async () => {
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
       it('Minter is not set after deploying Rewards contract', async () => {
-        // check the value of the minter variable
-        // await expect(
-        //   rewardsContract.getMinterContractAddress()
-        // ).to.be.revertedWith('minter contract is not set')
-
         // checking any functions with onlyMinter modifier to revert
 
         await expect(
@@ -466,7 +454,6 @@ describe('Rewards Contract', async () => {
 
       // Check value of pool.accHaloPerShare before next update
       const beforeAccHaloPerShare = ethers.BigNumber.from(pool.accHaloPerShare)
-      //let expectedAccHaloPerShare = ethers.BigNumber.from('2436000000000000000')
       let expectedAccHaloPerShare = ethers.BigNumber.from('232000000000000000')
       expect(beforeAccHaloPerShare).to.be.equal(expectedAccHaloPerShare)
 
