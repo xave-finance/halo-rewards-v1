@@ -24,7 +24,8 @@ const releasedRewardsRatio = 0.8 * BASIS_POINTS // 80% of the released rewards
 const epoch0ExpectedHaloHaloPrice = parseEther('1')
 const epoch1ExpectedHaloHaloPrice = parseEther('1.25')
 const epoch1ExpectedHaloHaloPriceEther = 1.25
-const RELEASED_HALO_REWARDS = parseEther('10000') // got from the previous contract
+// const RELEASED_HALO_REWARDS = parseEther('10000') // got from the previous contract
+const RELEASED_HALO_REWARDS = parseEther('6264000')
 const zeroAddress = '0x0000000000000000000000000000000000000000'
 epochLength = 30 * 24 * 60 * 5
 console.log('BASIS_POINTS = ', BASIS_POINTS)
@@ -69,20 +70,16 @@ describe('Rewards Manager', async () => {
     const startingRewards = ethers.utils.parseEther('7500000')
 
     rewardsContract = await RewardsContract.deploy(
-      haloTokenContract.address,
-      startingRewards,
+      halohaloContract.address,
       ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
-      vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
       genesisBlock,
       minterLpPools,
       ammLpPools
     )
 
     changedRewardsContract = await RewardsContract.deploy(
-      haloTokenContract.address,
-      startingRewards,
+      halohaloContract.address,
       ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
-      vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
       genesisBlock,
       minterLpPools,
       ammLpPools
@@ -97,9 +94,15 @@ describe('Rewards Manager', async () => {
       halohaloContract.address,
       haloTokenContract.address
     )
+
+    await rewardsContract.setRewardsManagerAddress(rewardsManagerContract.address)
+    console.log('Set Rewards Manager contract.')
+
+    console.log(`Deployed Rewards Manager Contract address: ${rewardsManagerContract.address}`)
     console.log(
       '==========================================================\n\n'
     )
+
   })
 
   describe('Check Contract Deployments', () => {
