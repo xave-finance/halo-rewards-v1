@@ -134,7 +134,8 @@ describe('Rewards Contract', async () => {
     const ammLpRewardsRatio = 0.4 * BASIS_POINTS
     const vestingRewardsRatio = 0.2 * BASIS_POINTS
 
-    const minterLpPools = [[collateralERC20Contract.address, 10]]
+    //const minterLpPools = [[collateralERC20Contract.address, 10]]
+    const minterLpPools = []
     const ammLpPools = [[lpTokenContract.address, 10]]
 
     genesisBlock = await ethers.provider.getBlockNumber()
@@ -264,8 +265,11 @@ describe('Rewards Contract', async () => {
 
     it('Rewards Contract should be deployed', async () => {
       expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10)
+      // expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
+      //   10
+      // )
       expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
-        10
+        0
       )
       expect(
         await rewardsContract.isValidAmmLp(lpTokenContract.address)
@@ -273,9 +277,9 @@ describe('Rewards Contract', async () => {
       expect(
         await rewardsContract.isValidAmmLp(collateralERC20Contract.address)
       ).to.equal(false)
-      expect(
-        await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
-      ).to.equal(true)
+      // expect(
+      //   await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
+      // ).to.equal(true)
       expect(
         await rewardsContract.isValidMinterLp(lpTokenContract.address)
       ).to.equal(false)
@@ -347,9 +351,9 @@ describe('Rewards Contract', async () => {
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
       it('Minter is not set after deploying Rewards contract', async () => {
         // check the value of the minter variable
-        await expect(
-          rewardsContract.getMinterContractAddress()
-        ).to.be.revertedWith('minter contract is not set')
+        // await expect(
+        //   rewardsContract.getMinterContractAddress()
+        // ).to.be.revertedWith('minter contract is not set')
 
         // checking any functions with onlyMinter modifier to revert
 
@@ -373,6 +377,28 @@ describe('Rewards Contract', async () => {
 
         console.log('Minter Contract is set and verified')
       })
+      it('Reverts setMinterLpAllocationPoints when no minter collateralType added', async () => {
+          await expect(
+            rewardsContract.setMinterLpAllocationPoints(collateralERC20Contract.address, 10)
+          ).to.be.revertedWith('No active minter rewards')
+      })
+
+      it('Reverts setMinterLpRewardsRatio when no minter collateralType added', async () => {
+          await expect(
+            rewardsContract.setMinterLpRewardsRatio(4000)
+          ).to.be.revertedWith('No active minter rewards')
+      })
+
+      it('Reverts updateMinterRewardPool when no minter collateralType added', async () => {
+          await expect(
+            rewardsContract.updateMinterRewardPool(collateralERC20Contract.address)
+          ).to.be.revertedWith('No active minter rewards')
+      })
+      it('Add minter collateral type', async() => {
+          await expect(
+            rewardsContract.addMinterCollateralType(collateralERC20Contract.address, 10)
+          ).to.not.be.reverted
+      })
 
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
       expect(
@@ -391,7 +417,7 @@ describe('Rewards Contract', async () => {
       console.log('MinterLpRewards ratio is set and verified')
     })
 
-    it('Reverts on adding new collateral wit allocPoint = 0', async () => {
+    it('Reverts on adding new collateral with allocPoint = 0', async () => {
         await expect(
           rewardsContract
             .addMinterCollateralType(collateralERC20Contract2.address, 0)
@@ -440,7 +466,8 @@ describe('Rewards Contract', async () => {
 
       // Check value of pool.accHaloPerShare before next update
       const beforeAccHaloPerShare = ethers.BigNumber.from(pool.accHaloPerShare)
-      let expectedAccHaloPerShare = ethers.BigNumber.from('2436000000000000000')
+      //let expectedAccHaloPerShare = ethers.BigNumber.from('2436000000000000000')
+      let expectedAccHaloPerShare = ethers.BigNumber.from('232000000000000000')
       expect(beforeAccHaloPerShare).to.be.equal(expectedAccHaloPerShare)
 
       // this function needs to be called so that rewards state is updated and then becomes claimable
@@ -471,7 +498,7 @@ describe('Rewards Contract', async () => {
       //  * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
       //  * */
 
-      expectedAccHaloPerShare = ethers.BigNumber.from('2668000000000000000')
+      expectedAccHaloPerShare = ethers.BigNumber.from('464000000000000000')
       expect(ethers.BigNumber.from(pool.accHaloPerShare)).to.be.equal(
         expectedAccHaloPerShare
       )

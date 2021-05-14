@@ -581,7 +581,6 @@ contract Rewards is Ownable {
   function getMinterContractAddress()
     public
     view
-    requireMinter()
     returns (address)
   {
     return minterContract;
