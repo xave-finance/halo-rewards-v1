@@ -293,7 +293,7 @@ describe('Rewards Contract', async () => {
         rewardsManager.address,
         RELEASED_HALO_REWARDS
       )
-      
+
       await expect(rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS))
         .to.be.not.reverted
     })
@@ -329,6 +329,35 @@ describe('Rewards Contract', async () => {
   })
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
+      it('Minter is not set after deploying Rewards contract', async () => {
+        // check the value of the minter variable
+        await expect(
+          rewardsContract.getMinterContractAddress()
+        ).to.be.revertedWith('minter contract is not set')
+
+        // checking any functions with onlyMinter modifier to revert
+
+        await expect(
+          minterContract.depositByCollateralAddress(
+            ethers.utils.parseEther('100'),
+            ethers.utils.parseEther('100'),
+            collateralERC20Contract.address
+          )
+        ).to.be.revertedWith('Only minter contract can call this function')
+      })
+
+      it('Adds minter to the Rewards contract and verify if minter address is added', async () => {
+        await expect(
+          rewardsContract.setMinterContractAddress(minterContract.address)
+        ).to.not.be.reverted
+
+        expect(
+          (await rewardsContract.getMinterContractAddress()).toString()
+        ).to.equal(minterContract.address)
+
+        console.log('Minter Contract is set and verified')
+      })
+
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
       expect(
         ethers.BigNumber.from(await rewardsContract.getMinterLpRewardsRatio())
@@ -344,35 +373,6 @@ describe('Rewards Contract', async () => {
         (await rewardsContract.getMinterLpRewardsRatio()).toString()
       ).to.equal(`${minterLpRewardsRatio}`)
       console.log('MinterLpRewards ratio is set and verified')
-    })
-
-    it('Minter is not set after deploying Rewards contract', async () => {
-      // check the value of the minter variable
-      await expect(
-        rewardsContract.getMinterContractAddress()
-      ).to.be.revertedWith('minter contract is not set')
-
-      // checking any functions with onlyMinter modifier to revert
-
-      await expect(
-        minterContract.depositByCollateralAddress(
-          ethers.utils.parseEther('100'),
-          ethers.utils.parseEther('100'),
-          collateralERC20Contract.address
-        )
-      ).to.be.revertedWith('Only minter contract can call this function')
-    })
-
-    it('Adds minter to the Rewards contract and verify if minter address is added', async () => {
-      await expect(
-        rewardsContract.setMinterContractAddress(minterContract.address)
-      ).to.not.be.reverted
-
-      expect(
-        (await rewardsContract.getMinterContractAddress()).toString()
-      ).to.equal(minterContract.address)
-
-      console.log('Minter Contract is set and verified')
     })
 
     it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
