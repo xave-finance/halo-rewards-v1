@@ -18,9 +18,7 @@ const deployOnlyRewards = async () => {
   const dummyCollateralAddress = '0xcE2E091802c44191ca147EAee66bFE064A01FE37'
   const BPTAddress = '0x37f80ac90235ce0d3911952d0ce49071a0ffdb1e'
 
-  const startingRewards = ethers.utils.parseEther('7500000')
   const ammLpRewardsRatio = 0.4 * BASIS_POINTS
-  const vestingRewardsRatio = 0.2 * BASIS_POINTS
   const genesisBlock = await ethers.provider.getBlockNumber()
   const minterLpPools = [[dummyCollateralAddress, 10]]
   const ammLpPools = [[BPTAddress, 10]]
@@ -34,9 +32,7 @@ const deployOnlyRewards = async () => {
   // Rewards constructor
   const rewardsContract = await RewardsContract.deploy(
     haloTokenContractAddress,
-    startingRewards,
     ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
-    vestingRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
     genesisBlock,
     minterLpPools,
     ammLpPools

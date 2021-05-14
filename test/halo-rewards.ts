@@ -1,5 +1,6 @@
 import { time } from '@openzeppelin/test-helpers'
 
+import { parseEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 
@@ -12,6 +13,7 @@ let minterContract
 let ubeContract
 let haloTokenContract
 let halohaloContract
+let rewardsManager
 let recalculateRewardPerBlockTestContract
 let genesisBlock = 0
 const DECIMALS = 10 ** 18
@@ -25,6 +27,9 @@ let addrs
 
 const sleepTime = 5000
 const expectedHALORewardPerBlock = ethers.BigNumber.from('29000000000000000000')
+
+const EPOCH_REWARD_AMOUNT = parseEther('6264000')
+const RELEASED_HALO_REWARDS = parseEther('10000')
 
 describe('Rewards Contract', async () => {
   before(async () => {
@@ -119,13 +124,19 @@ describe('Rewards Contract', async () => {
     genesisBlock = await ethers.provider.getBlockNumber()
     console.log(`current EVM block number ${genesisBlock}`)
     rewardsContract = await RewardsContract.deploy(
-      haloTokenContract.address,
-      startingRewards,
+      halohaloContract.address,
       ammLpRewardsRatio, //in bps, multiplied by 10^4
-      vestingRewardsRatio, //in bps, multiplied by 10^4
       genesisBlock,
       minterLpPools,
       ammLpPools
+    )
+
+    const RewardsManager = await ethers.getContractFactory('RewardsManager')
+    rewardsManager = await RewardsManager.deploy(
+      vestingRewardsRatio,
+      rewardsContract.address,
+      halohaloContract.address,
+      haloTokenContract.address
     )
 
     const _genesisBlock = await rewardsContract.genesisBlock()
@@ -137,10 +148,6 @@ describe('Rewards Contract', async () => {
     console.log(
       `Rewards Contract deployed to ${rewardsContract.address} at block number ${genesisBlock}`
     )
-    console.log()
-
-    await rewardsContract.setHaloChest(halohaloContract.address)
-    console.log('Halo Chest set')
     console.log()
 
     await minterContract.setRewardsContract(rewardsContract.address)
@@ -259,6 +266,68 @@ describe('Rewards Contract', async () => {
     })
   })
 
+  describe('As an admin, I allocate the monthly epoch reward then epochRewardAmount is set', async () => {
+    it('Calling Rewards.setRewardsManagerAddress function by non-admin will fail', async () => {
+      await expect(rewardsContract.connect(addr1).setRewardsManagerAddress(rewardsManager.address))
+        .to.be.reverted
+    })
+
+    it('Rewards contract admin can set the RewardsManager address', async () => {
+      await expect(rewardsContract.setRewardsManagerAddress(rewardsManager.address))
+      .to.be.not.reverted
+    })
+
+    it('Calling RewardsManager.releaseEpochRewards function by non-admin will fail', async () => {
+      await expect(rewardsManager.connect(addr1).releaseEpochRewards(RELEASED_HALO_REWARDS))
+        .to.be.reverted
+    })
+
+    it('Admin can call RewardsManager.releaseEpochRewards function and will distribute the HALOHALO from Rewards Manager to Rewards contract', async () => {
+      /** Mint HALO to deployer */
+      await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
+      console.log(`
+        Minted ${RELEASED_HALO_REWARDS} HALO Tokens to deployer
+      `)
+
+      await haloTokenContract.approve(
+        rewardsManager.address,
+        RELEASED_HALO_REWARDS
+      )
+      
+      await expect(rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS))
+        .to.be.not.reverted
+    })
+
+    /**
+     * This flow needs to be followed first:
+     * https://app.diagrams.net/#G1bbH7UmfMyCAqtfniTJXGMItGWS-AaOOR
+     * Specifically Rewards Manager uses Rewards.depositEpochRewardAmount()
+     */
+    it('Epoch Reward Amount is set to the value provided if sender is Rewards Manager contract', async () => {
+      /** Stimulate allocating HALO tokens for Epoch Reward Amount */
+      await haloTokenContract.mint(owner.address, EPOCH_REWARD_AMOUNT)
+      await haloTokenContract.approve(
+        halohaloContract.address,
+        EPOCH_REWARD_AMOUNT
+      )
+      await halohaloContract.enter(EPOCH_REWARD_AMOUNT)
+      await rewardsContract.setRewardsManagerAddress(owner.address)
+      await halohaloContract.approve(
+        rewardsContract.address,
+        EPOCH_REWARD_AMOUNT
+      )
+
+      await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT),
+        'Deposit Epoch Reward Call failed')
+          .to.emit(
+            halohaloContract,
+            'Transfer'
+          )
+          .withArgs(owner.address, rewardsContract.address, EPOCH_REWARD_AMOUNT)
+          .to.not.be.reverted
+    })
+  })
+
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
       expect(
@@ -335,6 +404,7 @@ describe('Rewards Contract', async () => {
       await time.advanceBlock()
       console.log('\t Done sleeping. Updating Minter Rewards')
 
+
       const nextBlock = await ethers.provider.getBlockNumber()
       console.log(`Next block ${nextBlock}`)
 
@@ -345,9 +415,9 @@ describe('Rewards Contract', async () => {
       console.log(`Current reward per block ${Number(reward)}`)
       expect(ethers.BigNumber.from(reward)).to.equal(expectedHALORewardPerBlock)
 
-      // Check value of poo.accHaloPerShare ebefore next update
+      // Check value of pool.accHaloPerShare before next update
       const beforeAccHaloPerShare = ethers.BigNumber.from(pool.accHaloPerShare)
-      let expectedAccHaloPerShare = ethers.BigNumber.from('1276000000000000000')
+      let expectedAccHaloPerShare = ethers.BigNumber.from('2436000000000000000')
       expect(beforeAccHaloPerShare).to.be.equal(expectedAccHaloPerShare)
 
       // this function needs to be called so that rewards state is updated and then becomes claimable
@@ -378,7 +448,7 @@ describe('Rewards Contract', async () => {
       //  * Since we update it again after calling rewardsContract.minterLpPools, the pool.accHaloPerShare value will either increase or remain the same
       //  * */
 
-      expectedAccHaloPerShare = ethers.BigNumber.from('1508000000000000000')
+      expectedAccHaloPerShare = ethers.BigNumber.from('2668000000000000000')
       expect(ethers.BigNumber.from(pool.accHaloPerShare)).to.be.equal(
         expectedAccHaloPerShare
       )
@@ -449,12 +519,6 @@ describe('Rewards Contract', async () => {
         expectedUnclaimedHaloRewardsBal
       )
     })
-
-    it('Should have correct amount of HALO token balance', async () => {
-      const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
-      const expectedHaloBal = ethers.BigNumber.from('23200000000000000000')
-      expect(actualHaloBal).to.equal(expectedHaloBal)
-    })
   })
 
   describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', () => {
@@ -521,12 +585,6 @@ describe('Rewards Contract', async () => {
       expect(actualUnclaimedHaloPoolRewards).to.equal(
         expectedUnclaimedHaloPoolRewards
       )
-    })
-
-    it('Should have correct amount of HALO token balance', async () => {
-      const actualHaloBal = await haloTokenContract.balanceOf(owner.address)
-      const expectedBal = ethers.BigNumber.from('58000000000000000000')
-      expect(actualHaloBal).to.equal(expectedBal)
     })
   })
 
@@ -734,13 +792,6 @@ describe('Rewards Contract', async () => {
 
       expect(actual).to.equal(expected)
     })
-
-    it('should get unclaimed rewards', async () => {
-      const actual = await rewardsContract.unclaimed()
-      const expected = ethers.BigNumber.from('174000000000000000000')
-
-      expect(actual).to.equal(expected)
-    })
   })
 
   describe('Get rewards per block ', async () => {
@@ -794,4 +845,7 @@ describe('Rewards Contract', async () => {
       ).to.be.revertedWith('epochLengthInDays can not be zero')
     })
   })
+})
+describe('Rewards #depositEpochRewardAmount', async () => {
+  
 })
