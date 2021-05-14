@@ -690,7 +690,7 @@ contract Rewards is Ownable {
       minterLpPools[_collateralAddress].whitelisted == false,
       'Collateral type already added'
     );
-    require(_allocPoint > 0, "allocPoint should be greater than 0");
+    require(_allocPoint > 0, 'allocPoint should be greater than 0');
     uint256 lastRewardBlock =
       block.number > genesisBlock ? block.number : genesisBlock;
     totalMinterLpAllocs = totalMinterLpAllocs.add(_allocPoint);
@@ -766,7 +766,7 @@ contract Rewards is Ownable {
   /// @dev require minter to be set before funtion is called
   modifier requireMinter() {
     require(minterContract != NULL_ADDRESS, 'minter contract is not set');
-    require(totalMinterLpAllocs > 0, "No active minter rewards");
+    require(totalMinterLpAllocs > 0, 'No active minter rewards');
     _;
   }
   /// @dev only minter contract can call function
