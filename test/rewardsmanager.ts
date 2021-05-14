@@ -98,7 +98,7 @@ describe('Rewards Manager', async () => {
     await rewardsContract.setRewardsManagerAddress(rewardsManagerContract.address)
     console.log('Set Rewards Manager contract.')
 
-    console.log('Deployed Rewards Manager Contract address: ', rewardsManagerContract.address)
+    console.log(`Deployed Rewards Manager Contract address: ${rewardsManagerContract.address}`)
     console.log(
       '==========================================================\n\n'
     )
