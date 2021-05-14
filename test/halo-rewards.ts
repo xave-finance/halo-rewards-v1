@@ -7,6 +7,7 @@ import { ethers } from 'hardhat'
 let contractCreatorAccount
 let rewardsContract
 let collateralERC20Contract
+let collateralERC20Contract2
 let lpTokenContract
 let lpTokenContract2
 let minterContract
@@ -51,6 +52,21 @@ describe('Rewards Contract', async () => {
       ethers.utils.parseEther(INITIAL_MINT.toString())
     )
     console.log(`${INITIAL_MINT} collateral ERC20 minted to ${owner.address}`)
+
+    collateralERC20Contract2 = await CollateralERC20.deploy(
+      'collateral ERC20 2',
+      'collateral ERC20 2'
+    )
+    await collateralERC20Contract2.deployed()
+    console.log(
+      `collateralERC20 2 deployed at ${collateralERC20Contract2.address}`
+    )
+
+    await collateralERC20Contract2.mint(
+      owner.address,
+      ethers.utils.parseEther(INITIAL_MINT.toString())
+    )
+    console.log(`${INITIAL_MINT} collateral ERC20 2 minted to ${owner.address}`)
     console.log()
 
     const LpToken = await ethers.getContractFactory('LpToken')
@@ -373,6 +389,13 @@ describe('Rewards Contract', async () => {
         (await rewardsContract.getMinterLpRewardsRatio()).toString()
       ).to.equal(`${minterLpRewardsRatio}`)
       console.log('MinterLpRewards ratio is set and verified')
+    })
+
+    it('Reverts on adding new collateral wit allocPoint = 0', async () => {
+        await expect(
+          rewardsContract
+            .addMinterCollateralType(collateralERC20Contract2.address, 0)
+        ).to.be.revertedWith('allocPoint should be greater than 0')
     })
 
     it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
