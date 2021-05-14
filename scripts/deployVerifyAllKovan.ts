@@ -1,4 +1,5 @@
 import { ethers } from 'hardhat'
+const hre = require('hardhat')
 
 const BASIS_POINTS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
@@ -34,14 +35,14 @@ const deployAllKovan = async () => {
   const collateralERC20Contract = await CollateralERC20.deploy('Dai', 'DAI')
   await collateralERC20Contract.deployed()
 
-  const Minter = await ethers.getContractFactory('Minter')
-  const minterContract = await Minter.deploy()
-  await minterContract.deployed()
-  console.log(
-    'Collateral token & minter deployed at: ',
-    collateralERC20Contract.address,
-    minterContract.address
-  )
+  // const Minter = await ethers.getContractFactory('Minter')
+  // const minterContract = await Minter.deploy()
+  // await minterContract.deployed()
+  // console.log(
+  //   'Collateral token & minter deployed at: ',
+  //   collateralERC20Contract.address,
+  //   minterContract.address
+  // )
 
   /**
    * Deploy Rewards contract
@@ -82,6 +83,56 @@ const deployAllKovan = async () => {
     'rewardsManager deployed at contract address ',
     rewardsManager.address
   )
+  rewardsContract.setRewardsManagerAddress(rewardsManager.address)
+  console.log(
+    'rewardsContract manager set to ',
+    rewardsContract.getRewardsManagerAddress()
+  )
+
+  console.log(
+    'waiting 1 minute for etherscan to cache newly deployed contract bytecode'
+  )
+  await sleep(60000)
+  console.log('done waiting')
+
+  // auto verify halo token
+  console.log('verifying haloToken')
+  await hre.run('verify:verify', {
+    address: haloTokenContract.address,
+    constructorArguments: ['HALO Rewards Token', 'HALO']
+  })
+
+  // auto verify rewards contract
+  console.log('verifying rewardsContract')
+  await hre.run('verify:verify', {
+    address: rewardsContract.address,
+    constructorArguments: [
+      HaloHaloContract.address,
+      ammLpRewardsRatio,
+      genesisBlock,
+      minterLpPools,
+      ammLpPools
+    ]
+  })
+
+  // auto verify halohalo contract
+  console.log('verifying halohaloContract')
+  await hre.run('verify:verify', {
+    address: HaloHaloContract.address,
+    constructorArguments: [haloTokenContract.address]
+  })
+
+  // auto verify RewardsManager contract
+  console.log('verifying rewardsManagerContract')
+  await hre.run('verify:verify', {
+    address: rewardsManager.address,
+    constructorArguments: [
+      vestingRewardsRatio,
+      rewardsContract.address,
+      HaloHaloContract.address,
+      haloTokenContract.address
+    ]
+  })
 
   // Mint initial Halo tokens
   await haloTokenContract.mint(

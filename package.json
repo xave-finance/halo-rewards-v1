@@ -5,6 +5,7 @@
     "deploy:hardhat": "npx hardhat run scripts/deployAllLocal.ts",
     "deploy:local": "npx hardhat run scripts/deployAllLocal.ts --network \"localhost\"",
     "deploy:kovan": "npx hardhat run scripts/deployAllKovan.ts --network \"kovan\"",
+    "deploy-verify:kovan": "npx hardhat run scripts/deployVerifyAllKovan.ts --network \"kovan\"",
     "deploy:halo-kovan": "npx hardhat run scripts/deployHalo.ts --network \"kovan\"",
     "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployOnlyRewardsContract.ts --network \"kovan\"",
     "deploy:bscTestnet": "npx hardhat run scripts/deployAllKovan.ts --network \"bscTestnet\"",
@@ -12,6 +13,7 @@
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/test-helpers": "^0.5.10",
     "@types/chai": "^4.2.16",

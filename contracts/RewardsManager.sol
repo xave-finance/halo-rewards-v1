@@ -41,6 +41,7 @@ contract RewardsManager is Ownable {
       transferToHaloHaloContract(currentHaloBalance);
     }
 
+    // halo.approve(address(this), _amount);
     halo.transferFrom(msg.sender, address(this), _amount);
 
     uint256 currentVestedRewards = _amount.mul(vestingRatio).div(BASIS_POINTS);

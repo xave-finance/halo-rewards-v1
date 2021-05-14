@@ -578,11 +578,7 @@ contract Rewards is Ownable {
 
   /// @dev get current minter address
   /// @return minter address
-  function getMinterContractAddress()
-    public
-    view
-    returns (address)
-  {
+  function getMinterContractAddress() public view returns (address) {
     return minterContract;
   }
 
@@ -639,7 +635,10 @@ contract Rewards is Ownable {
   }
 
   function setMinterLpRewardsRatio(uint256 _minterLpRewardsRatio)
-    public onlyOwner requireMinter {
+    public
+    onlyOwner
+    requireMinter
+  {
     minterLpRewardsRatio = _minterLpRewardsRatio;
   }
 
