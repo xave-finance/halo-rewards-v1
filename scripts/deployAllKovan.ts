@@ -1,4 +1,5 @@
 import { ethers } from 'hardhat'
+const hre = require('hardhat')
 
 const BASIS_POINTS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
@@ -33,15 +34,6 @@ const deployAllKovan = async () => {
   const CollateralERC20 = await ethers.getContractFactory('CollateralERC20')
   const collateralERC20Contract = await CollateralERC20.deploy('Dai', 'DAI')
   await collateralERC20Contract.deployed()
-
-  const Minter = await ethers.getContractFactory('Minter')
-  const minterContract = await Minter.deploy()
-  await minterContract.deployed()
-  console.log(
-    'Collateral token & minter deployed at: ',
-    collateralERC20Contract.address,
-    minterContract.address
-  )
 
   /**
    * Deploy Rewards contract
@@ -81,6 +73,11 @@ const deployAllKovan = async () => {
   console.log(
     'rewardsManager deployed at contract address ',
     rewardsManager.address
+  )
+  rewardsContract.setRewardsManagerAddress(rewardsManager.address)
+  console.log(
+    'rewardsContract manager set to ',
+    rewardsContract.getRewardsManagerAddress()
   )
 
   // Mint initial Halo tokens

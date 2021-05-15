@@ -35,15 +35,6 @@ const deployAllKovan = async () => {
   const collateralERC20Contract = await CollateralERC20.deploy('Dai', 'DAI')
   await collateralERC20Contract.deployed()
 
-  // const Minter = await ethers.getContractFactory('Minter')
-  // const minterContract = await Minter.deploy()
-  // await minterContract.deployed()
-  // console.log(
-  //   'Collateral token & minter deployed at: ',
-  //   collateralERC20Contract.address,
-  //   minterContract.address
-  // )
-
   /**
    * Deploy Rewards contract
    */
