@@ -1,6 +1,6 @@
 import  deployAll  from './initDeploy'
 
-deployAll('Matic')
+deployAll('Kovan', false)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
