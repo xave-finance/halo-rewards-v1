@@ -65,6 +65,7 @@ const deployAll = async ( network, verify ) => {
         ['0xc4e595acDD7d12feC385E5dA5D43160e8A0bAC0E', 10]
       ]
       break
+    case 'Moonbase': 
     case 'Local': {
       const LpToken = await ethers.getContractFactory('LpToken')
       const lpTokenContract = await LpToken.deploy('LpToken', 'LPT')

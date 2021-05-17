@@ -38,12 +38,6 @@ module.exports = {
         mnemonic: MNEMONIC_SEED
       }
     },
-    matic: {
-      url: "https://rpc-mumbai.maticvigil.com",
-      accounts: {
-        mnemonic: MNEMONIC_SEED
-      }
-    },
     kovan: {
       url: `https://kovan.infura.io/v3/${INFURA_PROJECT_ID}`,
       accounts: {
@@ -61,7 +55,21 @@ module.exports = {
       accounts: {
         mnemonic: MNEMONIC_SEED
       }
-    }
+    },
+    matic: {
+      url: "https://rpc-mumbai.maticvigil.com",
+      chainId: 137,
+      accounts: {
+        mnemonic: MNEMONIC_SEED
+      }
+    },
+    moonbase: {
+      url: "https://rpc.testnet.moonbeam.network",
+      chainId: 1287,
+      accounts: {
+        mnemonic: MNEMONIC_SEED
+      }
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY
