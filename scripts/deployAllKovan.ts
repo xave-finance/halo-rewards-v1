@@ -10,7 +10,7 @@ const deployAllKovan = async () => {
   const HaloToken = await ethers.getContractFactory('HaloToken')
   const haloTokenContract = await HaloToken.deploy('HALO Rewards Token', 'HALO')
   await haloTokenContract.deployed()
-  console.log('haloTokenContract deployed at: ', haloTokenContract.address)
+  console.log(`haloTokenContract deployed at: ${haloTokenContract.address}`)
 
   /**
    * Deploy HeloChest contract
@@ -18,7 +18,7 @@ const deployAllKovan = async () => {
   const HaloHalo = await ethers.getContractFactory('HaloHalo')
   const HaloHaloContract = await HaloHalo.deploy(haloTokenContract.address)
   await HaloHaloContract.deployed()
-  console.log('halohaloContract deployed at: ', HaloHaloContract.address)
+  console.log(`halohaloContract deployed at: ${HaloHaloContract.address}`)
 
   /**
    * Deploy dummy contracts (required by Rewards contract)
@@ -34,9 +34,7 @@ const deployAllKovan = async () => {
   const minterContract = await Minter.deploy()
   await minterContract.deployed()
   console.log(
-    'Collateral token & minter deployed at: ',
-    collateralERC20Contract.address,
-    minterContract.address
+    `Collateral token & minter deployed at: ${collateralERC20Contract.address} ${minterContract.address}`
   )
 
   /**
@@ -61,7 +59,7 @@ const deployAllKovan = async () => {
     ammLpPools
   )
   await rewardsContract.deployed()
-  console.log('rewardsContract deployed at: ', rewardsContract.address)
+  console.log(`rewardsContract deployed at: ${rewardsContract.address}`)
 
   // Mint initial Halo tokens
   await haloTokenContract.mint(
