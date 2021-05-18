@@ -342,51 +342,53 @@ describe('Rewards Contract', async () => {
   })
 
   describe('When I deposit collateral ERC20 on the Minter dApp, I start to earn HALO rewards.\n\tWhen I withdraw collateral ERC20, I stop earning HALO rewards', () => {
-      it('Minter is not set after deploying Rewards contract', async () => {
-        // checking any functions with onlyMinter modifier to revert
+    it('Minter is not set after deploying Rewards contract', async () => {
+      // checking any functions with onlyMinter modifier to revert
 
-        await expect(
-          minterContract.depositByCollateralAddress(
-            ethers.utils.parseEther('100'),
-            ethers.utils.parseEther('100'),
-            collateralERC20Contract.address
-          )
-        ).to.be.revertedWith('Only minter contract can call this function')
-      })
+      await expect(
+        minterContract.depositByCollateralAddress(
+          ethers.utils.parseEther('100'),
+          ethers.utils.parseEther('100'),
+          collateralERC20Contract.address
+        )
+      ).to.be.revertedWith('Only minter contract can call this function')
+    })
 
-      it('Adds minter to the Rewards contract and verify if minter address is added', async () => {
+    it('Adds minter to the Rewards contract and verify if minter address is added', async () => {
+      await expect(
+        rewardsContract.setMinterContractAddress(minterContract.address)
+      ).to.not.be.reverted
+
+      expect(
+        (await rewardsContract.getMinterContractAddress()).toString()
+      ).to.equal(minterContract.address)
+
+      console.log('Minter Contract is set and verified')
+    })
+    
+    it('Reverts setMinterLpAllocationPoints when no minter collateralType added', async () => {
         await expect(
-          rewardsContract.setMinterContractAddress(minterContract.address)
+          rewardsContract.setMinterLpAllocationPoints(collateralERC20Contract.address, 10)
+        ).to.be.revertedWith('No active minter rewards')
+    })
+
+    it('Reverts setMinterLpRewardsRatio when no minter collateralType added', async () => {
+        await expect(
+          rewardsContract.setMinterLpRewardsRatio(4000)
+        ).to.be.revertedWith('No active minter rewards')
+    })
+
+    it('Reverts updateMinterRewardPool when no minter collateralType added', async () => {
+        await expect(
+          rewardsContract.updateMinterRewardPool(collateralERC20Contract.address)
+        ).to.be.revertedWith('No active minter rewards')
+    })
+
+    it('Add minter collateral type', async() => {
+        await expect(
+          rewardsContract.addMinterCollateralType(collateralERC20Contract.address, 10)
         ).to.not.be.reverted
-
-        expect(
-          (await rewardsContract.getMinterContractAddress()).toString()
-        ).to.equal(minterContract.address)
-
-        console.log('Minter Contract is set and verified')
-      })
-      it('Reverts setMinterLpAllocationPoints when no minter collateralType added', async () => {
-          await expect(
-            rewardsContract.setMinterLpAllocationPoints(collateralERC20Contract.address, 10)
-          ).to.be.revertedWith('No active minter rewards')
-      })
-
-      it('Reverts setMinterLpRewardsRatio when no minter collateralType added', async () => {
-          await expect(
-            rewardsContract.setMinterLpRewardsRatio(4000)
-          ).to.be.revertedWith('No active minter rewards')
-      })
-
-      it('Reverts updateMinterRewardPool when no minter collateralType added', async () => {
-          await expect(
-            rewardsContract.updateMinterRewardPool(collateralERC20Contract.address)
-          ).to.be.revertedWith('No active minter rewards')
-      })
-      it('Add minter collateral type', async() => {
-          await expect(
-            rewardsContract.addMinterCollateralType(collateralERC20Contract.address, 10)
-          ).to.not.be.reverted
-      })
+    })
 
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
       expect(
