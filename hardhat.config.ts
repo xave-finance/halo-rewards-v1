@@ -6,6 +6,7 @@ import '@nomiclabs/hardhat-waffle'
 import 'hardhat-gas-reporter'
 import '@nomiclabs/hardhat-ethers'
 import 'solidity-coverage'
+import '@nomiclabs/hardhat-etherscan'
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -22,12 +23,13 @@ task('accounts', 'Prints the list of accounts', async (args, hre) => {
 
 const INFURA_PROJECT_ID = process.env.INFURA_PROJECT_ID || ''
 const MNEMONIC_SEED = process.env.MNEMONIC_SEED || ''
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || ''
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 
-const config: HardhatUserConfig = {
+module.exports = {
   solidity: '0.6.12',
   networks: {
     hardhat: {
@@ -53,8 +55,25 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: MNEMONIC_SEED
       }
-    }
+    },
+    matic: {
+      url: "https://rpc-mumbai.maticvigil.com",
+      chainId: 137,
+      accounts: {
+        mnemonic: MNEMONIC_SEED
+      }
+    },
+    moonbase: {
+      url: "https://rpc.testnet.moonbeam.network",
+      chainId: 1287,
+      accounts: {
+        mnemonic: MNEMONIC_SEED
+      }
+    },
+  },
+  etherscan: {
+    apiKey: ETHERSCAN_API_KEY
   }
 }
 
-export default config
+// export default config

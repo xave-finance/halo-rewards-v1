@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat'
+import  deployAll  from './initDeploy'
 
 const BASIS_POINTS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
