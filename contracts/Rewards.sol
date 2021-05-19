@@ -171,7 +171,6 @@ contract Rewards is Ownable {
   /// @param _rewardsTokenAddress This is currently the HALO HALO token
   /// @param _ammLpRewardsRatio percentage of rewards allocated to minter Amm Lps in bps
   /// @param _genesisBlock timestamp of rewards genesis
-  /// @param _minterLpPools info of whitelisted minter Lp pools at genesis
   /// @param _ammLpPools info of whitelisted amm Lp pools at genesis
   constructor(
     address _rewardsTokenAddress,
@@ -899,10 +898,10 @@ contract Rewards is Ownable {
     returns (uint256)
   {
     // 5 blocks per minute * 60 min * 24 hours * 30 days
-    uint256 rewardPerBlock =
+    uint256 _rewardPerBlock =
       recalculateRewardPerBlock(_epochRewardAmount, 5, 30);
 
-    return rewardPerBlock;
+    return _rewardPerBlock;
   }
 
   function recalculateRewardPerBlock(
@@ -914,9 +913,9 @@ contract Rewards is Ownable {
     require(_epochLengthInDays > 0, 'epochLengthInDays can not be zero');
 
     //60 min * 24 hours = 1440
-    uint256 rewardPerBlock =
+    uint256 _rewardPerBlock =
       _epochRewardAmount.div(_blocksPerMin.mul(_epochLengthInDays).mul(1440));
 
-    return rewardPerBlock;
+    return _rewardPerBlock;
   }
 }
