@@ -177,19 +177,12 @@ contract Rewards is Ownable {
     address _rewardsTokenAddress,
     uint256 _ammLpRewardsRatio, //in bps, multiplied by 10^4
     uint256 _genesisBlock,
-    Pool[] memory _minterLpPools,
     Pool[] memory _ammLpPools
   ) public {
     rewardsTokenAddress = _rewardsTokenAddress;
     ammLpRewardsRatio = _ammLpRewardsRatio;
     genesisBlock = _genesisBlock;
     lastHaloVestRewardBlock = genesisBlock;
-    for (uint8 i = 0; i < _minterLpPools.length; i++) {
-      addMinterCollateralType(
-        _minterLpPools[i].poolAddress,
-        _minterLpPools[i].allocPoint
-      );
-    }
     for (uint8 i = 0; i < _ammLpPools.length; i++) {
       addAmmLp(_ammLpPools[i].poolAddress, _ammLpPools[i].allocPoint);
     }

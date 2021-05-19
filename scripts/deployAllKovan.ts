@@ -44,7 +44,6 @@ const deployAllKovan = async () => {
    */
   const ammLpRewardsRatio = 0.4 * BASIS_POINTS
   const genesisBlock = await ethers.provider.getBlockNumber()
-  const minterLpPools = [[collateralERC20Contract.address, 10]]
 
   // Hardcode kovan balancer pools
   const ammLpPools = [
@@ -57,7 +56,6 @@ const deployAllKovan = async () => {
     HaloHaloContract.address,
     ammLpRewardsRatio, //in bps, multiplied by 10^4
     genesisBlock,
-    minterLpPools,
     ammLpPools
   )
   await rewardsContract.deployed()

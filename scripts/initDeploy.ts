@@ -41,7 +41,6 @@ const deployAll = async ( network, verify ) => {
   const ammLpRewardsRatio = 0.4 * BASIS_POINTS
   const vestingRewardsRatio = 0.2 * BASIS_POINTS
   const genesisBlock = await ethers.provider.getBlockNumber()
-  const minterLpPools = [[collateralERC20Contract.address, 10]]
   
   let ammLpPools = []
 
@@ -87,7 +86,6 @@ const deployAll = async ( network, verify ) => {
     HaloHaloContract.address,
     ammLpRewardsRatio, //in bps, multiplied by 10^4
     genesisBlock,
-    minterLpPools,
     ammLpPools
   )
   await rewardsContract.deployed()
@@ -137,7 +135,6 @@ const deployAll = async ( network, verify ) => {
         HaloHaloContract.address,
         ammLpRewardsRatio,
         genesisBlock,
-        minterLpPools,
         ammLpPools
       ]
     })

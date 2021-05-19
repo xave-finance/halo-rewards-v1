@@ -28,6 +28,7 @@ contract HaloToken is ERC20, Ownable {
     function cap() public view returns (uint256) {
         return _cap;
     }
+    
     /// @notice Locks the cap and disables mint func.
     /// @dev Should be called only once. Allows owner to lock the cap and disable mint function.
     function setCapped() external onlyOwner {
