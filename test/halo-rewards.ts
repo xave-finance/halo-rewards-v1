@@ -127,8 +127,6 @@ describe('Rewards Contract', async () => {
     console.log('minter deployed')
 
     const RewardsContract = await ethers.getContractFactory('Rewards')
-    const startingRewards = ethers.utils.parseEther('7500000')
-
     console.log(`BASIS_POINTS = ${BASIS_POINTS}`)
 
     const ammLpRewardsRatio = 0.4 * BASIS_POINTS
@@ -143,7 +141,6 @@ describe('Rewards Contract', async () => {
       halohaloContract.address,
       ammLpRewardsRatio, //in bps, multiplied by 10^4
       genesisBlock,
-      minterLpPools,
       ammLpPools
     )
 
