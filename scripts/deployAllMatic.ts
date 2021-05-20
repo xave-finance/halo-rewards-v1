@@ -1,4 +1,4 @@
-import  deployAll  from './initDeploy'
+import deployAll from './initDeploy'
 
 deployAll('Matic', false)
   .then(() => process.exit(0))

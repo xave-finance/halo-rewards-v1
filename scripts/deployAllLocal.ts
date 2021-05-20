@@ -1,4 +1,4 @@
-import  deployAll  from './initDeploy'
+import deployAll from './initDeploy'
 
 deployAll('Local', false)
   .then(() => process.exit(0))

@@ -168,10 +168,3 @@ const deployAll = async ( network, verify ) => {
 }
 
 export default deployAll
-// deployAllKovan()
-//   .then(() => process.exit(0))
-//   .catch((error) => {
-//     console.error(error)
-//     process.exit(1)
-//   })
-

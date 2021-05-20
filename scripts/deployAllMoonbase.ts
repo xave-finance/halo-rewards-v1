@@ -1,6 +1,6 @@
 import deployAll from './initDeploy'
 
-deployAll('Kovan', true)
+deployAll('Moonbase', false)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
