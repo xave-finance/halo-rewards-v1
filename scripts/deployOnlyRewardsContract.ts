@@ -20,7 +20,6 @@ const deployOnlyRewards = async () => {
 
   const ammLpRewardsRatio = 0.4 * BASIS_POINTS
   const genesisBlock = await ethers.provider.getBlockNumber()
-  const minterLpPools = [[dummyCollateralAddress, 10]]
   const ammLpPools = [[BPTAddress, 10]]
 
   // Get contract instance
@@ -34,7 +33,6 @@ const deployOnlyRewards = async () => {
     haloTokenContractAddress,
     ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
     genesisBlock,
-    minterLpPools,
     ammLpPools
   )
 

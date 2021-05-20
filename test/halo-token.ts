@@ -29,6 +29,7 @@ describe('Halo Token', function () {
     )
     console.log('Minted initial HALO for addr1 account')
   })
+
   describe('Check Contract Deployment', async () => {
     it('HaloToken should be deployed', async () => {
       const ownerHaloBalance = await haloTokenContract.balanceOf(owner.address)
@@ -41,6 +42,7 @@ describe('Halo Token', function () {
       )
     })
   })
+  
   describe('I should be able to transfer HALO tokens', async () => {
     const transferAmount = ethers.utils.parseEther(
       (10 * INITIAL_MINT).toString()
