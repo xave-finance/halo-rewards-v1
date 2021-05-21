@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {IMinter} from './interfaces/IMinter.sol';
 import 'hardhat/console.sol';
 
@@ -41,6 +42,7 @@ contract Rewards is Ownable {
   address private constant NULL_ADDRESS = address(0);
 
   using SafeMath for uint256;
+  using SafeERC20 for IERC20;
 
   /****************************************
    *                EVENTS                *
@@ -307,7 +309,12 @@ contract Rewards is Ownable {
 
     updateAmmRewardPool(_lpAddress);
 
-    IERC20(_lpAddress).transferFrom(
+    /* IERC20(_lpAddress).transferFrom(
+      address(msg.sender),
+      address(this),
+      _amount
+    ); */
+    IERC20(_lpAddress).safeTransferFrom(
       address(msg.sender),
       address(this),
       _amount
@@ -341,7 +348,11 @@ contract Rewards is Ownable {
       _amount
     );
 
-    IERC20(_lpAddress).transfer(address(msg.sender), _amount);
+    //IERC20(_lpAddress).transfer(address(msg.sender), _amount);
+    IERC20(_lpAddress).safeTransfer(
+      address(msg.sender),
+      _amount
+    );
 
     emit WithdrawAMMLPTokensEvent(msg.sender, _lpAddress, _amount);
   }
@@ -740,8 +751,13 @@ contract Rewards is Ownable {
   {
     epochRewardAmount = _epochRewardAmount;
 
-    IERC20(rewardsTokenAddress).transferFrom(
+    /* IERC20(rewardsTokenAddress).transferFrom(
       msg.sender,
+      address(this),
+      epochRewardAmount
+    ); */
+    IERC20(rewardsTokenAddress).safeTransferFrom(
+      address(msg.sender),
       address(this),
       epochRewardAmount
     );
@@ -860,7 +876,11 @@ contract Rewards is Ownable {
       _amount <= rewardTokenBalance,
       'Not enough rewards tokens in the contract'
     );
-    IERC20(rewardsTokenAddress).transfer(_to, _amount);
+    //IERC20(rewardsTokenAddress).transfer(_to, _amount);
+    IERC20(rewardsTokenAddress).transfer(
+      _to,
+      _amount
+    );
     claimedRewardsToken[_to] = claimedRewardsToken[_to].add(_amount);
   }
 
