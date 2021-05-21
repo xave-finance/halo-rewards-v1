@@ -207,6 +207,10 @@ contract Rewards is Ownable {
     //   return;
     // }
     require(block.number > pool.lastRewardBlock, 'Can not be in the past');
+    require(
+      ammLpPools[_lpAddress].whitelisted == true,
+      'Error: AMM Pool Address not allowed'
+    );
     uint256 lpSupply = IERC20(_lpAddress).balanceOf(address(this));
     if (lpSupply == 0) {
       pool.lastRewardBlock = block.number;
@@ -253,6 +257,10 @@ contract Rewards is Ownable {
     public
     requireMinter()
   {
+    require(
+      minterLpPools[_collateralAddress].whitelisted == true,
+      'Error: Collateral type not allowed'
+    );
     PoolInfo storage pool = minterLpPools[_collateralAddress];
     if (block.number <= pool.lastRewardBlock) {
       return;
@@ -327,7 +335,10 @@ contract Rewards is Ownable {
   /// @param _lpAddress address of the amm lp token
   /// @param _amount amount of lp tokens
   function withdrawPoolTokens(address _lpAddress, uint256 _amount) public {
-    //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lp
+    require(
+      ammLpPools[_lpAddress].whitelisted == true,
+      'Error: AMM Pool Address not allowed'
+    );
 
     UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
 
@@ -386,7 +397,10 @@ contract Rewards is Ownable {
     address _account,
     uint256 _amount
   ) public onlyMinter {
-    //require(lpPools[_lpAddress].whitelisted == true, "Error: Amm Lp not allowed"); //#DISCUSS: Allow withdraw from later blacklisted lps
+    require(
+      minterLpPools[_collateralAddress].whitelisted == true,
+      'Error: Collateral type not allowed'
+    );
 
     UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
@@ -411,6 +425,10 @@ contract Rewards is Ownable {
   /// @dev withdraw unclaimed amm lp rewards, checks unclaimed rewards, updates rewardDebt
   /// @param _lpAddress address of the amm lp token
   function withdrawUnclaimedPoolRewards(address _lpAddress) external {
+    require(
+      ammLpPools[_lpAddress].whitelisted == true,
+      'Error: AMM Pool Address not allowed'
+    );
     PoolInfo storage pool = ammLpPools[_lpAddress];
     UserInfo storage user = ammLpUserInfo[_lpAddress][msg.sender];
 
@@ -431,6 +449,10 @@ contract Rewards is Ownable {
     address _collateralAddress,
     address _account
   ) public onlyMinter {
+    require(
+      minterLpPools[_collateralAddress].whitelisted == true,
+      'Error: Collateral type not allowed'
+    );
     PoolInfo storage pool = minterLpPools[_collateralAddress];
     UserInfo storage user = minterLpUserInfo[_collateralAddress][_account];
 
