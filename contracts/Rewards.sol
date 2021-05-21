@@ -309,11 +309,6 @@ contract Rewards is Ownable {
 
     updateAmmRewardPool(_lpAddress);
 
-    /* IERC20(_lpAddress).transferFrom(
-      address(msg.sender),
-      address(this),
-      _amount
-    ); */
     IERC20(_lpAddress).safeTransferFrom(
       address(msg.sender),
       address(this),
@@ -348,7 +343,6 @@ contract Rewards is Ownable {
       _amount
     );
 
-    //IERC20(_lpAddress).transfer(address(msg.sender), _amount);
     IERC20(_lpAddress).safeTransfer(
       address(msg.sender),
       _amount
@@ -751,11 +745,6 @@ contract Rewards is Ownable {
   {
     epochRewardAmount = _epochRewardAmount;
 
-    /* IERC20(rewardsTokenAddress).transferFrom(
-      msg.sender,
-      address(this),
-      epochRewardAmount
-    ); */
     IERC20(rewardsTokenAddress).safeTransferFrom(
       address(msg.sender),
       address(this),
@@ -876,8 +865,7 @@ contract Rewards is Ownable {
       _amount <= rewardTokenBalance,
       'Not enough rewards tokens in the contract'
     );
-    //IERC20(rewardsTokenAddress).transfer(_to, _amount);
-    IERC20(rewardsTokenAddress).transfer(
+    IERC20(rewardsTokenAddress).safeTransfer(
       _to,
       _amount
     );
