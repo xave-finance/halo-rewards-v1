@@ -182,7 +182,7 @@ contract Rewards is Ownable {
     ammLpRewardsRatio = _ammLpRewardsRatio;
     genesisBlock = _genesisBlock;
     lastHaloVestRewardBlock = genesisBlock;
-    for (uint8 i = 0; i < _ammLpPools.length; i++) {
+    for (uint256 i = 0; i < _ammLpPools.length; i++) {
       addAmmLp(_ammLpPools[i].poolAddress, _ammLpPools[i].allocPoint);
     }
   }
@@ -866,7 +866,7 @@ contract Rewards is Ownable {
 
   function addToAmmLpPoolsAddresses(address _lpAddress) internal {
     bool exists = false;
-    for (uint8 i = 0; i < ammLpPoolsAddresses.length; i++) {
+    for (uint256 i = 0; i < ammLpPoolsAddresses.length; i++) {
       if (ammLpPoolsAddresses[i] == _lpAddress) {
         exists = true;
         break;
@@ -879,7 +879,7 @@ contract Rewards is Ownable {
   }
 
   function removeFromAmmLpPoolsAddresses(address _lpAddress) internal {
-    for (uint8 i = 0; i < ammLpPoolsAddresses.length; i++) {
+    for (uint256 i = 0; i < ammLpPoolsAddresses.length; i++) {
       if (ammLpPoolsAddresses[i] == _lpAddress) {
         if (i + 1 < ammLpPoolsAddresses.length) {
           ammLpPoolsAddresses[i] = ammLpPoolsAddresses[
