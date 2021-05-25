@@ -4,8 +4,11 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract HaloToken is ERC20, Ownable {
+    using SafeMath for uint256;
+
     bool private canMint;
     bool private isCappedFuncLocked;
     uint256 private _cap;
@@ -44,7 +47,7 @@ contract HaloToken is ERC20, Ownable {
     function mint(address account, uint256 amount) external onlyOwner {
         require(canMint == true, "Total supply is now capped, cannot mint more");
         _mint(account, amount);
-        _cap += amount;
+        _cap = _cap.add(amount);
     }
 
     /// @notice Destroys halo token, decreasing total supply.
