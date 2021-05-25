@@ -607,6 +607,7 @@ contract Rewards is Ownable {
       ammLpPools[_lpAddress].whitelisted == true,
       'AMM LP Pool not whitelisted'
     );
+    require(_allocPoint > 0, 'allocPoint should be greater than 0');
     totalAmmLpAllocs = totalAmmLpAllocs
       .sub(ammLpPools[_lpAddress].allocPoint)
       .add(_allocPoint);
@@ -625,6 +626,7 @@ contract Rewards is Ownable {
       minterLpPools[_collateralAddress].whitelisted == true,
       'Collateral type not whitelisted'
     );
+    require(_allocPoint > 0, 'allocPoint should be greater than 0');
     totalMinterLpAllocs = totalMinterLpAllocs
       .sub(minterLpPools[_collateralAddress].allocPoint)
       .add(_allocPoint);
@@ -648,6 +650,7 @@ contract Rewards is Ownable {
       ammLpPools[_lpAddress].whitelisted == false,
       'AMM LP Pool already added'
     );
+    require(_allocPoint > 0, 'allocPoint should be greater than 0');
     uint256 lastRewardBlock =
       block.number > genesisBlock ? block.number : genesisBlock;
     totalAmmLpAllocs = totalAmmLpAllocs.add(_allocPoint);
