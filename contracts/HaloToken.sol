@@ -52,9 +52,8 @@ contract HaloToken is ERC20, Ownable {
 
     /// @notice Destroys halo token, decreasing total supply.
     /// @dev Allows owner to burn HALO tokens.
-    /// @param account address of the owner
     /// @param amount amount to burn
-    function burn(address account, uint256 amount) external onlyOwner {
-        _burn(account, amount);
+    function burn(uint256 amount) external {
+        _burn(msg.sender, amount);
     }
 }

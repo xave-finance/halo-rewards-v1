@@ -96,39 +96,26 @@ describe('Halo Token', function () {
   })
   describe('I should be able to burn HALO tokens and get the correct totalSupply', async () => {
     const burnAmount = ethers.utils.parseEther((5 * INITIAL_MINT).toString())
-    it('Only owner should burn', async () => {
+    it('Only account holder should burn', async () => {
       await expect(
-        haloTokenContract.connect(owner).burn(owner.address, burnAmount)
-      ).to.be.not.reverted
-      await expect(
-        haloTokenContract.connect(addr1).burn(owner.address, burnAmount)
-      ).to.be.revertedWith('Ownable: caller is not the owner')
-    })
-    it('Owner can burn from other address', async () => {
-      const transferAmount = ethers.utils.parseEther(
-        (10 * INITIAL_MINT).toString()
-      )
-      await haloTokenContract.transfer(addr1.address, transferAmount)
-      await expect(
-        haloTokenContract.connect(owner).burn(addr1.address, burnAmount)
+        haloTokenContract.connect(owner).burn(burnAmount)
       ).to.be.not.reverted
     })
-    it('When owner burns, the total supply should be equal to all wallet balance', async () => {
-      await haloTokenContract.burn(owner.address, burnAmount)
+    it('When user burns, the total supply should be equal to all wallet balance', async () => {
+      await haloTokenContract.burn(burnAmount)
       const ownerHaloBalance = await haloTokenContract.balanceOf(owner.address)
       const addr1HaloBalance = await haloTokenContract.balanceOf(addr1.address)
       const expectedTotalSupply = ownerHaloBalance.add(addr1HaloBalance)
       expect(await haloTokenContract.totalSupply()).to.equal(
         expectedTotalSupply
       )
-      console.log(`${Number(ownerHaloBalance)}  HALO tokens owner balance`)
+      console.log(`${Number(ownerHaloBalance)} HALO tokens owner balance`)
     })
     it('Burn amount should not exceed wallet balance', async () => {
       await expect(
         haloTokenContract
           .connect(owner)
           .burn(
-            owner.address,
             ethers.utils.parseEther((101 * INITIAL_MINT).toString())
           )
       ).to.be.revertedWith('ERC20: burn amount exceeds balance')
@@ -136,7 +123,6 @@ describe('Halo Token', function () {
         haloTokenContract
           .connect(owner)
           .burn(
-            addr1.address,
             ethers.utils.parseEther((101 * INITIAL_MINT).toString())
           )
       ).to.be.revertedWith('ERC20: burn amount exceeds balance')
