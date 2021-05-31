@@ -45,10 +45,9 @@ contract AmmRewards is ReentrancyGuard, Ownable {
     /// @notice Address of each `IRewarder` contract in MCV2.
     IRewarder[] public rewarder;
 
-    address public rewardsManager;
-
     /// @notice Info of each user that stakes LP tokens.
     mapping (uint256 => mapping (address => UserInfo)) public userInfo;
+
     /// @dev Total allocation points. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint;
 
@@ -68,15 +67,9 @@ contract AmmRewards is ReentrancyGuard, Ownable {
     event LogSetPool(uint256 indexed pid, uint256 allocPoint, IRewarder indexed rewarder, bool overwrite);
     event LogUpdatePool(uint256 indexed pid, uint256 lastRewardTime, uint256 lpSupply, uint256 accRewardTokenPerShare);
     event LogRewardTokenPerSecond(uint256 rewardTokenPerSecond);
-    event DepositEpochReward(address indexed sender, uint256 amount);
-    event RewardsManagerAddressChanged(address indexed sender, address indexed rewardsManager);
 
     constructor(IERC20 rewardToken_) public {
         REWARD_TOKEN = rewardToken_;
-    }
-
-    function setRewardsManager(address rewardsManager_) public onlyOwner {
-        rewardsManager = rewardsManager_;
     }
 
     /// @notice Returns the number of MCV2 pools.
@@ -115,12 +108,10 @@ contract AmmRewards is ReentrancyGuard, Ownable {
     }
 
     /// @notice Sets the rewardToken per second to be distributed. Can only be called by the owner.
-    /// @param epochRewardAmount_ The amount of RewardToken to be distributed next epoch.
-    function setRewardTokenPerSecond(uint256 epochRewardAmount_) internal returns (uint256){
-        //rewardTokenPerSecond = _rewardTokenPerSecond;
-        rewardTokenPerSecond = epochRewardAmount_.div(epochLength);
+    /// @param rewardTokenPerSecond_ The amount of RewardToken to be distributed per second
+    function setRewardTokenPerSecond(uint256 rewardTokenPerSecond_) external onlyOwner {
+        rewardTokenPerSecond = rewardTokenPerSecond_;
         emit LogRewardTokenPerSecond(rewardTokenPerSecond);
-        return rewardTokenPerSecond;
     }
 
     /// @notice View function to see pending REWARD_TOKEN on frontend.
@@ -283,28 +274,6 @@ contract AmmRewards is ReentrancyGuard, Ownable {
         // Note: transfer can fail or succeed if `amount` is zero.
         lpToken[pid].safeTransfer(to, amount);
         emit EmergencyWithdraw(msg.sender, pid, amount, to);
-    }
-
-    function depositEpochRewardAmount(uint256 epochRewardAmount_) public onlyRewardsManager {
-        epochRewardAmount = epochRewardAmount_;
-
-        IERC20(REWARD_TOKEN).safeTransferFrom(
-            address(msg.sender),
-            address(this),
-            epochRewardAmount
-        );
-
-        rewardTokenPerSecond = setRewardTokenPerSecond(epochRewardAmount_);
-
-        emit DepositEpochReward(msg.sender, epochRewardAmount);
-    }
-
-    modifier onlyRewardsManager() {
-        require(
-            msg.sender == rewardsManager,
-            'Only rewards manager contract can call this function'
-        );
-        _;
     }
 
 }
