@@ -21,7 +21,6 @@ const zeroAddress = '0x0000000000000000000000000000000000000000'
 const DECIMALS = 10 ** 18
 const BASIS_POINTS = 10 ** 4
 const INITIAL_MINT = 10 ** 6
-const minterLpRewardsRatio = 0.4 * BASIS_POINTS
 let owner
 let addr1
 let addr2
@@ -361,9 +360,6 @@ describe('Rewards Contract', async () => {
         lpTokenPid,
         owner.address
       )
-      // const expectedUnclaimedHaloPoolRewards = ethers.BigNumber.from(
-      //   '23200000000000000000'
-      // )
       const expectedUnclaimedHaloPoolRewards = ethers.BigNumber.from(
         '12083333333333333330000'
       )

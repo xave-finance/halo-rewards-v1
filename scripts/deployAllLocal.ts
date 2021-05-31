@@ -1,6 +1,6 @@
-import deployAll from './initDeploy'
+import deployAll2 from './initDeploy2'
 
-deployAll('Local', false)
+deployAll2('Local', false)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
