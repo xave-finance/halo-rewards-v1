@@ -109,10 +109,10 @@ describe('Rewards Manager', async () => {
     })
 
     it('Halohalo should be deployed', async () => {
-      expect(await halohaloContract.symbol()).to.equal('HALOHALO')
-      expect(await halohaloContract.name()).to.equal('HaloHalo')
-      expect(await changedHaloHaloContract.symbol()).to.equal('HALOHALO')
-      expect(await changedHaloHaloContract.name()).to.equal('HaloHalo')
+      expect(await halohaloContract.symbol()).to.equal('RNBW')
+      expect(await halohaloContract.name()).to.equal('Rainbow')
+      expect(await changedHaloHaloContract.symbol()).to.equal('RNBW')
+      expect(await changedHaloHaloContract.name()).to.equal('Rainbow')
     })
 
     it('Lptoken should be deployed', async () => {
