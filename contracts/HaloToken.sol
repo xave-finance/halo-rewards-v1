@@ -39,7 +39,6 @@ contract HaloToken is ERC20, Ownable {
     function mint(address account, uint256 amount) external onlyOwner {
         require(canMint == true, "Total supply is now capped, cannot mint more");
         _mint(account, amount);
-        _cap = _cap.add(amount);
     }
 
     /// @notice Destroys halo token, decreasing total supply.
