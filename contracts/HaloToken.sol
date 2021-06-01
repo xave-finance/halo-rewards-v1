@@ -12,7 +12,6 @@ contract HaloToken is ERC20, ERC20Burnable, Ownable {
 
     bool private canMint;
     bool private isCappedFuncLocked;
-    uint256 private _cap;
 
     /// @notice initiates the contract with predefined params
     /// @dev initiates the contract with predefined params
@@ -24,13 +23,6 @@ contract HaloToken is ERC20, ERC20Burnable, Ownable {
     {
         canMint = true;
         isCappedFuncLocked = false;
-    }
-
-    /**
-     * @dev Returns the cap on the token's total supply.
-     */
-    function cap() public view returns (uint256) {
-        return _cap;
     }
     
     /// @notice Locks the cap and disables mint func.
@@ -48,6 +40,5 @@ contract HaloToken is ERC20, ERC20Burnable, Ownable {
     function mint(address account, uint256 amount) external onlyOwner {
         require(canMint == true, "Total supply is now capped, cannot mint more");
         _mint(account, amount);
-        _cap = _cap.add(amount);
     }
 }
