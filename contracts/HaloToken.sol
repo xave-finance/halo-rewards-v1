@@ -11,7 +11,6 @@ contract HaloToken is ERC20, Ownable {
 
     bool private canMint;
     bool private isCappedFuncLocked;
-    uint256 private _cap;
 
     /// @notice initiates the contract with predefined params
     /// @dev initiates the contract with predefined params
@@ -23,13 +22,6 @@ contract HaloToken is ERC20, Ownable {
     {
         canMint = true;
         isCappedFuncLocked = false;
-    }
-
-    /**
-     * @dev Returns the cap on the token's total supply.
-     */
-    function cap() public view returns (uint256) {
-        return _cap;
     }
     
     /// @notice Locks the cap and disables mint func.
