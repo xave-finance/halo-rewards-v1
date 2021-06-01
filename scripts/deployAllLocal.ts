@@ -1,6 +1,6 @@
-import deployAll2 from './initDeploy2'
+import deployAllAmmRewards from './deployAllAmmRewards'
 
-deployAll2('Local', false)
+deployAllAmmRewards('Local', false)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

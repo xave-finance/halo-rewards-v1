@@ -6,7 +6,7 @@ const INITIAL_MINT = 10 ** 6
 const zeroAddress = '0x0000000000000000000000000000000000000000'
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
 
-const deployAll2 = async ( network, verify ) => {
+const deployAllAmmRewards = async ( network, verify ) => {
   const [deployer] = await ethers.getSigners()
   console.log('Deploying with account: ', deployer.address)
   /**
@@ -102,12 +102,6 @@ const deployAll2 = async ( network, verify ) => {
     'rewardsManager deployed at contract address ',
     rewardsManager.address
   )
-  await ammRewardsContract.setRewardsManager(rewardsManager.address)
-  const rewardsManagerAddress = await ammRewardsContract.rewardsManager()
-  console.log(
-    'rewardsContract manager set to ',
-    rewardsManagerAddress
-  )
 
   for (var pool of ammLpPools) {
       await ammRewardsContract.add(pool[1], pool[0], zeroAddress);
@@ -165,4 +159,4 @@ const deployAll2 = async ( network, verify ) => {
   console.log('Minted initial HALO for deployer account', deployer.address)
 }
 
-export default deployAll2
+export default deployAllAmmRewards
