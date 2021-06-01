@@ -1,3 +1,7 @@
+//========================================================
+// To deploy AmmRewards (Minichef Fork) specific contracts
+//========================================================
+
 import { ethers } from 'hardhat'
 const hre = require('hardhat')
 
