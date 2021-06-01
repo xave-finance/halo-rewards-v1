@@ -101,6 +101,17 @@ describe('Halo Token', function () {
         haloTokenContract.connect(owner).burn(burnAmount)
       ).to.be.not.reverted
     })
+    it('Only owner should burn users tokens', async () => {
+      await haloTokenContract.connect(owner).transfer(addr1.address, 10)
+      let addr1HaloBalance = await haloTokenContract.balanceOf(addr1.address)
+      expect(ethers.BigNumber.from("50000000000000000000000010")).to.equal(addr1HaloBalance)
+      await haloTokenContract.connect(addr1).increaseAllowance(owner.address, burnAmount)
+      await expect(
+        haloTokenContract.connect(owner).burnFrom(addr1.address, burnAmount)
+      ).to.be.not.reverted
+      addr1HaloBalance = await haloTokenContract.balanceOf(addr1.address)
+      expect(ethers.BigNumber.from("45000000000000000000000010")).to.equal(addr1HaloBalance)
+    })
     it('When user burns, the total supply should be equal to all wallet balance', async () => {
       await haloTokenContract.burn(burnAmount)
       const ownerHaloBalance = await haloTokenContract.balanceOf(owner.address)
