@@ -4,9 +4,10 @@ pragma experimental ABIEncoderV2;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
 
-contract HaloToken is ERC20, Ownable {
+contract HaloToken is ERC20, ERC20Burnable, Ownable {
     using SafeMath for uint256;
 
     bool private canMint;
@@ -39,13 +40,5 @@ contract HaloToken is ERC20, Ownable {
     function mint(address account, uint256 amount) external onlyOwner {
         require(canMint == true, "Total supply is now capped, cannot mint more");
         _mint(account, amount);
-    }
-
-    /// @notice Destroys halo token, decreasing total supply.
-    /// @dev Allows owner to burn HALO tokens.
-    /// @param account address of the owner
-    /// @param amount amount to burn
-    function burn(address account, uint256 amount) external onlyOwner {
-        _burn(account, amount);
     }
 }
