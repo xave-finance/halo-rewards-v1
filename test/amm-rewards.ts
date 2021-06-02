@@ -56,14 +56,14 @@ describe("Amm Rewards", function () {
       })
 
     it("Should revert if invalid pool", async function () {
-      let err;
-      try {
-        await this.ammRewards.set(0, 10, ADDRESS_ZERO, false)
-      } catch (e) {
-        err = e;
-      }
-      assert.equal(err.toString(), "ProviderError: Error: VM Exception while processing transaction: invalid opcode")
-      //await expect(this.ammRewards.set(0, 10, ADDRESS_ZERO, false)).to.be.reverted
+      // let err;
+      // try {
+      //   await this.ammRewards.set(0, 10, ADDRESS_ZERO, false)
+      // } catch (e) {
+      //   err = e;
+      // }
+      // assert.equal(err.toString(), "ProviderError: Error: VM Exception while processing transaction: invalid opcode")
+      await expect(this.ammRewards.set(0, 10, ADDRESS_ZERO, false)).to.be.reverted
     })
   })
 
@@ -105,15 +105,15 @@ describe("Amm Rewards", function () {
     })
 
     it("Updating invalid pools should fail", async function () {
-      let err;
-      try {
-        await this.ammRewards.massUpdatePools([0, 10000, 100000])
-      } catch (e) {
-        err = e;
-      }
-
-      assert.equal(err.toString(), "ProviderError: Error: VM Exception while processing transaction: invalid opcode")
-      //await expect(this.ammRewards.massUpdatePools([0, 10000, 100000])).to.be.reverted
+      // let err;
+      // try {
+      //   await this.ammRewards.massUpdatePools([0, 10000, 100000])
+      // } catch (e) {
+      //   err = e;
+      // }
+      //
+      // assert.equal(err.toString(), "ProviderError: Error: VM Exception while processing transaction: invalid opcode")
+      await expect(this.ammRewards.massUpdatePools([0, 10000, 100000])).to.be.reverted
     })
 })
 
@@ -150,14 +150,14 @@ describe("Amm Rewards", function () {
     })
 
     it("Depositing into non-existent pool should fail", async function () {
-      let err;
-      try {
-        await this.ammRewards.deposit(1001, getBigNumber(0), this.alice.address)
-      } catch (e) {
-        err = e;
-      }
-      assert.equal(err.toString(), "ProviderError: Error: VM Exception while processing transaction: invalid opcode")
-      //await expect(this.ammRewards.deposit(1001, getBigNumber(0), this.alice.address)).to.be.reverted
+      // let err;
+      // try {
+      //   await this.ammRewards.deposit(1001, getBigNumber(0), this.alice.address)
+      // } catch (e) {
+      //   err = e;
+      // }
+      // assert.equal(err.toString(), "ProviderError: Error: VM Exception while processing transaction: invalid opcode")
+      await expect(this.ammRewards.deposit(1001, getBigNumber(0), this.alice.address)).to.be.reverted
     })
   })
 
