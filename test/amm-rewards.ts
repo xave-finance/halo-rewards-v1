@@ -133,7 +133,7 @@ describe("Amm Rewards", function () {
       let lastRewardTime = ((await this.ammRewards.poolInfo(0)).lastRewardTime).toNumber()
       await expect(this.ammRewards.updatePool(0))
             .to.emit(this.ammRewards, "LogUpdatePool")
-            .withArgs(0, lastRewardTime+timeToAdvance,
+            .withArgs(0, BigNumber.from(`${lastRewardTime+timeToAdvance}`),
               (await this.lpt.balanceOf(this.ammRewards.address)),
               (await this.ammRewards.poolInfo(0)).accRewardTokenPerShare)
     })
