@@ -137,7 +137,6 @@ describe("Amm Rewards", function () {
               (await this.lpt.balanceOf(this.ammRewards.address)),
               (await this.ammRewards.poolInfo(0)).accRewardTokenPerShare)
     })
-
   })
 
   describe("Deposit", function () {
