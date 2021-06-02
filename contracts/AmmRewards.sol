@@ -123,8 +123,8 @@ contract AmmRewards is ReentrancyGuard, Ownable {
         uint256 lpSupply = lpToken[_pid].balanceOf(address(this));
         if (block.timestamp > pool.lastRewardTime && lpSupply != 0) {
             uint256 time = block.timestamp.sub(pool.lastRewardTime);
-            uint256 rewardTokenReward = time.mul(rewardTokenPerSecond).mul(pool.allocPoint) / totalAllocPoint;
-            accRewardTokenPerShare = accRewardTokenPerShare.add(rewardTokenReward.mul(ACC_REWARD_TOKEN_PRECISION) / lpSupply);
+            uint256 rewardTokenReward = time.mul(rewardTokenPerSecond).mul(pool.allocPoint).div(totalAllocPoint);
+            accRewardTokenPerShare = accRewardTokenPerShare.add(rewardTokenReward.mul(ACC_REWARD_TOKEN_PRECISION).div(lpSupply));
         }
         pending = int256(user.amount.mul(accRewardTokenPerShare).div(ACC_REWARD_TOKEN_PRECISION)).sub(user.rewardDebt).toUInt256();
     }
@@ -147,8 +147,8 @@ contract AmmRewards is ReentrancyGuard, Ownable {
             uint256 lpSupply = lpToken[pid].balanceOf(address(this));
             if (lpSupply > 0) {
                 uint256 time = block.timestamp.sub(pool.lastRewardTime);
-                uint256 rewardTokenReward = time.mul(rewardTokenPerSecond).mul(pool.allocPoint) / totalAllocPoint;
-                pool.accRewardTokenPerShare = pool.accRewardTokenPerShare.add((rewardTokenReward.mul(ACC_REWARD_TOKEN_PRECISION) / lpSupply));
+                uint256 rewardTokenReward = time.mul(rewardTokenPerSecond).mul(pool.allocPoint).div(totalAllocPoint);
+                pool.accRewardTokenPerShare = pool.accRewardTokenPerShare.add((rewardTokenReward.mul(ACC_REWARD_TOKEN_PRECISION).div(lpSupply)));
             }
             pool.lastRewardTime = block.timestamp;
             poolInfo[pid] = pool;
@@ -166,7 +166,7 @@ contract AmmRewards is ReentrancyGuard, Ownable {
 
         // Effects
         user.amount = user.amount.add(amount);
-        user.rewardDebt = user.rewardDebt.add(int256(amount.mul(pool.accRewardTokenPerShare) / ACC_REWARD_TOKEN_PRECISION));
+        user.rewardDebt = user.rewardDebt.add(int256(amount.mul(pool.accRewardTokenPerShare).div(ACC_REWARD_TOKEN_PRECISION)));
 
         // Interactions
         IRewarder _rewarder = rewarder[pid];
@@ -188,7 +188,7 @@ contract AmmRewards is ReentrancyGuard, Ownable {
         UserInfo storage user = userInfo[pid][msg.sender];
 
         // Effects
-        user.rewardDebt = user.rewardDebt.sub(int256(amount.mul(pool.accRewardTokenPerShare) / ACC_REWARD_TOKEN_PRECISION));
+        user.rewardDebt = user.rewardDebt.sub(int256(amount.mul(pool.accRewardTokenPerShare).div(ACC_REWARD_TOKEN_PRECISION)));
         user.amount = user.amount.sub(amount);
 
         // Interactions
@@ -208,7 +208,7 @@ contract AmmRewards is ReentrancyGuard, Ownable {
     function harvest(uint256 pid, address to) public {
         PoolInfo memory pool = updatePool(pid);
         UserInfo storage user = userInfo[pid][msg.sender];
-        int256 accumulatedRewardToken = int256(user.amount.mul(pool.accRewardTokenPerShare) / ACC_REWARD_TOKEN_PRECISION);
+        int256 accumulatedRewardToken = int256(user.amount.mul(pool.accRewardTokenPerShare).div(ACC_REWARD_TOKEN_PRECISION));
         uint256 _pendingRewardToken = accumulatedRewardToken.sub(user.rewardDebt).toUInt256();
 
         // Effects
@@ -234,11 +234,11 @@ contract AmmRewards is ReentrancyGuard, Ownable {
     function withdrawAndHarvest(uint256 pid, uint256 amount, address to) public {
         PoolInfo memory pool = updatePool(pid);
         UserInfo storage user = userInfo[pid][msg.sender];
-        int256 accumulatedRewardToken = int256(user.amount.mul(pool.accRewardTokenPerShare) / ACC_REWARD_TOKEN_PRECISION);
+        int256 accumulatedRewardToken = int256(user.amount.mul(pool.accRewardTokenPerShare).div(ACC_REWARD_TOKEN_PRECISION));
         uint256 _pendingRewardToken = accumulatedRewardToken.sub(user.rewardDebt).toUInt256();
 
         // Effects
-        user.rewardDebt = accumulatedRewardToken.sub(int256(amount.mul(pool.accRewardTokenPerShare) / ACC_REWARD_TOKEN_PRECISION));
+        user.rewardDebt = accumulatedRewardToken.sub(int256(amount.mul(pool.accRewardTokenPerShare).div(ACC_REWARD_TOKEN_PRECISION)));
         user.amount = user.amount.sub(amount);
 
         // Interactions
