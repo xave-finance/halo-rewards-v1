@@ -3,9 +3,9 @@ import { advanceTime, advanceTimeAndBlock, advanceBlockTo, advanceBlock, prepare
 const { BigNumber } = require("ethers")
 import {ethers} from "hardhat"
 
-let initialVestingRatio = 0.2 * 10**4
-let rewardTokenPerSecond = "2416666666666666666"
-let changedRewardTokenPerSecond = "1964750000000000000"
+const initialVestingRatio = 0.2 * 10**4
+const rewardTokenPerSecond = "2416666666666666666"
+const changedRewardTokenPerSecond = "1964750000000000000"
 
 describe("Amm Rewards", function () {
   before(async function () {
@@ -71,25 +71,25 @@ describe("Amm Rewards", function () {
     it("Pending Reward Token should equal Expected Reward Token", async function () {
       await this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO)
       await this.lpt.approve(this.ammRewards.address, getBigNumber(10))
-      let log = await this.ammRewards.deposit(0, getBigNumber(1), this.alice.address)
+      const log = await this.ammRewards.deposit(0, getBigNumber(1), this.alice.address)
       await advanceTime(86400)
-      let log2 = await this.ammRewards.updatePool(0)
-      let timestamp2 = (await ethers.provider.getBlock(log2.blockNumber)).timestamp
-      let timestamp = (await ethers.provider.getBlock(log.blockNumber)).timestamp
-      let expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(timestamp2 - timestamp)
-      let pendingRewardToken = await this.ammRewards.pendingRewardToken(0, this.alice.address)
+      const log2 = await this.ammRewards.updatePool(0)
+      const timestamp2 = (await ethers.provider.getBlock(log2.blockNumber)).timestamp
+      const timestamp = (await ethers.provider.getBlock(log.blockNumber)).timestamp
+      const expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(timestamp2 - timestamp)
+      const pendingRewardToken = await this.ammRewards.pendingRewardToken(0, this.alice.address)
       expect(pendingRewardToken).to.be.equal(expectedRewardToken)
     })
     it("When time is lastRewardTime", async function () {
       await this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO)
       await this.lpt.approve(this.ammRewards.address, getBigNumber(10))
-      let log = await this.ammRewards.deposit(0, getBigNumber(1), this.alice.address)
+      const log = await this.ammRewards.deposit(0, getBigNumber(1), this.alice.address)
       await advanceBlockTo(3)
-      let log2 = await this.ammRewards.updatePool(0)
-      let timestamp2 = (await ethers.provider.getBlock(log2.blockNumber)).timestamp
-      let timestamp = (await ethers.provider.getBlock(log.blockNumber)).timestamp
-      let expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(timestamp2 - timestamp)
-      let pendingRewardToken = await this.ammRewards.pendingRewardToken(0, this.alice.address)
+      const log2 = await this.ammRewards.updatePool(0)
+      const timestamp2 = (await ethers.provider.getBlock(log2.blockNumber)).timestamp
+      const timestamp = (await ethers.provider.getBlock(log.blockNumber)).timestamp
+      const expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(timestamp2 - timestamp)
+      const pendingRewardToken = await this.ammRewards.pendingRewardToken(0, this.alice.address)
       expect(pendingRewardToken).to.be.equal(expectedRewardToken)
     })
   })
@@ -128,9 +128,9 @@ describe("Amm Rewards", function () {
   describe("UpdatePool", function () {
     it("Should emit event LogUpdatePool", async function () {
       await this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO)
-      let timeToAdvance = 600
+      const timeToAdvance = 600
       await advanceTime(timeToAdvance)
-      let lastRewardTime = ((await this.ammRewards.poolInfo(0)).lastRewardTime).toNumber()
+      const lastRewardTime = ((await this.ammRewards.poolInfo(0)).lastRewardTime).toNumber()
       await expect(this.ammRewards.updatePool(0))
             .to.emit(this.ammRewards, "LogUpdatePool")
             .withArgs(0, BigNumber.from(`${lastRewardTime+timeToAdvance}`),
@@ -176,12 +176,12 @@ describe("Amm Rewards", function () {
         await this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO)
         await this.lpt.approve(this.ammRewards.address, getBigNumber(10))
         expect(await this.ammRewards.lpToken(0)).to.be.equal(this.lpt.address)
-        let log = await this.ammRewards.deposit(0, getBigNumber(1), this.alice.address)
+        const log = await this.ammRewards.deposit(0, getBigNumber(1), this.alice.address)
         await advanceTime(86400)
-        let log2 = await this.ammRewards.withdraw(0, getBigNumber(1), this.alice.address)
-        let timestamp2 = (await ethers.provider.getBlock(log2.blockNumber)).timestamp
-        let timestamp = (await ethers.provider.getBlock(log.blockNumber)).timestamp
-        let expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(timestamp2 - timestamp)
+        const log2 = await this.ammRewards.withdraw(0, getBigNumber(1), this.alice.address)
+        const timestamp2 = (await ethers.provider.getBlock(log2.blockNumber)).timestamp
+        const timestamp = (await ethers.provider.getBlock(log.blockNumber)).timestamp
+        const expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(timestamp2 - timestamp)
         expect((await this.ammRewards.userInfo(0, this.alice.address)).rewardDebt).to.be.equal("-"+expectedRewardToken)
         await this.ammRewards.harvest(0, this.alice.address)
         expect(await this.halo.balanceOf(this.alice.address)).to.be.equal(expectedRewardToken)
