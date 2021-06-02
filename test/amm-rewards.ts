@@ -63,7 +63,7 @@ describe("Amm Rewards", function () {
         err = e;
       }
 
-      assert.equal(err.toString(), "ProviderError: VM Exception while processing transaction: invalid opcode")
+      assert.equal(err.toString(), "ProviderError: Error: VM Exception while processing transaction: invalid opcode")
     })
   })
 
@@ -112,7 +112,7 @@ describe("Amm Rewards", function () {
         err = e;
       }
 
-      assert.equal(err.toString(), "ProviderError: VM Exception while processing transaction: invalid opcode")
+      assert.equal(err.toString(), "ProviderError: Error: VM Exception while processing transaction: invalid opcode")
     })
 })
 
@@ -156,7 +156,7 @@ describe("Amm Rewards", function () {
         err = e;
       }
 
-      assert.equal(err.toString(), "ProviderError: VM Exception while processing transaction: invalid opcode")
+      assert.equal(err.toString(), "ProviderError: Error: VM Exception while processing transaction: invalid opcode")
     })
   })
 

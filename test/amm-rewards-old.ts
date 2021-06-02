@@ -3,6 +3,7 @@ import { time } from '@openzeppelin/test-helpers'
 import { parseEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+const { BigNumber } = require("ethers")
 
 let contractCreatorAccount
 let ammRewardsContract
@@ -27,7 +28,7 @@ let addr2
 let addrs
 let lpTokenPid
 const sleepTime = 5000
-const expectedHALORewardPerSecond = ethers.BigNumber.from('2416666666666666666')
+const rewardTokenPerSecond = ethers.BigNumber.from('2416666666666666666')
 
 const EPOCH_REWARD_AMOUNT = parseEther('6264000')
 const RELEASED_HALO_REWARDS = parseEther('10000')
@@ -141,7 +142,7 @@ describe('Rewards Contract', async () => {
     )
 
     //await ammRewardsContract.setRewardsManager(rewardsManager.address);
-    await ammRewardsContract.setRewardTokenPerSecond(expectedHALORewardPerSecond)
+    await ammRewardsContract.setRewardTokenPerSecond(rewardTokenPerSecond)
     await ammRewardsContract.deployed()
     console.log(`AmmRewardsContract deployed at ${ammRewardsContract.address}`)
 
@@ -293,20 +294,12 @@ describe('Rewards Contract', async () => {
         EPOCH_REWARD_AMOUNT
       )
       await halohaloContract.enter(EPOCH_REWARD_AMOUNT)
-      //await ammRewardsContract.setRewardsManager(owner.address)
       await halohaloContract.approve(
         ammRewardsContract.address,
         EPOCH_REWARD_AMOUNT
       )
       await halohaloContract.transfer(ammRewardsContract.address, EPOCH_REWARD_AMOUNT)
-      // await expect(ammRewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT),
-      //   'Deposit Epoch Reward Call failed')
-      //     .to.emit(
-      //       halohaloContract,
-      //       'Transfer'
-      //     )
-      //     .withArgs(owner.address, ammRewardsContract.address, EPOCH_REWARD_AMOUNT)
-      //     .to.not.be.reverted
+
     })
   })
 
@@ -330,6 +323,12 @@ describe('Rewards Contract', async () => {
         owner.address
       )
 
+      const depositPoolTxTs = (
+        await ethers.provider.getBlock(
+          depositPoolTxn.blockHash
+        )
+      ).timestamp
+
       expect(depositPoolTxn).to.not.be.null
 
       await time.increase(sleepTime)
@@ -346,16 +345,14 @@ describe('Rewards Contract', async () => {
       ).timestamp
 
       expect(updateTxTs).to.not.be.null
-
       const actualUnclaimedHaloPoolRewards = await ammRewardsContract.pendingRewardToken(
         lpTokenPid,
         owner.address
       )
-      const expectedUnclaimedHaloPoolRewards = ethers.BigNumber.from(
-        '12083333333333333330000'
-      )
-      expect(actualUnclaimedHaloPoolRewards).to.equal(
-        expectedUnclaimedHaloPoolRewards
+      const expectedUnclaimedHaloPoolRewards = BigNumber.from(rewardTokenPerSecond).mul(updateTxTs - depositPoolTxTs)
+      expect(actualUnclaimedHaloPoolRewards).to.be.within(
+        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).sub(BigNumber.from("10000")),
+        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).add(BigNumber.from("10000"))
       )
     })
 

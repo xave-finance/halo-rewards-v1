@@ -49,4 +49,18 @@ export function getBigNumber(amount, decimals = 18) {
   return BigNumber.from(amount).mul(BigNumber.from(BASE_TEN).pow(decimals))
 }
 
+export function checkAproximate(a, b, message) { // check a is withing 5% of b
+  a = BigNumber.from(a.toString())
+  b = BigNumber.from(b.toString())
+  let _check
+  if (b.eq(BigNumber.from('0'))) {
+      _check = a.eq(b)
+  } else {
+      _check = b.mul("999999999").lte(a.mul("1000000000")) && a.mul("1000000000").lte(b.mul("1000000001"))
+  }
+
+  let [icon, symbol] = _check ? ["✔️", "~="] : ["🚨🚨🚨", "!~="];
+  console.log(`${icon}  `, a.toString(), symbol, b.toString(), message ? message : "");
+}
+
 export * from "./time"
