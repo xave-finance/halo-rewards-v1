@@ -110,8 +110,6 @@ contract RewardsManager is Ownable {
     uint256 currentHaloHaloBalance = halohalo.balanceOf(address(this));
 
     require(currentHaloHaloBalance > 0, 'No HALOHALO in contract');
-
-    halohalo.approve(rewardsContract, currentHaloHaloBalance);
     halohalo.safeTransfer(rewardsContract, currentHaloHaloBalance);
     ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
   }
