@@ -1,6 +1,6 @@
-import deployAll from './initDeploy'
+import deployAllAmmRewards from './deployAllAmmRewards'
 
-deployAll('Moonbase', false)
+deployAllAmmRewards('Moonbase', false)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

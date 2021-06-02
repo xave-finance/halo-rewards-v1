@@ -1,6 +1,6 @@
-import deployAll from './initDeploy'
+import deployAllAmmRewards from './deployAllAmmRewards'
 
-deployAll('Matic', false)
+deployAllAmmRewards('Matic', false)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
