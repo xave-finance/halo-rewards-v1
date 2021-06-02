@@ -141,9 +141,9 @@ describe('Rewards Contract', async () => {
     )
 
     //await ammRewardsContract.setRewardsManager(rewardsManager.address);
-
+    await ammRewardsContract.setRewardTokenPerSecond(expectedHALORewardPerSecond)
     await ammRewardsContract.deployed()
-    console.log(`AmmRewardsContract deployed at ${ammRewardsContract.address}`);
+    console.log(`AmmRewardsContract deployed at ${ammRewardsContract.address}`)
 
     console.log()
 
@@ -241,15 +241,6 @@ describe('Rewards Contract', async () => {
   })
 
   describe('As an admin, I allocate the monthly epoch reward then epochRewardAmount is set', async () => {
-    it('Calling Rewards.setRewardsManagerAddress function by non-admin will fail', async () => {
-      await expect(ammRewardsContract.connect(addr1).setRewardsManager(rewardsManager.address))
-        .to.be.reverted
-    })
-
-    it('Rewards contract admin can set the RewardsManager address', async () => {
-      await expect(ammRewardsContract.setRewardsManager(rewardsManager.address))
-      .to.be.not.reverted
-    })
 
     it('Calling RewardsManager.releaseEpochRewards function by non-admin will fail', async () => {
       await expect(rewardsManager.connect(addr1).releaseEpochRewards(RELEASED_HALO_REWARDS))
@@ -302,20 +293,20 @@ describe('Rewards Contract', async () => {
         EPOCH_REWARD_AMOUNT
       )
       await halohaloContract.enter(EPOCH_REWARD_AMOUNT)
-      await ammRewardsContract.setRewardsManager(owner.address)
+      //await ammRewardsContract.setRewardsManager(owner.address)
       await halohaloContract.approve(
         ammRewardsContract.address,
         EPOCH_REWARD_AMOUNT
       )
-
-      await expect(ammRewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT),
-        'Deposit Epoch Reward Call failed')
-          .to.emit(
-            halohaloContract,
-            'Transfer'
-          )
-          .withArgs(owner.address, ammRewardsContract.address, EPOCH_REWARD_AMOUNT)
-          .to.not.be.reverted
+      await halohaloContract.transfer(ammRewardsContract.address, EPOCH_REWARD_AMOUNT)
+      // await expect(ammRewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT),
+      //   'Deposit Epoch Reward Call failed')
+      //     .to.emit(
+      //       halohaloContract,
+      //       'Transfer'
+      //     )
+      //     .withArgs(owner.address, ammRewardsContract.address, EPOCH_REWARD_AMOUNT)
+      //     .to.not.be.reverted
     })
   })
 

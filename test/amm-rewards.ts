@@ -5,6 +5,7 @@ import {ethers} from "hardhat"
 
 let initialVestingRatio = 0.2 * 10**4
 let rewardTokenPerSecond = "2416666666666666666"
+let changedRewardTokenPerSecond = "1964750000000000000"
 
 describe("Amm Rewards", function () {
   before(async function () {
@@ -126,10 +127,12 @@ describe("Amm Rewards", function () {
   describe("UpdatePool", function () {
     it("Should emit event LogUpdatePool", async function () {
       await this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO)
-      await advanceBlockTo(1)
+      let timeToAdvance = 600
+      await advanceTime(timeToAdvance)
+      let lastRewardTime = ((await this.ammRewards.poolInfo(0)).lastRewardTime).toNumber()
       await expect(this.ammRewards.updatePool(0))
             .to.emit(this.ammRewards, "LogUpdatePool")
-            .withArgs(0, (await this.ammRewards.poolInfo(0)).lastRewardTime,
+            .withArgs(0, lastRewardTime+timeToAdvance,
               (await this.lpt.balanceOf(this.ammRewards.address)),
               (await this.ammRewards.poolInfo(0)).accRewardTokenPerShare)
     })
@@ -198,6 +201,29 @@ describe("Amm Rewards", function () {
       await expect(this.ammRewards.connect(this.bob).emergencyWithdraw(0, this.bob.address))
       .to.emit(this.ammRewards, "EmergencyWithdraw")
       .withArgs(this.bob.address, 0, getBigNumber(1), this.bob.address)
+    })
+  })
+
+  describe("Admin functions", function () {
+    it("Non-owner should not be able to add pool", async function () {
+      await expect(this.ammRewards.connect(this.bob).add(10, this.lpt.address, ADDRESS_ZERO)).to.be.reverted
+    })
+    it("Owner should be able to add pool", async function () {
+      await expect(this.ammRewards.connect(this.alice).add(10, this.lpt.address, ADDRESS_ZERO)).to.not.be.reverted
+    })
+    it("Non-owner should not be able to set pool allocs", async function () {
+      await this.ammRewards.connect(this.alice).add(10, this.lpt.address, ADDRESS_ZERO)
+      await expect(this.ammRewards.connect(this.bob).set(0, 5, ADDRESS_ZERO, false)).to.be.reverted
+    })
+    it("Owner should be able to set pool allocs", async function () {
+      await this.ammRewards.connect(this.alice).add(10, this.lpt.address, ADDRESS_ZERO)
+      await expect(this.ammRewards.connect(this.alice).set(0, 5, ADDRESS_ZERO, false)).to.not.be.reverted
+    })
+    it("Non-owner should not be able to set rewardTokenPerSecond", async function () {
+      await expect(this.ammRewards.connect(this.bob).setRewardTokenPerSecond(changedRewardTokenPerSecond)).to.be.reverted
+    })
+    it("Owner should be able to set rewardTokenPerSecond", async function () {
+      await expect(this.ammRewards.connect(this.alice).setRewardTokenPerSecond(changedRewardTokenPerSecond)).to.not.be.reverted
     })
   })
 })

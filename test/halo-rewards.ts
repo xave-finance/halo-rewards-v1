@@ -255,8 +255,8 @@ describe('Rewards Contract', async () => {
     })
 
     it('Halohalo should be deployed', async () => {
-      expect(await halohaloContract.symbol()).to.equal('HALOHALO')
-      expect(await halohaloContract.name()).to.equal('HaloHalo')
+      expect(await halohaloContract.symbol()).to.equal('RNBW')
+      expect(await halohaloContract.name()).to.equal('Rainbow')
     })
 
     it('Rewards Contract should be deployed', async () => {
