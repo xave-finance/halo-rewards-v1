@@ -255,8 +255,8 @@ describe('Rewards Contract', async () => {
     })
 
     it('Halohalo should be deployed', async () => {
-      expect(await halohaloContract.symbol()).to.equal('HALOHALO')
-      expect(await halohaloContract.name()).to.equal('HaloHalo')
+      expect(await halohaloContract.symbol()).to.equal('RNBW')
+      expect(await halohaloContract.name()).to.equal('Rainbow')
     })
 
     it('Rewards Contract should be deployed', async () => {
@@ -316,7 +316,7 @@ describe('Rewards Contract', async () => {
         )
         .withArgs(currentRewardsReleasedInEther)
         .to.be.not.reverted
-      
+
       expect(await halohaloContract.balanceOf(rewardsManager.address))
         .to.be.equal(0, 'All HaloHalo tokens in Rewards manager should be tranferred to Rewards Contract.')
 
@@ -379,7 +379,7 @@ describe('Rewards Contract', async () => {
 
       console.log('Minter Contract is set and verified')
     })
-    
+
     it('Reverts setMinterLpAllocationPoints when no minter collateralType added', async () => {
         await expect(
           rewardsContract.setMinterLpAllocationPoints(collateralERC20Contract.address, 10)
@@ -898,7 +898,4 @@ describe('Rewards Contract', async () => {
       ).to.be.revertedWith('epochLengthInDays can not be zero')
     })
   })
-})
-describe('Rewards #depositEpochRewardAmount', async () => {
-  
 })

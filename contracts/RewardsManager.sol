@@ -4,10 +4,14 @@ pragma solidity ^0.6.12;
 import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {IRewards} from './interfaces/IRewards.sol';
 import './HaloHalo.sol';
 
 contract RewardsManager is Ownable {
+  using SafeERC20 for IERC20;
+  using SafeERC20 for HaloHalo;
+
   IERC20 public halo;
   HaloHalo halohalo;
   // in percent
@@ -106,9 +110,7 @@ contract RewardsManager is Ownable {
     uint256 currentHaloHaloBalance = halohalo.balanceOf(address(this));
 
     require(currentHaloHaloBalance > 0, 'No HALOHALO in contract');
-
-    halohalo.approve(rewardsContract, currentHaloHaloBalance);
-    IRewards(rewardsContract).depositEpochRewardAmount(currentHaloHaloBalance);
+    halohalo.safeTransfer(rewardsContract, currentHaloHaloBalance);
     ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
   }
 }
