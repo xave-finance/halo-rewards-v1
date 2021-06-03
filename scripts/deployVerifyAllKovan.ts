@@ -1,4 +1,4 @@
-import deployAll from './initDeploy'
+import deployAll from './deployAllAmmRewards'
 
 deployAll('Kovan', true)
   .then(() => process.exit(0))
