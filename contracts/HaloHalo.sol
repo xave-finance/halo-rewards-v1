@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.6.12;
 
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 
-contract HaloHalo is ERC20('HaloHalo', 'HALOHALO') {
+contract HaloHalo is ERC20('Rainbow Token', 'RNBW') {
   using SafeMath for uint256;
   IERC20 public halo;
   uint256 public constant DECIMALS = 1e18;

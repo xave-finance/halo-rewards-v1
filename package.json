@@ -6,12 +6,16 @@
     "deploy:local": "npx hardhat run scripts/deployAllLocal.ts --network \"localhost\"",
     "deploy:kovan": "npx hardhat run scripts/deployAllKovan.ts --network \"kovan\"",
     "deploy-verify:kovan": "npx hardhat run scripts/deployVerifyAllKovan.ts --network \"kovan\"",
-    "deploy:halo-kovan": "npx hardhat run scripts/deployHalo.ts --network \"kovan\"",
+    "deploy:halo-mainnet": "npx hardhat run scripts/deployHalo.ts --network \"mainnet\"",
+    "deploy:vesting-mainnet": "npx hardhat run scripts/deployVesting.ts --network \"mainnet\"",
+    "mint:halo-kovan": "npx hardhat run scripts/deployHalo.ts --network \"kovan\"",
     "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployOnlyRewardsContract.ts --network \"kovan\"",
     "deploy:bscTestnet": "npx hardhat run scripts/deployAllKovan.ts --network \"bscTestnet\"",
     "deploy:matic": "npx hardhat run scripts/deployAllMatic.ts --network \"matic\"",
     "deploy:moonbase": "npx hardhat run scripts/deployAllMoonbase.ts --network \"moonbase\"",
-    "node": "npx hardhat node"
+    "node": "npx hardhat node",
+    "compile": "npx hardhat compile",
+    "recompile": "rm -rf artifacts && rm -rf cache && yarn run compile"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
