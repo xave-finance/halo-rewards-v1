@@ -19,7 +19,10 @@ task('accounts', 'Prints the list of accounts', async (args, hre) => {
   }
 })
 
-// sample: npx hardhat verifyHalo --address 0x7e830bf4d4e64f063b8920a08fdb847eee323bf4 --name 'Rainbow Token' --symbol 'RNBW' --network "mainnet"
+/**
+ * use this if you ran the deploy script, but timed out on terminal while waiting for tx confirmation
+ * sample: npx hardhat verifyHalo --address '' --name 'Rainbow Token' --symbol 'RNBW' --network "mainnet"
+ */
 task('verifyHalo', 'verifies predeployed Halo token')
   .addParam(
     'address',
@@ -36,7 +39,10 @@ task('verifyHalo', 'verifies predeployed Halo token')
     })
   })
 
-// sample: npx hardhat verifyVesting --vestingaddress ''  --haloaddress '0x7e830bf4d4e64f063b8920a08fdb847eee323bf4'
+/**
+ * use this if you ran the deploy script, but timed out on terminal while waiting for tx confirmation
+ * sample: npx hardhat verifyVesting --vestingaddress ''  --haloaddress '' --network "mainnet"
+ */
 task('verifyVesting', 'deploys and verifies Vesting contract')
   .addParam(
     'vestingaddress',
@@ -55,7 +61,7 @@ task('verifyVesting', 'deploys and verifies Vesting contract')
     // auto verify vesting token
     console.log('verifying vesting contract')
     await hre.run('verify:verify', {
-      address: args.vestingaddressaddress,
+      address: args.vestingaddress,
       constructorArguments: [args.haloaddress]
     })
 
