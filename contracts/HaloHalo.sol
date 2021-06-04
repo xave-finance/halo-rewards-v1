@@ -5,7 +5,7 @@ import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 
-contract HaloHalo is ERC20('Rainbow Token', 'RNBW') {
+contract HaloHalo is ERC20('Rainbow Pool', 'xRNBW') {
   using SafeMath for uint256;
   IERC20 public halo;
   uint256 public constant DECIMALS = 1e18;

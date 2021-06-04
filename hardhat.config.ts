@@ -19,7 +19,7 @@ task('accounts', 'Prints the list of accounts', async (args, hre) => {
   }
 })
 
-// sample: npx hardhat verifyHalo --address 0x7e830bf4d4e64f063b8920a08fdb847eee323bf4 --name 'Halo Token' --symbol 'HALO'
+// sample: npx hardhat verifyHalo --address 0x7e830bf4d4e64f063b8920a08fdb847eee323bf4 --name 'Rainbow Token' --symbol 'RNBW' --network "mainnet"
 task('verifyHalo', 'verifies predeployed Halo token')
   .addParam(
     'address',

@@ -25,7 +25,7 @@ const doDeployHalo = async (
    * Deploy HeloToken contract
    */
   const HaloToken = await ethers.getContractFactory('HaloToken')
-  const haloTokenContract = await HaloToken.deploy('Halo Token', 'HALO')
+  const haloTokenContract = await HaloToken.deploy('Rainbow Token', 'RNBW')
   await haloTokenContract.deployed()
   console.log('haloTokenContract deployed at: ', haloTokenContract.address)
 
