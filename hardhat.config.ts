@@ -39,35 +39,6 @@ task('verifyHalo', 'verifies predeployed Halo token')
     })
   })
 
-/**
- * use this if you ran the deploy script, but timed out on terminal while waiting for tx confirmation
- * sample: npx hardhat verifyVesting --vestingaddress ''  --haloaddress '' --network "mainnet"
- */
-task('verifyVesting', 'deploys and verifies Vesting contract')
-  .addParam(
-    'vestingaddress',
-    'The mainnet address of the deployed HALO contract to be verified'
-  )
-  .addParam(
-    'haloaddress',
-    'The mainnet address of the deployed HALO contract to be verified'
-  )
-  .setAction(async (args, hre) => {
-    const [deployer] = await hre.ethers.getSigners()
-    console.log('------------- DEPLOY Vesting Contract -------------')
-    console.log('Deploying Vesting contract with account: ', deployer.address)
-    console.log('Passing Halo ERC20 address to ctor: ', args.haloaddress)
-
-    // auto verify vesting token
-    console.log('verifying vesting contract')
-    await hre.run('verify:verify', {
-      address: args.vestingaddress,
-      constructorArguments: [args.haloaddress]
-    })
-
-    console.log('------------- DONE DEPLOYING Vesting Contract -------------')
-  })
-
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
