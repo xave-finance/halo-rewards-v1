@@ -20,6 +20,10 @@ yarn install
 yarn run test
 ```
 
+### Verifying smart contracts in bscscan and etherscan
+
+Change the apiKey in hardhat config to ETHERSCAN_API_KEY if etherscan and BSCSCAN_API_KEY if bscscan.
+
 ### Using dev scripts
 
 ### Development and Debug Scripts

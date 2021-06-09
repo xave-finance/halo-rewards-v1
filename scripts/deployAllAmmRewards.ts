@@ -10,7 +10,7 @@ const INITIAL_MINT = 10 ** 6
 const zeroAddress = '0x0000000000000000000000000000000000000000'
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
 
-const deployAllAmmRewards = async ( network, verify ) => {
+const deployAllAmmRewards = async (network, verify) => {
   const [deployer] = await ethers.getSigners()
   console.log('Deploying with account: ', deployer.address)
   /**
@@ -49,24 +49,29 @@ const deployAllAmmRewards = async ( network, verify ) => {
   let ammLpPools = []
 
   switch (network) {
+    case 'BSCTestnet':
+      // Hardcode Sushi LP Token
+      ammLpPools = [
+        ['0x71e3c96C21D734bFA64D652EA99611Aa64F7D9F6', 10],
+        ['0x9A0eeceDA5c0203924484F5467cEE4321cf6A189', 10]
+      ]
+      break
     case 'Kovan':
       // Hardcode kovan balancer pools
       ammLpPools = [
         ['0x37f80ac90235ce0d3911952d0ce49071a0ffdb1e', 10],
         ['0x65850ecd767e7ef71e4b78a348bb605343bd87c3', 10]
       ]
-      break;
+      break
     case 'Goerli':
       ammLpPools = [
         ['0xBea012aaF56949a95759B9CE0B494A97edf389e6', 10],
         ['0x9C303C18397cB5Fa62D9e68a0C7f2Cc6e00F0066', 10]
       ]
-      break;
+      break
     case 'Matic':
       // Sushi LP Token
-      ammLpPools = [
-        ['0xc4e595acDD7d12feC385E5dA5D43160e8A0bAC0E', 10]
-      ]
+      ammLpPools = [['0xc4e595acDD7d12feC385E5dA5D43160e8A0bAC0E', 10]]
       break
     case 'Moonbase':
     case 'Local': {
@@ -86,9 +91,7 @@ const deployAllAmmRewards = async ( network, verify ) => {
   }
 
   const AmmRewards = await ethers.getContractFactory('AmmRewards')
-  const ammRewardsContract = await AmmRewards.deploy(
-    HaloHaloContract.address
-  )
+  const ammRewardsContract = await AmmRewards.deploy(HaloHaloContract.address)
   await ammRewardsContract.deployed()
   console.log(
     'rewardsContract deployed at contract address ',
@@ -108,11 +111,10 @@ const deployAllAmmRewards = async ( network, verify ) => {
   )
 
   for (var pool of ammLpPools) {
-      await ammRewardsContract.add(pool[1], pool[0], zeroAddress);
+    await ammRewardsContract.add(pool[1], pool[0], zeroAddress)
   }
 
   if (verify === true) {
-
     console.log(
       'waiting 1 minute for etherscan to cache newly deployed contract bytecode'
     )
@@ -130,9 +132,7 @@ const deployAllAmmRewards = async ( network, verify ) => {
     console.log('verifying rewardsContract')
     await hre.run('verify:verify', {
       address: ammRewardsContract.address,
-      constructorArguments: [
-        HaloHaloContract.address
-      ]
+      constructorArguments: [HaloHaloContract.address]
     })
 
     // auto verify halohalo contract
@@ -153,7 +153,6 @@ const deployAllAmmRewards = async ( network, verify ) => {
         haloTokenContract.address
       ]
     })
-
   }
   // Mint initial Halo tokens
   await haloTokenContract.mint(

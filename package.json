@@ -8,7 +8,8 @@
     "deploy-verify:kovan": "npx hardhat run scripts/deployVerifyAllKovan.ts --network \"kovan\"",
     "deploy:halo-kovan": "npx hardhat run scripts/deployHalo.ts --network \"kovan\"",
     "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployOnlyRewardsContract.ts --network \"kovan\"",
-    "deploy:bscTestnet": "npx hardhat run scripts/deployAllKovan.ts --network \"bscTestnet\"",
+    "deploy:bscTestnet": "npx hardhat run scripts/deployAllBscTestnet.ts --network \"bscTestnet\"",
+    "deploy-verify:bscTestnet": "npx hardhat run scripts/deployVerifyAllBscTestnet.ts --network \"bscTestnet\"",
     "deploy:matic": "npx hardhat run scripts/deployAllMatic.ts --network \"matic\"",
     "deploy:moonbase": "npx hardhat run scripts/deployAllMoonbase.ts --network \"moonbase\"",
     "node": "npx hardhat node"
