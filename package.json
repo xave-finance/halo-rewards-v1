@@ -10,7 +10,7 @@
     "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployOnlyRewardsContract.ts --network \"kovan\"",
     "deploy:bscTestnet": "npx hardhat run scripts/deployAllBscTestnet.ts --network \"bscTestnet\"",
     "deploy-verify:bscTestnet": "npx hardhat run scripts/deployVerifyAllBscTestnet.ts --network \"bscTestnet\"",
-    "deploy:matic": "npx hardhat run scripts/deployAllMatic.ts --network \"matic\"",
+    "deploy:matic": "npx hardhat run scripts/deployAllMatic.ts --network \"maticTestnet\"",
     "deploy:moonbase": "npx hardhat run scripts/deployAllMoonbase.ts --network \"moonbase\"",
     "node": "npx hardhat node"
   },

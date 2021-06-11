@@ -57,9 +57,9 @@ module.exports = {
         mnemonic: MNEMONIC_SEED
       }
     },
-    matic: {
-      url: 'https://rpc-mumbai.maticvigil.com',
-      chainId: 137,
+    maticTestnet: {
+      url: 'https://rpc-mumbai.matic.today',
+      chainId: 80001,
       accounts: {
         mnemonic: MNEMONIC_SEED
       }
