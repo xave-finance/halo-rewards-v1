@@ -8,6 +8,8 @@
     "deploy-verify:kovan": "npx hardhat run scripts/deployVerifyAllKovan.ts --network \"kovan\"",
     "deploy:halo-mainnet": "npx hardhat run scripts/deployHalo.ts --network \"mainnet\"",
     "deploy:vesting-mainnet": "npx hardhat run scripts/deployVesting.ts --network \"mainnet\"",
+    "verify": "npx hardhat verify",
+    "about:verify": "verifies a predeployed undeployed contract. sample usage: yarn/npm run verify -- --network mainnet [DEPLOYED_CONTRACT_ADDRESS] [ARG 1] [ARG 2] [ARG N]",
     "mint:halo-kovan": "npx hardhat run scripts/deployHalo.ts --network \"kovan\"",
     "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployOnlyRewardsContract.ts --network \"kovan\"",
     "deploy:bscTestnet": "npx hardhat run scripts/deployAllKovan.ts --network \"bscTestnet\"",
