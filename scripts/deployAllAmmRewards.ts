@@ -13,6 +13,7 @@ const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
 const deployAllAmmRewards = async (network, verify) => {
   const [deployer] = await ethers.getSigners()
   console.log('Deploying with account: ', deployer.address)
+
   /**
    * Deploy HeloToken contract
    */
@@ -69,16 +70,29 @@ const deployAllAmmRewards = async (network, verify) => {
         ['0x9C303C18397cB5Fa62D9e68a0C7f2Cc6e00F0066', 10]
       ]
       break
-    case 'Matic':
-      // Sushi LP Token
-      ammLpPools = [['0xc4e595acDD7d12feC385E5dA5D43160e8A0bAC0E', 10]]
+    case 'Matic': {
+      // break // ammLpPools = [['0xc4e595acDD7d12feC385E5dA5D43160e8A0bAC0E', 10]] // Sushi LP Token
+      const LpToken = await ethers.getContractFactory('LpToken')
+      const lpTokenContract = await LpToken.deploy('SUSHI/xSGD', 'SLP')
+      await lpTokenContract.deployed()
+      console.log('lptoken deployed at ', lpTokenContract.address)
+      await lpTokenContract.mint(
+        deployer.address,
+        ethers.utils.parseEther((100 * INITIAL_MINT).toString())
+      )
+      ammLpPools = [[lpTokenContract.address, 10]]
       break
+    }
     case 'Moonbase':
     case 'Local': {
       const LpToken = await ethers.getContractFactory('LpToken')
       const lpTokenContract = await LpToken.deploy('LpToken', 'LPT')
       await lpTokenContract.deployed()
       console.log('lptoken deployed at ', lpTokenContract.address)
+      await lpTokenContract.mint(
+        deployer.address,
+        ethers.utils.parseEther((100 * INITIAL_MINT).toString())
+      )
       ammLpPools = [[lpTokenContract.address, 10]]
       break
     }
@@ -163,3 +177,6 @@ const deployAllAmmRewards = async (network, verify) => {
 }
 
 export default deployAllAmmRewards
+function formatEther(arg0: any): any {
+  throw new Error('Function not implemented.')
+}

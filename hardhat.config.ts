@@ -45,6 +45,12 @@ module.exports = {
         mnemonic: MNEMONIC_SEED
       }
     },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${INFURA_PROJECT_ID}`,
+      accounts: {
+        mnemonic: MNEMONIC_SEED
+      }
+    },
     localhost: {
       chainId: 1337,
       url: 'http://127.0.0.1:8545/'
