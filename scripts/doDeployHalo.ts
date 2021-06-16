@@ -47,7 +47,7 @@ const doDeployHalo = async (
     console.log('verifying haloToken')
     await hre.run('verify:verify', {
       address: haloTokenContract.address,
-      constructorArguments: ['Halo Token', 'HALO']
+      constructorArguments: ['Rainbow Token', 'RNBW']
     })
   }
 
