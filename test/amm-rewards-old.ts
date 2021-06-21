@@ -3,7 +3,7 @@ import { time } from '@openzeppelin/test-helpers'
 import { parseEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-const { BigNumber } = require("ethers")
+const { BigNumber } = require('ethers')
 
 let contractCreatorAccount
 let ammRewardsContract
@@ -127,9 +127,10 @@ describe('Rewards Contract', async () => {
     await minterContract.deployed()
     console.log('minter deployed')
 
-
     const AmmRewardsContract = await ethers.getContractFactory('AmmRewards')
-    ammRewardsContract = await AmmRewardsContract.deploy(halohaloContract.address);
+    ammRewardsContract = await AmmRewardsContract.deploy(
+      halohaloContract.address
+    )
 
     const vestingRewardsRatio = 0.2 * BASIS_POINTS
 
@@ -185,7 +186,10 @@ describe('Rewards Contract', async () => {
     console.log()
 
     const ownerHaloBalance = await haloTokenContract.balanceOf(owner.address)
-    await haloTokenContract.transfer(ammRewardsContract.address, ownerHaloBalance)
+    await haloTokenContract.transfer(
+      ammRewardsContract.address,
+      ownerHaloBalance
+    )
     console.log(
       `${Number(ownerHaloBalance)}  HALO tokens transfered to rewards contract`
     )
@@ -232,20 +236,18 @@ describe('Rewards Contract', async () => {
     })
 
     it('Halohalo should be deployed', async () => {
-      expect(await halohaloContract.symbol()).to.equal('RNBW')
-      expect(await halohaloContract.name()).to.equal('Rainbow')
+      expect(await halohaloContract.symbol()).to.equal('xRNBW')
+      expect(await halohaloContract.name()).to.equal('Rainbow Pool')
     })
 
-    it('AmmRewards Contract should be deployed', async () => {
-
-    })
+    it('AmmRewards Contract should be deployed', async () => {})
   })
 
   describe('As an admin, I allocate the monthly epoch reward then epochRewardAmount is set', async () => {
-
     it('Calling RewardsManager.releaseEpochRewards function by non-admin will fail', async () => {
-      await expect(rewardsManager.connect(addr1).releaseEpochRewards(RELEASED_HALO_REWARDS))
-        .to.be.reverted
+      await expect(
+        rewardsManager.connect(addr1).releaseEpochRewards(RELEASED_HALO_REWARDS)
+      ).to.be.reverted
     })
 
     it('Admin can call RewardsManager.releaseEpochRewards function and will distribute the HALOHALO from Rewards Manager to Rewards contract', async () => {
@@ -261,24 +263,32 @@ describe('Rewards Contract', async () => {
       )
 
       const vestingRewardsRatio = 0.2 * BASIS_POINTS
-      const currentVestedRewards = (Number(RELEASED_HALO_REWARDS) * vestingRewardsRatio) / BASIS_POINTS
-      const currentRewardsReleased = Number(RELEASED_HALO_REWARDS) - currentVestedRewards
-      const currentRewardsReleasedInEther = parseEther(`${currentRewardsReleased / 10 ** 18}`)
+      const currentVestedRewards =
+        (Number(RELEASED_HALO_REWARDS) * vestingRewardsRatio) / BASIS_POINTS
+      const currentRewardsReleased =
+        Number(RELEASED_HALO_REWARDS) - currentVestedRewards
+      const currentRewardsReleasedInEther = parseEther(
+        `${currentRewardsReleased / 10 ** 18}`
+      )
 
       await expect(rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS))
-        .to.emit(
-          rewardsManager,
-          'ReleasedRewardsToRewardsContractEvent'
-        )
-        .withArgs(currentRewardsReleasedInEther)
-        .to.be.not.reverted
+        .to.emit(rewardsManager, 'ReleasedRewardsToRewardsContractEvent')
+        .withArgs(currentRewardsReleasedInEther).to.be.not.reverted
       //console.log(`Halohalo balance: ${Number(await halohaloContract.balanceOf(ammRewardsContract.address))}`)
-      expect(await halohaloContract.balanceOf(rewardsManager.address))
-        .to.be.equal(0, 'All HaloHalo tokens in Rewards manager should be tranferred to Rewards Contract.')
+      expect(
+        await halohaloContract.balanceOf(rewardsManager.address)
+      ).to.be.equal(
+        0,
+        'All HaloHalo tokens in Rewards manager should be tranferred to Rewards Contract.'
+      )
 
-      const haloHaloBalance = Number(await halohaloContract.balanceOf(ammRewardsContract.address))
-      expect(haloHaloBalance).to.be.equal(currentRewardsReleased,
-        '80% of the rewards amount released during first month epoch should be equal to the HaloHalo balance of Rewards contract')
+      const haloHaloBalance = Number(
+        await halohaloContract.balanceOf(ammRewardsContract.address)
+      )
+      expect(haloHaloBalance).to.be.equal(
+        currentRewardsReleased,
+        '80% of the rewards amount released during first month epoch should be equal to the HaloHalo balance of Rewards contract'
+      )
     })
 
     /**
@@ -298,21 +308,27 @@ describe('Rewards Contract', async () => {
         ammRewardsContract.address,
         EPOCH_REWARD_AMOUNT
       )
-      await halohaloContract.transfer(ammRewardsContract.address, EPOCH_REWARD_AMOUNT)
-
+      await halohaloContract.transfer(
+        ammRewardsContract.address,
+        EPOCH_REWARD_AMOUNT
+      )
     })
   })
 
   describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', () => {
-    it('Non-admin cannot add LP pool', async() => {
-        await expect(ammRewardsContract.connect(addr1).add(10, lpTokenContract.address, zeroAddress))
-          .to.be.reverted
-      })
+    it('Non-admin cannot add LP pool', async () => {
+      await expect(
+        ammRewardsContract
+          .connect(addr1)
+          .add(10, lpTokenContract.address, zeroAddress)
+      ).to.be.reverted
+    })
     //})
-    it('Admin cannot add LP pool', async() => {
-        await expect(ammRewardsContract.add(10, lpTokenContract.address, zeroAddress))
-          .to.not.be.reverted
-      })
+    it('Admin cannot add LP pool', async () => {
+      await expect(
+        ammRewardsContract.add(10, lpTokenContract.address, zeroAddress)
+      ).to.not.be.reverted
+    })
     //})
     it('I earn the correct number of HALO tokens per time interval on depositing LPT', async () => {
       lpTokenPid = 0
@@ -324,9 +340,7 @@ describe('Rewards Contract', async () => {
       )
 
       const depositPoolTxTs = (
-        await ethers.provider.getBlock(
-          depositPoolTxn.blockHash
-        )
+        await ethers.provider.getBlock(depositPoolTxn.blockHash)
       ).timestamp
 
       expect(depositPoolTxn).to.not.be.null
@@ -349,10 +363,16 @@ describe('Rewards Contract', async () => {
         lpTokenPid,
         owner.address
       )
-      const expectedUnclaimedHaloPoolRewards = BigNumber.from(rewardTokenPerSecond).mul(updateTxTs - depositPoolTxTs)
+      const expectedUnclaimedHaloPoolRewards = BigNumber.from(
+        rewardTokenPerSecond
+      ).mul(updateTxTs - depositPoolTxTs)
       expect(actualUnclaimedHaloPoolRewards).to.be.within(
-        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).sub(BigNumber.from("10000")),
-        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).add(BigNumber.from("10000"))
+        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).sub(
+          BigNumber.from('10000')
+        ),
+        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).add(
+          BigNumber.from('10000')
+        )
       )
     })
 
@@ -373,10 +393,7 @@ describe('Rewards Contract', async () => {
 
       const actualUnclaimedHaloPoolRewards = Math.round(
         +ethers.utils.formatEther(
-          await ammRewardsContract.pendingRewardToken(
-            lpTokenPid,
-            owner.address
-          )
+          await ammRewardsContract.pendingRewardToken(lpTokenPid, owner.address)
         )
       )
 
@@ -386,10 +403,10 @@ describe('Rewards Contract', async () => {
       )
     })
   })
-  describe('As an Admin, I can update AMM LP pool’s allocation points', async() => {
+  describe('As an Admin, I can update AMM LP pool’s allocation points', async () => {
     const maxAllocationPoints = Number(10)
 
-    console.log(`lpPoolInfo: ${await ammRewardsContract.poolInfo(lpTokenPid)}`);
+    console.log(`lpPoolInfo: ${await ammRewardsContract.poolInfo(lpTokenPid)}`)
     // it('AMM LP allocation points before', async () => {
     //   expect(
     //     (
@@ -406,17 +423,13 @@ describe('Rewards Contract', async () => {
 
     it('If caller is not contract owner, it should fail', async () => {
       await expect(
-        ammRewardsContract
-          .connect(addr1)
-          .set(lpTokenPid, 5, zeroAddress, false)
+        ammRewardsContract.connect(addr1).set(lpTokenPid, 5, zeroAddress, false)
       ).to.be.revertedWith('Ownable: caller is not the owner')
     })
 
     it('If caller is contract owner, it should not fail; If AMM LP pool is whitelisted it should not fail; Set Amm LP pool allocs', async () => {
       await expect(
-        ammRewardsContract
-          .connect(owner)
-          .set(lpTokenPid, 5, zeroAddress, false)
+        ammRewardsContract.connect(owner).set(lpTokenPid, 5, zeroAddress, false)
       ).to.not.be.reverted
     })
 
