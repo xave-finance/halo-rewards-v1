@@ -1,6 +1,6 @@
 import deployAllAmmRewards from './deployAllAmmRewards'
 
-deployAllAmmRewards('Goerli', false)
+deployAllAmmRewards('Goerli', true)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

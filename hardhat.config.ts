@@ -51,6 +51,14 @@ module.exports = {
         mnemonic: MNEMONIC_SEED
       }
     },
+
+    goerli: {
+      url: `https://goerli.infura.io/v3/${INFURA_PROJECT_ID}`,
+      gasPrice: 200000000000,
+      accounts: {
+        mnemonic: MNEMONIC_SEED
+      }
+    },
     localhost: {
       chainId: 1337,
       url: 'http://127.0.0.1:8545/'
@@ -80,6 +88,6 @@ module.exports = {
   },
   etherscan: {
     // change to BSCSCAN_API_KEY if BSC, ETHERSCAN_API_KEY if Eth networks
-    apiKey: BSCSCAN_API_KEY
+    apiKey: ETHERSCAN_API_KEY
   }
 }

@@ -17,16 +17,18 @@ const deployAllAmmRewards = async (network, verify) => {
   /**
    * Deploy HeloToken contract
    */
-  const HaloToken = await ethers.getContractFactory('HaloToken')
-  const haloTokenContract = await HaloToken.deploy('HALO Rewards Token', 'HALO')
-  await haloTokenContract.deployed()
-  console.log('haloTokenContract deployed at: ', haloTokenContract.address)
+  //const HaloToken = await ethers.getContractFactory('HaloToken')
+  //const haloTokenContract = await HaloToken.deploy('HALO Rewards Token', 'HALO')
+  //await haloTokenContract.deployed()
+  //console.log('haloTokenContract deployed at: ', haloTokenContract.address)
 
   /**
    * Deploy HeloChest contract
    */
   const HaloHalo = await ethers.getContractFactory('HaloHalo')
-  const HaloHaloContract = await HaloHalo.deploy(haloTokenContract.address)
+  const HaloHaloContract = await HaloHalo.deploy(
+    '0x83eA0ECac2F3d3C18F4a43774A146ED1097acC57'
+  )
   await HaloHaloContract.deployed()
   console.log('halohaloContract deployed at: ', HaloHaloContract.address)
 
@@ -36,9 +38,9 @@ const deployAllAmmRewards = async (network, verify) => {
    * - LP token contract
    * - minter
    */
-  const CollateralERC20 = await ethers.getContractFactory('CollateralERC20')
-  const collateralERC20Contract = await CollateralERC20.deploy('Dai', 'DAI')
-  await collateralERC20Contract.deployed()
+  // const CollateralERC20 = await ethers.getContractFactory('CollateralERC20')
+  // const collateralERC20Contract = await CollateralERC20.deploy('Dai', 'DAI')
+  // await collateralERC20Contract.deployed()
 
   /**
    * Deploy Rewards contract
@@ -117,7 +119,7 @@ const deployAllAmmRewards = async (network, verify) => {
     vestingRewardsRatio,
     ammRewardsContract.address,
     HaloHaloContract.address,
-    haloTokenContract.address
+    '0x83eA0ECac2F3d3C18F4a43774A146ED1097acC57'
   )
   console.log(
     'rewardsManager deployed at contract address ',
@@ -136,12 +138,12 @@ const deployAllAmmRewards = async (network, verify) => {
     console.log('done waiting')
 
     // auto verify halo token
-    console.log('verifying haloToken')
-    await hre.run('verify:verify', {
-      address: haloTokenContract.address,
-      constructorArguments: ['HALO Rewards Token', 'HALO']
-    })
-
+    // console.log('verifying haloToken')
+    // await hre.run('verify:verify', {
+    //   address: haloTokenContract.address,
+    //   constructorArguments: ['HALO Rewards Token', 'HALO']
+    // })
+    //
     // auto verify rewards contract
     console.log('verifying rewardsContract')
     await hre.run('verify:verify', {
@@ -153,7 +155,7 @@ const deployAllAmmRewards = async (network, verify) => {
     console.log('verifying halohaloContract')
     await hre.run('verify:verify', {
       address: HaloHaloContract.address,
-      constructorArguments: [haloTokenContract.address]
+      constructorArguments: ['0x83eA0ECac2F3d3C18F4a43774A146ED1097acC57']
     })
 
     // auto verify RewardsManager contract
@@ -164,16 +166,16 @@ const deployAllAmmRewards = async (network, verify) => {
         vestingRewardsRatio,
         ammRewardsContract.address,
         HaloHaloContract.address,
-        haloTokenContract.address
+        '0x83eA0ECac2F3d3C18F4a43774A146ED1097acC57'
       ]
     })
   }
   // Mint initial Halo tokens
-  await haloTokenContract.mint(
-    deployer.address,
-    ethers.utils.parseEther((100 * INITIAL_MINT).toString())
-  )
-  console.log('Minted initial HALO for deployer account', deployer.address)
+  //await haloTokenContract.mint(
+  //  deployer.address,
+  //  ethers.utils.parseEther((100 * INITIAL_MINT).toString())
+  //)
+  //console.log('Minted initial HALO for deployer account', deployer.address)
 }
 
 export default deployAllAmmRewards
