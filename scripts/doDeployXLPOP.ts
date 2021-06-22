@@ -2,16 +2,16 @@ import { ethers } from 'hardhat'
 const hre = require('hardhat')
 import sleep from './util/sleep'
 
-const doDeployVesting = async (haloTokenAddress, verify) => {
+const doDeployXLPOP = async (haloTokenAddress, verify) => {
   const [deployer] = await ethers.getSigners()
-  console.log('------------- DEPLOY HaloHalo.sol -------------')
+  console.log('------------- DEPLOY LollipopPool.sol -------------')
   console.log('Deploying Vesting contract with account: ', deployer.address)
-  console.log('Passing Halo ERC20 address to ctor: ', haloTokenAddress)
+  console.log('Passing LPOP ERC20 address to ctor: ', haloTokenAddress)
 
   /**
    * Deploy Vesting contract
    */
-  const VestingContractFactory = await ethers.getContractFactory('HaloHalo')
+  const VestingContractFactory = await ethers.getContractFactory('LollipopPool')
   const VestingContract = await VestingContractFactory.deploy(haloTokenAddress)
   await VestingContract.deployed()
   console.log('Vesting contract deployed at: ', VestingContract.address)
@@ -31,9 +31,11 @@ const doDeployVesting = async (haloTokenAddress, verify) => {
     })
   }
 
-  console.log('------------- DONE DEPLOYING Vesting Contract -------------')
+  console.log(
+    '------------- DONE DEPLOYING LollipopPool Contract -------------'
+  )
 
   return VestingContract.address
 }
 
-export default doDeployVesting
+export default doDeployXLPOP
