@@ -92,14 +92,17 @@ describe('Rewards Manager', async () => {
       haloTokenContract.address
     )
 
-    await rewardsContract.setRewardsManagerAddress(rewardsManagerContract.address)
+    await rewardsContract.setRewardsManagerAddress(
+      rewardsManagerContract.address
+    )
     console.log('Set Rewards Manager contract.')
 
-    console.log(`Deployed Rewards Manager Contract address: ${rewardsManagerContract.address}`)
+    console.log(
+      `Deployed Rewards Manager Contract address: ${rewardsManagerContract.address}`
+    )
     console.log(
       '==========================================================\n\n'
     )
-
   })
 
   describe('Check Contract Deployments', () => {
@@ -109,10 +112,10 @@ describe('Rewards Manager', async () => {
     })
 
     it('Halohalo should be deployed', async () => {
-      expect(await halohaloContract.symbol()).to.equal('RNBW')
-      expect(await halohaloContract.name()).to.equal('Rainbow')
-      expect(await changedHaloHaloContract.symbol()).to.equal('RNBW')
-      expect(await changedHaloHaloContract.name()).to.equal('Rainbow')
+      expect(await halohaloContract.symbol()).to.equal('xRNBW')
+      expect(await halohaloContract.name()).to.equal('Rainbow Pool')
+      expect(await changedHaloHaloContract.symbol()).to.equal('xRNBW')
+      expect(await changedHaloHaloContract.name()).to.equal('Rainbow Pool')
     })
 
     it('Lptoken should be deployed', async () => {
@@ -125,27 +128,24 @@ describe('Rewards Manager', async () => {
       expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
         0
       )
-      expect(
-        await rewardsContract.isValidAmmLp(lpTokenContract.address)
-      ).to.be.true
+      expect(await rewardsContract.isValidAmmLp(lpTokenContract.address)).to.be
+        .true
       expect(
         await rewardsContract.isValidAmmLp(collateralERC20Contract.address)
       ).to.be.false
       expect(
         await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
       ).to.be.false
-      expect(
-        await rewardsContract.isValidMinterLp(lpTokenContract.address)
-      ).to.be.false
+      expect(await rewardsContract.isValidMinterLp(lpTokenContract.address)).to
+        .be.false
       expect(
         await changedRewardsContract.getTotalPoolAllocationPoints()
       ).to.equal(10)
       expect(
         await changedRewardsContract.getTotalMinterLpAllocationPoints()
       ).to.equal(0)
-      expect(
-        await changedRewardsContract.isValidAmmLp(lpTokenContract.address)
-      ).to.be.true
+      expect(await changedRewardsContract.isValidAmmLp(lpTokenContract.address))
+        .to.be.true
       expect(
         await changedRewardsContract.isValidAmmLp(
           collateralERC20Contract.address
