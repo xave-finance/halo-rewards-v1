@@ -255,8 +255,8 @@ describe('Rewards Contract', async () => {
     })
 
     it('Halohalo should be deployed', async () => {
-      expect(await halohaloContract.symbol()).to.equal('RNBW')
-      expect(await halohaloContract.name()).to.equal('Rainbow')
+      expect(await halohaloContract.symbol()).to.equal('xRNBW')
+      expect(await halohaloContract.name()).to.equal('Rainbow Pool')
     })
 
     it('Rewards Contract should be deployed', async () => {
@@ -278,18 +278,23 @@ describe('Rewards Contract', async () => {
 
   describe('As an admin, I allocate the monthly epoch reward then epochRewardAmount is set', async () => {
     it('Calling Rewards.setRewardsManagerAddress function by non-admin will fail', async () => {
-      await expect(rewardsContract.connect(addr1).setRewardsManagerAddress(rewardsManager.address))
-        .to.be.reverted
+      await expect(
+        rewardsContract
+          .connect(addr1)
+          .setRewardsManagerAddress(rewardsManager.address)
+      ).to.be.reverted
     })
 
     it('Rewards contract admin can set the RewardsManager address', async () => {
-      await expect(rewardsContract.setRewardsManagerAddress(rewardsManager.address))
-      .to.be.not.reverted
+      await expect(
+        rewardsContract.setRewardsManagerAddress(rewardsManager.address)
+      ).to.be.not.reverted
     })
 
     it('Calling RewardsManager.releaseEpochRewards function by non-admin will fail', async () => {
-      await expect(rewardsManager.connect(addr1).releaseEpochRewards(RELEASED_HALO_REWARDS))
-        .to.be.reverted
+      await expect(
+        rewardsManager.connect(addr1).releaseEpochRewards(RELEASED_HALO_REWARDS)
+      ).to.be.reverted
     })
 
     it('Admin can call RewardsManager.releaseEpochRewards function and will distribute the HALOHALO from Rewards Manager to Rewards contract', async () => {
@@ -305,24 +310,32 @@ describe('Rewards Contract', async () => {
       )
 
       const vestingRewardsRatio = 0.2 * BASIS_POINTS
-      const currentVestedRewards = (Number(RELEASED_HALO_REWARDS) * vestingRewardsRatio) / BASIS_POINTS
-      const currentRewardsReleased = Number(RELEASED_HALO_REWARDS) - currentVestedRewards
-      const currentRewardsReleasedInEther = parseEther(`${currentRewardsReleased / 10 ** 18}`)
+      const currentVestedRewards =
+        (Number(RELEASED_HALO_REWARDS) * vestingRewardsRatio) / BASIS_POINTS
+      const currentRewardsReleased =
+        Number(RELEASED_HALO_REWARDS) - currentVestedRewards
+      const currentRewardsReleasedInEther = parseEther(
+        `${currentRewardsReleased / 10 ** 18}`
+      )
 
       await expect(rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS))
-        .to.emit(
-          rewardsManager,
-          'ReleasedRewardsToRewardsContractEvent'
-        )
-        .withArgs(currentRewardsReleasedInEther)
-        .to.be.not.reverted
+        .to.emit(rewardsManager, 'ReleasedRewardsToRewardsContractEvent')
+        .withArgs(currentRewardsReleasedInEther).to.be.not.reverted
 
-      expect(await halohaloContract.balanceOf(rewardsManager.address))
-        .to.be.equal(0, 'All HaloHalo tokens in Rewards manager should be tranferred to Rewards Contract.')
+      expect(
+        await halohaloContract.balanceOf(rewardsManager.address)
+      ).to.be.equal(
+        0,
+        'All HaloHalo tokens in Rewards manager should be tranferred to Rewards Contract.'
+      )
 
-      const haloHaloBalance = Number(await halohaloContract.balanceOf(rewardsContract.address))
-      expect(haloHaloBalance).to.be.equal(currentRewardsReleased,
-        '80% of the rewards amount released during first month epoch should be equal to the HaloHalo balance of Rewards contract')
+      const haloHaloBalance = Number(
+        await halohaloContract.balanceOf(rewardsContract.address)
+      )
+      expect(haloHaloBalance).to.be.equal(
+        currentRewardsReleased,
+        '80% of the rewards amount released during first month epoch should be equal to the HaloHalo balance of Rewards contract'
+      )
     })
 
     /**
@@ -344,14 +357,13 @@ describe('Rewards Contract', async () => {
         EPOCH_REWARD_AMOUNT
       )
 
-      await expect(rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT),
-        'Deposit Epoch Reward Call failed')
-          .to.emit(
-            halohaloContract,
-            'Transfer'
-          )
-          .withArgs(owner.address, rewardsContract.address, EPOCH_REWARD_AMOUNT)
-          .to.not.be.reverted
+      await expect(
+        rewardsContract.depositEpochRewardAmount(EPOCH_REWARD_AMOUNT),
+        'Deposit Epoch Reward Call failed'
+      )
+        .to.emit(halohaloContract, 'Transfer')
+        .withArgs(owner.address, rewardsContract.address, EPOCH_REWARD_AMOUNT)
+        .to.not.be.reverted
     })
   })
 
@@ -381,27 +393,33 @@ describe('Rewards Contract', async () => {
     })
 
     it('Reverts setMinterLpAllocationPoints when no minter collateralType added', async () => {
-        await expect(
-          rewardsContract.setMinterLpAllocationPoints(collateralERC20Contract.address, 10)
-        ).to.be.revertedWith('No active minter rewards')
+      await expect(
+        rewardsContract.setMinterLpAllocationPoints(
+          collateralERC20Contract.address,
+          10
+        )
+      ).to.be.revertedWith('No active minter rewards')
     })
 
     it('Reverts setMinterLpRewardsRatio when no minter collateralType added', async () => {
-        await expect(
-          rewardsContract.setMinterLpRewardsRatio(4000)
-        ).to.be.revertedWith('No active minter rewards')
+      await expect(
+        rewardsContract.setMinterLpRewardsRatio(4000)
+      ).to.be.revertedWith('No active minter rewards')
     })
 
     it('Reverts updateMinterRewardPool when no minter collateralType added', async () => {
-        await expect(
-          rewardsContract.updateMinterRewardPool(collateralERC20Contract.address)
-        ).to.be.revertedWith('No active minter rewards')
+      await expect(
+        rewardsContract.updateMinterRewardPool(collateralERC20Contract.address)
+      ).to.be.revertedWith('No active minter rewards')
     })
 
-    it('Add minter collateral type', async() => {
-        await expect(
-          rewardsContract.addMinterCollateralType(collateralERC20Contract.address, 10)
-        ).to.not.be.reverted
+    it('Add minter collateral type', async () => {
+      await expect(
+        rewardsContract.addMinterCollateralType(
+          collateralERC20Contract.address,
+          10
+        )
+      ).to.not.be.reverted
     })
 
     it('MinterLpRewards ratio is not set after deploying Rewards contract', async () => {
@@ -422,10 +440,12 @@ describe('Rewards Contract', async () => {
     })
 
     it('Reverts on adding new collateral with allocPoint = 0', async () => {
-        await expect(
-          rewardsContract
-            .addMinterCollateralType(collateralERC20Contract2.address, 0)
-        ).to.be.revertedWith('allocPoint should be greater than 0')
+      await expect(
+        rewardsContract.addMinterCollateralType(
+          collateralERC20Contract2.address,
+          0
+        )
+      ).to.be.revertedWith('allocPoint should be greater than 0')
     })
 
     it('I earn the correct number of HALO tokens per time interval on depositing collateral ERC20', async () => {
@@ -456,7 +476,6 @@ describe('Rewards Contract', async () => {
 
       await time.advanceBlock()
       console.log('\t Done sleeping. Updating Minter Rewards')
-
 
       const nextBlock = await ethers.provider.getBlockNumber()
       console.log(`Next block ${nextBlock}`)
@@ -899,3 +918,4 @@ describe('Rewards Contract', async () => {
     })
   })
 })
+describe('Rewards #depositEpochRewardAmount', async () => {})

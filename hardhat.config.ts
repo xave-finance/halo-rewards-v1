@@ -1,7 +1,6 @@
 require('dotenv').config()
 
 import { task } from 'hardhat/config'
-import { HardhatUserConfig } from 'hardhat/types'
 import '@nomiclabs/hardhat-waffle'
 import 'hardhat-gas-reporter'
 import '@nomiclabs/hardhat-ethers'
@@ -32,6 +31,15 @@ const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || ''
 module.exports = {
   solidity: '0.6.12',
   networks: {
+    mainnet: {
+      url: `https://mainnet.infura.io/v3/${INFURA_PROJECT_ID}`,
+      chainId: 1,
+      accounts: {
+        mnemonic: MNEMONIC_SEED
+      },
+      gas: 'auto',
+      gasPrice: 'auto'
+    },
     hardhat: {
       chainId: 1337,
       accounts: {
@@ -57,19 +65,19 @@ module.exports = {
       }
     },
     matic: {
-      url: "https://rpc-mumbai.maticvigil.com",
+      url: 'https://rpc-mumbai.maticvigil.com',
       chainId: 137,
       accounts: {
         mnemonic: MNEMONIC_SEED
       }
     },
     moonbase: {
-      url: "https://rpc.testnet.moonbeam.network",
+      url: 'https://rpc.testnet.moonbeam.network',
       chainId: 1287,
       accounts: {
         mnemonic: MNEMONIC_SEED
       }
-    },
+    }
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY
