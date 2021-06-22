@@ -292,38 +292,41 @@ describe('Rewards Contract', async () => {
         .to.be.reverted
     })
 
-    it('Admin can call RewardsManager.releaseEpochRewards function and will distribute the HALOHALO from Rewards Manager to Rewards contract', async () => {
-      /** Mint HALO to deployer */
-      await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
-      console.log(`
-        Minted ${RELEASED_HALO_REWARDS} HALO Tokens to deployer
-      `)
-
-      await haloTokenContract.approve(
-        rewardsManager.address,
-        RELEASED_HALO_REWARDS
-      )
-
-      const vestingRewardsRatio = 0.2 * BASIS_POINTS
-      const currentVestedRewards = (Number(RELEASED_HALO_REWARDS) * vestingRewardsRatio) / BASIS_POINTS
-      const currentRewardsReleased = Number(RELEASED_HALO_REWARDS) - currentVestedRewards
-      const currentRewardsReleasedInEther = parseEther(`${currentRewardsReleased / 10 ** 18}`)
-
-      await expect(rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS))
-        .to.emit(
-          rewardsManager,
-          'ReleasedRewardsToRewardsContractEvent'
-        )
-        .withArgs(currentRewardsReleasedInEther)
-        .to.be.not.reverted
-
-      expect(await halohaloContract.balanceOf(rewardsManager.address))
-        .to.be.equal(0, 'All HaloHalo tokens in Rewards manager should be tranferred to Rewards Contract.')
-
-      const haloHaloBalance = Number(await halohaloContract.balanceOf(rewardsContract.address))
-      expect(haloHaloBalance).to.be.equal(currentRewardsReleased,
-        '80% of the rewards amount released during first month epoch should be equal to the HaloHalo balance of Rewards contract')
-    })
+    /**
+    removed since this test was meant for the old rewards contract
+    **/
+    // it('Admin can call RewardsManager.releaseEpochRewards function and will distribute the HALOHALO from Rewards Manager to Rewards contract', async () => {
+    //   /** Mint HALO to deployer */
+    //   await haloTokenContract.mint(owner.address, RELEASED_HALO_REWARDS)
+    //   console.log(`
+    //     Minted ${RELEASED_HALO_REWARDS} HALO Tokens to deployer
+    //   `)
+    //
+    //   await haloTokenContract.approve(
+    //     rewardsManager.address,
+    //     RELEASED_HALO_REWARDS
+    //   )
+    //
+    //   const vestingRewardsRatio = 0.2 * BASIS_POINTS
+    //   const currentVestedRewards = (Number(RELEASED_HALO_REWARDS) * vestingRewardsRatio) / BASIS_POINTS
+    //   const currentRewardsReleased = Number(RELEASED_HALO_REWARDS) - currentVestedRewards
+    //   const currentRewardsReleasedInEther = parseEther(`${currentRewardsReleased / 10 ** 18}`)
+    //
+    //   await expect(rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS))
+    //     .to.emit(
+    //       rewardsManager,
+    //       'ReleasedRewardsToRewardsContractEvent'
+    //     )
+    //     .withArgs(currentRewardsReleasedInEther)
+    //     .to.not.be.reverted
+    //
+    //   expect(await halohaloContract.balanceOf(rewardsManager.address))
+    //     .to.be.equal(0, 'All HaloHalo tokens in Rewards manager should be tranferred to Rewards Contract.')
+    //
+    //   const haloHaloBalance = Number(await halohaloContract.balanceOf(rewardsContract.address))
+    //   expect(haloHaloBalance).to.be.equal(currentRewardsReleased,
+    //     '80% of the rewards amount released during first month epoch should be equal to the HaloHalo balance of Rewards contract')
+    // })
 
     /**
      * This flow needs to be followed first:

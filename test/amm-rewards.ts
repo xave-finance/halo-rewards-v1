@@ -22,7 +22,7 @@ describe("Amm Rewards", function () {
       ["rnbw", this.HaloHalo, [this.halo.address]],
     ])
     await deploy(this, [
-      ["ammRewards", this.AmmRewards, [this.halo.address]]
+      ["ammRewards", this.AmmRewards, [this.rnbw.address]]
     ])
     await deploy(this,
       [
@@ -83,7 +83,6 @@ describe("Amm Rewards", function () {
       const timestamp = (await ethers.provider.getBlock(log.blockNumber)).timestamp
       const expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(timestamp2 - timestamp)
       const pendingRewardToken = await this.ammRewards.pendingRewardToken(0, this.alice.address)
-      //expect(pendingRewardToken).to.be.equal(expectedRewardToken)
       expect(pendingRewardToken).to.be.within(
         BigNumber.from(expectedRewardToken.toString()).sub(BigNumber.from("10000000")),
         BigNumber.from(expectedRewardToken.toString()).add(BigNumber.from("10000000"))
@@ -99,7 +98,6 @@ describe("Amm Rewards", function () {
       const timestamp = (await ethers.provider.getBlock(log.blockNumber)).timestamp
       const expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(timestamp2 - timestamp)
       const pendingRewardToken = await this.ammRewards.pendingRewardToken(0, this.alice.address)
-      //expect(pendingRewardToken).to.be.equal(expectedRewardToken)
       expect(pendingRewardToken).to.be.within(
         BigNumber.from(expectedRewardToken.toString()).sub(BigNumber.from("10000000")),
         BigNumber.from(expectedRewardToken.toString()).add(BigNumber.from("10000000"))
@@ -199,12 +197,11 @@ describe("Amm Rewards", function () {
           BigNumber.from(expectedRewardToken.toString()).sub(BigNumber.from("10000000")),
           BigNumber.from(expectedRewardToken.toString()).add(BigNumber.from("10000000"))
         )
-        // await this.ammRewards.harvest(0, this.alice.address)
-        // //expect(await this.halo.balanceOf(this.alice.address)).to.be.equal(expectedRewardToken)
-        // expect(await this.halo.balanceOf(this.alice.address)).to.be.within(
-        //   BigNumber.from(expectedRewardToken.toString()).sub(BigNumber.from("10000000")),
-        //   BigNumber.from(expectedRewardToken.toString()).add(BigNumber.from("10000000"))
-        // )
+        await this.ammRewards.harvest(0, this.alice.address)
+        expect(await this.rnbw.balanceOf(this.alice.address)).to.be.within(
+          BigNumber.from(expectedRewardToken.toString()).sub(BigNumber.from("10000000")),
+          BigNumber.from(expectedRewardToken.toString()).add(BigNumber.from("10000000"))
+        )
     })
     it("Harvest with empty user balance", async function () {
       await this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO)
@@ -267,10 +264,4 @@ describe("Amm Rewards", function () {
       expect(updatedRewardTokenPerSecond).to.be.equal(changedRewardTokenPerSecond)
     })
   })
-  describe("releaseEpochRewards sets rewardTokenPerSecond", function () {
-    it("", async function () {
-
-    })
-  })
-
 })
