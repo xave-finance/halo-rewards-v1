@@ -28,10 +28,11 @@ let addr2
 let addrs
 let lpTokenPid
 const sleepTime = 5000
-const rewardTokenPerSecond = ethers.BigNumber.from('2416666666666666666')
+//const rewardTokenPerSecond = ethers.BigNumber.from('2416666666666666666')
+const rewardTokenPerSecond = ethers.BigNumber.from('77160493827160500')
 
 const EPOCH_REWARD_AMOUNT = parseEther('6264000')
-const RELEASED_HALO_REWARDS = parseEther('10000')
+const RELEASED_HALO_REWARDS = parseEther('250000')
 
 describe('Rewards Contract', async () => {
   before(async () => {
@@ -141,8 +142,8 @@ describe('Rewards Contract', async () => {
       haloTokenContract.address
     )
 
-    //await ammRewardsContract.setRewardsManager(rewardsManager.address);
-    await ammRewardsContract.setRewardTokenPerSecond(rewardTokenPerSecond)
+    await ammRewardsContract.setRewardsManager(rewardsManager.address)
+    //await ammRewardsContract.setRewardTokenPerSecond(rewardTokenPerSecond)
     await ammRewardsContract.deployed()
     console.log(`AmmRewardsContract deployed at ${ammRewardsContract.address}`)
 
@@ -286,21 +287,21 @@ describe('Rewards Contract', async () => {
      * https://app.diagrams.net/#G1bbH7UmfMyCAqtfniTJXGMItGWS-AaOOR
      * Specifically Rewards Manager uses Rewards.depositEpochRewardAmount()
      */
-    it('Epoch Reward Amount is set to the value provided if sender is Rewards Manager contract', async () => {
-      /** Stimulate allocating HALO tokens for Epoch Reward Amount */
-      await haloTokenContract.mint(owner.address, EPOCH_REWARD_AMOUNT)
-      await haloTokenContract.approve(
-        halohaloContract.address,
-        EPOCH_REWARD_AMOUNT
-      )
-      await halohaloContract.enter(EPOCH_REWARD_AMOUNT)
-      await halohaloContract.approve(
-        ammRewardsContract.address,
-        EPOCH_REWARD_AMOUNT
-      )
-      await halohaloContract.transfer(ammRewardsContract.address, EPOCH_REWARD_AMOUNT)
-
-    })
+    // it('Epoch Reward Amount is set to the value provided if sender is Rewards Manager contract', async () => {
+    //   /** Stimulate allocating HALO tokens for Epoch Reward Amount */
+    //   await haloTokenContract.mint(owner.address, EPOCH_REWARD_AMOUNT)
+    //   await haloTokenContract.approve(
+    //     halohaloContract.address,
+    //     EPOCH_REWARD_AMOUNT
+    //   )
+    //   await halohaloContract.enter(EPOCH_REWARD_AMOUNT)
+    //   await halohaloContract.approve(
+    //     ammRewardsContract.address,
+    //     EPOCH_REWARD_AMOUNT
+    //   )
+    //   await halohaloContract.transfer(ammRewardsContract.address, EPOCH_REWARD_AMOUNT)
+    //
+    // })
   })
 
   describe('When I supply liquidity to an AMM, I am able to receive my proportion of HALO rewards. When I remove my AMM stake token from the Rewards contract, I stop earning HALO', () => {
@@ -351,8 +352,8 @@ describe('Rewards Contract', async () => {
       )
       const expectedUnclaimedHaloPoolRewards = BigNumber.from(rewardTokenPerSecond).mul(updateTxTs - depositPoolTxTs)
       expect(actualUnclaimedHaloPoolRewards).to.be.within(
-        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).sub(BigNumber.from("10000")),
-        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).add(BigNumber.from("10000"))
+        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).sub(BigNumber.from("10000000")),
+        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).add(BigNumber.from("10000000"))
       )
     })
 
