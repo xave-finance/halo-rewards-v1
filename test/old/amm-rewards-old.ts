@@ -28,8 +28,7 @@ let addr2
 let addrs
 let lpTokenPid
 const sleepTime = 5000
-//const rewardTokenPerSecond = ethers.BigNumber.from('2416666666666666666')
-const rewardTokenPerSecond = ethers.BigNumber.from('77160493827160500')
+const rewardTokenPerSecond = ethers.BigNumber.from('77160493827160493')
 
 const EPOCH_REWARD_AMOUNT = parseEther('6264000')
 const RELEASED_HALO_REWARDS = parseEther('250000')
@@ -143,7 +142,6 @@ describe('Rewards Contract', async () => {
     )
 
     await ammRewardsContract.setRewardsManager(rewardsManager.address)
-    //await ammRewardsContract.setRewardTokenPerSecond(rewardTokenPerSecond)
     await ammRewardsContract.deployed()
     console.log(`AmmRewardsContract deployed at ${ammRewardsContract.address}`)
 
@@ -265,18 +263,13 @@ describe('Rewards Contract', async () => {
       const currentVestedRewards = (Number(RELEASED_HALO_REWARDS) * vestingRewardsRatio) / BASIS_POINTS
       const currentRewardsReleased = Number(RELEASED_HALO_REWARDS) - currentVestedRewards
       const currentRewardsReleasedInEther = parseEther(`${currentRewardsReleased / 10 ** 18}`)
-      try {
-          await expect(rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS))
-            .to.emit(
-              rewardsManager,
-              'ReleasedRewardsToRewardsContractEvent'
-            )
-            .withArgs(currentRewardsReleasedInEther)
-            .to.not.be.reverted
-      }
-      catch (e) {
-          console.log(e)
-      }
+      await expect(rewardsManager.releaseEpochRewards(RELEASED_HALO_REWARDS))
+        .to.emit(
+          rewardsManager,
+          'ReleasedRewardsToRewardsContractEvent'
+        )
+        .withArgs(currentRewardsReleasedInEther)
+        .to.not.be.reverted
 
       //console.log(`Halohalo balance: ${Number(await halohaloContract.balanceOf(ammRewardsContract.address))}`)
       expect(await halohaloContract.balanceOf(rewardsManager.address))
@@ -356,9 +349,10 @@ describe('Rewards Contract', async () => {
         owner.address
       )
       const expectedUnclaimedHaloPoolRewards = BigNumber.from(rewardTokenPerSecond).mul(updateTxTs - depositPoolTxTs)
+      // expect(actualUnclaimedHaloPoolRewards).to.be.equal(expectedUnclaimedHaloPoolRewards)
       expect(actualUnclaimedHaloPoolRewards).to.be.within(
-        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).sub(BigNumber.from("10000000")),
-        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).add(BigNumber.from("10000000"))
+        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).sub(BigNumber.from("1000")),
+        BigNumber.from(expectedUnclaimedHaloPoolRewards.toString()).add(BigNumber.from("1000"))
       )
     })
 
