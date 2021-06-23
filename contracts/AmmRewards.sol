@@ -276,8 +276,8 @@ contract AmmRewards is ReentrancyGuard, Ownable {
         emit EmergencyWithdraw(msg.sender, pid, amount, to);
     }
 
-    function setRewardsManager(address rewardsManager_) public onlyOwner {
-        rewardsManager = rewardsManager_;
+    function setRewardsManager(address _rewardsManager) public onlyOwner {
+        rewardsManager = _rewardsManager;
     }
 
     modifier onlyOwnerOrRewardsManager() {
