@@ -19,9 +19,10 @@
     "deploy:matic": "npx hardhat run scripts/deployAllMatic.ts ",
     "deploy:moonbase": "npx hardhat run scripts/deployAllMoonbase.ts --network \"moonbase\"",
     "about:recompile": "echo 'Sometimes verification doesn't work off the bat and needs a recompile'",
-    "recompile": "rm -rf artifacts && rm -rf cache && npx hardhat compile"
+    "recompile": "rm -rf artifacts && rm -rf cache && npx hardhat compile",
     "call:triggerEpochRewards-maticTestnet": "npx hardhat run scripts/triggerEpochRewards.ts --network \"maticTestnet\"",
     "call:updateAMMPoolRewards-maticTestnet": "npx hardhat run scripts/updateAMMPoolRewards.ts --network \"maticTestnet\"",
+    "node": "npx hardhat node"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
