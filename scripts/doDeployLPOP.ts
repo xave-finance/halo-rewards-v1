@@ -27,7 +27,7 @@ const doDeployLPOP = async (
   const HaloToken = await ethers.getContractFactory('LPOP')
   const haloTokenContract = await HaloToken.deploy('Lollipop Token', 'LPOP')
   await haloTokenContract.deployed()
-  console.log('haloTokenContract deployed at: ', haloTokenContract.address)
+  console.log('Lollipop Token deployed at: ', haloTokenContract.address)
 
   // Mint initial Halo tokens
   await haloTokenContract.mint(deployer.address, initSupply)
