@@ -6,6 +6,7 @@ import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {IRewards} from './interfaces/IRewards.sol';
+import {AmmRewards} from './AmmRewards.sol';
 import './HaloHalo.sol';
 
 contract RewardsManager is Ownable {
@@ -110,6 +111,7 @@ contract RewardsManager is Ownable {
     uint256 currentHaloHaloBalance = halohalo.balanceOf(address(this));
 
     require(currentHaloHaloBalance > 0, 'No HALOHALO in contract');
+    AmmRewards(rewardsContract).setRewardTokenPerSecond(currentHaloHaloBalance.div(2592000));
     halohalo.safeTransfer(rewardsContract, currentHaloHaloBalance);
     ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
   }
