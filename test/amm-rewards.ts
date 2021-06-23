@@ -239,8 +239,13 @@ describe("Amm Rewards", function () {
       const prevRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
       await this.halo.mint(this.alice.address, getBigNumber(250000))
       await this.rewardsManager.releaseEpochRewards(getBigNumber(250000))
+      const vestingContractTotalSupply = await this.rnbw.totalSupply()
+      const vestingContractHaloBalance = await this.halo.balanceOf(this.rnbw.address)
+      const expectedUpdatedTokenPerSecond =
+        getBigNumber(250000).mul(8000).div(10000).mul(vestingContractTotalSupply).div(vestingContractHaloBalance).div(2592000)
       const updatedRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
-      expect(prevRewardTokenPerSecond).to.not.be.equal(updatedRewardTokenPerSecond)
+      expect(updatedRewardTokenPerSecond).to.not.be.equal(prevRewardTokenPerSecond)
+      expect(updatedRewardTokenPerSecond).to.be.equal(expectedUpdatedTokenPerSecond)
     })
     it("Owner should be able to set rewardTokenPerSecond", async function () {
       const prevRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
