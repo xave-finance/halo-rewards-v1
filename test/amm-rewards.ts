@@ -4,8 +4,10 @@ const { BigNumber } = require("ethers")
 import {ethers} from "hardhat"
 
 const initialVestingRatio = 0.2 * 10**4
-const rewardTokenPerSecond = "2416666666666666666"
-const changedRewardTokenPerSecond = "1964750000000000000"
+//const rewardTokenPerSecond = "2416666666666666666"
+//const changedRewardTokenPerSecond = "1964750000000000000"
+const rewardTokenPerSecond = "77160493827160493"
+const changedRewardTokenPerSecond = "55160000000000000"
 
 describe("Amm Rewards", function () {
   before(async function () {
@@ -20,7 +22,7 @@ describe("Amm Rewards", function () {
       ["rnbw", this.HaloHalo, [this.halo.address]],
     ])
     await deploy(this, [
-      ["ammRewards", this.AmmRewards, [this.halo.address]]
+      ["ammRewards", this.AmmRewards, [this.rnbw.address]]
     ])
     await deploy(this,
       [
@@ -30,10 +32,12 @@ describe("Amm Rewards", function () {
         ["dummy", this.CollateralERC20, ["Dummy", "DummyT"]]
       ])
 
-    await this.halo.mint(this.ammRewards.address, getBigNumber(6000000))
+    await this.halo.mint(this.alice.address, getBigNumber(250000))
     await this.lpt.mint(this.alice.address, getBigNumber(10000))
     await this.lpt.approve(this.ammRewards.address, getBigNumber(10000))
-    await this.ammRewards.setRewardTokenPerSecond(rewardTokenPerSecond)
+    await this.ammRewards.setRewardsManager(this.rewardsManager.address)
+    await this.halo.approve(this.rewardsManager.address, getBigNumber(100000000))
+    await this.rewardsManager.releaseEpochRewards(getBigNumber(250000))
     await this.lpt.transfer(this.bob.address, getBigNumber(1))
   })
 
@@ -183,7 +187,7 @@ describe("Amm Rewards", function () {
         const expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(timestamp2 - timestamp)
         expect((await this.ammRewards.userInfo(0, this.alice.address)).rewardDebt).to.be.equal("-"+expectedRewardToken)
         await this.ammRewards.harvest(0, this.alice.address)
-        expect(await this.halo.balanceOf(this.alice.address)).to.be.equal(expectedRewardToken)
+        expect(await this.rnbw.balanceOf(this.alice.address)).to.be.equal(expectedRewardToken)
     })
     it("Harvest with empty user balance", async function () {
       await this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO)
@@ -224,6 +228,31 @@ describe("Amm Rewards", function () {
     })
     it("Owner should be able to set rewardTokenPerSecond", async function () {
       await expect(this.ammRewards.connect(this.alice).setRewardTokenPerSecond(changedRewardTokenPerSecond)).to.not.be.reverted
+    })
+  })
+
+  describe("Set rewardTokenPerSecond", function () {
+    it("Non-owner should not be able to set rewardTokenPerSecond", async function () {
+      await expect(this.ammRewards.connect(this.bob).setRewardTokenPerSecond(rewardTokenPerSecond)).to.be.reverted
+    })
+    it("RewardsManager should change rewardTokenPerSecond", async function () {
+      const prevRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
+      await this.halo.mint(this.alice.address, getBigNumber(250000))
+      await this.rewardsManager.releaseEpochRewards(getBigNumber(250000))
+      const vestingContractTotalSupply = await this.rnbw.totalSupply()
+      const vestingContractHaloBalance = await this.halo.balanceOf(this.rnbw.address)
+      const expectedUpdatedTokenPerSecond =
+        getBigNumber(250000).mul(8000).div(10000).mul(vestingContractTotalSupply).div(vestingContractHaloBalance).div(2592000)
+      const updatedRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
+      expect(updatedRewardTokenPerSecond).to.not.be.equal(prevRewardTokenPerSecond)
+      expect(updatedRewardTokenPerSecond).to.be.equal(expectedUpdatedTokenPerSecond)
+    })
+    it("Owner should be able to set rewardTokenPerSecond", async function () {
+      const prevRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
+      await this.ammRewards.setRewardTokenPerSecond(changedRewardTokenPerSecond)
+      const updatedRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
+      expect(prevRewardTokenPerSecond).to.not.be.equal(updatedRewardTokenPerSecond)
+      expect(updatedRewardTokenPerSecond).to.be.equal(changedRewardTokenPerSecond)
     })
   })
 })

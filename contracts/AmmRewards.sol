@@ -57,6 +57,8 @@ contract AmmRewards is ReentrancyGuard, Ownable {
 
     uint256 private epochRewardAmount;
 
+    address public rewardsManager;
+
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount, address indexed to);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount, address indexed to);
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount, address indexed to);
@@ -107,7 +109,7 @@ contract AmmRewards is ReentrancyGuard, Ownable {
 
     /// @notice Sets the rewardToken per second to be distributed. Can only be called by the owner.
     /// @param rewardTokenPerSecond_ The amount of RewardToken to be distributed per second
-    function setRewardTokenPerSecond(uint256 rewardTokenPerSecond_) external onlyOwner {
+    function setRewardTokenPerSecond(uint256 rewardTokenPerSecond_) external onlyOwnerOrRewardsManager {
         rewardTokenPerSecond = rewardTokenPerSecond_;
         emit LogRewardTokenPerSecond(rewardTokenPerSecond);
     }
@@ -274,4 +276,13 @@ contract AmmRewards is ReentrancyGuard, Ownable {
         emit EmergencyWithdraw(msg.sender, pid, amount, to);
     }
 
+    function setRewardsManager(address _rewardsManager) public onlyOwner {
+        rewardsManager = _rewardsManager;
+    }
+
+    modifier onlyOwnerOrRewardsManager() {
+        require(rewardsManager != address(0), "Rewards Manager not set");
+        require(owner() == msg.sender || msg.sender == rewardsManager, "Caller is not owner or rewards manager");
+        _;
+    }
 }
