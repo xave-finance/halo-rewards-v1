@@ -10,7 +10,7 @@ const INITIAL_MINT = 10 ** 6
 const zeroAddress = '0x0000000000000000000000000000000000000000'
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
 
-const deployAllAmmRewards = async (network, verify) => {
+const deployAllAmmRewards = async (network, verify, rnbwTokenAddress) => {
   const [deployer] = await ethers.getSigners()
   console.log('Deploying with account: ', deployer.address)
 
@@ -26,9 +26,7 @@ const deployAllAmmRewards = async (network, verify) => {
    * Deploy HeloChest contract
    */
   const HaloHalo = await ethers.getContractFactory('HaloHalo')
-  const HaloHaloContract = await HaloHalo.deploy(
-    '0x83eA0ECac2F3d3C18F4a43774A146ED1097acC57'
-  )
+  const HaloHaloContract = await HaloHalo.deploy(rnbwTokenAddress)
   await HaloHaloContract.deployed()
   console.log('halohaloContract deployed at: ', HaloHaloContract.address)
 
@@ -52,6 +50,13 @@ const deployAllAmmRewards = async (network, verify) => {
   let ammLpPools = []
 
   switch (network) {
+    case 'Mainnet':
+      // Current LP Supported
+      ammLpPools = [
+        ['0x3e8e036ddfd310b0838d3cc881a9fa827778845d', 10], // Uniswap RNBW:ETH Pool
+        ['0x309411c77cf68d5662c0d4df68fb60f7e2df3b65', 10] // Balancer - THKD:USDC
+      ]
+      break
     case 'BSCTestnet':
       // Hardcode Sushi LP Token
       ammLpPools = [
@@ -73,7 +78,6 @@ const deployAllAmmRewards = async (network, verify) => {
       ]
       break
     case 'Matic': {
-      // break // ammLpPools = [['0xc4e595acDD7d12feC385E5dA5D43160e8A0bAC0E', 10]] // Sushi LP Token
       const LpToken = await ethers.getContractFactory('LpToken')
       const lpTokenContract = await LpToken.deploy('SUSHI/xSGD', 'SLP')
       await lpTokenContract.deployed()
@@ -119,7 +123,7 @@ const deployAllAmmRewards = async (network, verify) => {
     vestingRewardsRatio,
     ammRewardsContract.address,
     HaloHaloContract.address,
-    '0x83eA0ECac2F3d3C18F4a43774A146ED1097acC57'
+    rnbwTokenAddress
   )
   console.log(
     'rewardsManager deployed at contract address ',
@@ -155,7 +159,7 @@ const deployAllAmmRewards = async (network, verify) => {
     console.log('verifying halohaloContract')
     await hre.run('verify:verify', {
       address: HaloHaloContract.address,
-      constructorArguments: ['0x83eA0ECac2F3d3C18F4a43774A146ED1097acC57']
+      constructorArguments: [rnbwTokenAddress]
     })
 
     // auto verify RewardsManager contract
@@ -166,7 +170,7 @@ const deployAllAmmRewards = async (network, verify) => {
         vestingRewardsRatio,
         ammRewardsContract.address,
         HaloHaloContract.address,
-        '0x83eA0ECac2F3d3C18F4a43774A146ED1097acC57'
+        rnbwTokenAddress
       ]
     })
   }

@@ -8,13 +8,20 @@ const hre = require('hardhat')
 const INITIAL_MINT = 10 ** 6
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
 
-const doDeployAmmRewards = async (network, haloHaloAddress, verify) => {
+export const doDeployAmmRewards = async (network, haloHaloAddress, verify) => {
   const [deployer] = await ethers.getSigners()
   console.log('Deploying with account: ', deployer.address)
 
   let ammLpPools = []
 
   switch (network) {
+    case 'Mainnet':
+      // Current LP Supported
+      ammLpPools = [
+        ['0x3e8e036ddfd310b0838d3cc881a9fa827778845d', 10], // Uniswap RNBW:ETH Pool
+        ['0x309411c77cf68d5662c0d4df68fb60f7e2df3b65', 10] // Balancer - THKD:USDC
+      ]
+      break
     case 'BSCTestnet':
       // Hardcode Sushi LP Token
       ammLpPools = [
