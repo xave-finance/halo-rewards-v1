@@ -1,7 +1,8 @@
 {
   "name": "hardhat-project",
   "scripts": {
-    "test": "npx hardhat --network localhost test",
+    "test": "npx hardhat --network localhost test ",
+    "deploy-verify:mainnet": "npx hardhat run scripts/deployVerifyAllMainnet.ts --network \"mainnet\"",
     "deploy:hardhat": "npx hardhat run scripts/deployAllLocal.ts",
     "deploy:local": "npx hardhat run scripts/deployAllLocal.ts --network \"localhost\"",
     "deployAll:kovan": "npx hardhat run scripts/deployAllKovan.ts --network \"kovan\"",
@@ -13,15 +14,15 @@
     "verify": "npx hardhat verify",
     "about:verify": "echo 'verifies a predeployed unverified contract. sample usage: yarn/npm run verify -- --network mainnet [DEPLOYED_CONTRACT_ADDRESS] [CTOR ARG 1] [CTOR ARG 2] [CTOR ARG N]'",
     "mint:halo-kovan": "npx hardhat run scripts/deployHalo.ts --network \"kovan\"",
-    "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployOnlyRewardsContract.ts --network \"kovan\"",
+    "deploy:onlyrewards-kovan": "npx hardhat run scripts/deployAmmRewards.ts --network \"kovan\"",
     "deploy:bscTestnet": "npx hardhat run scripts/deployAllBscTestnet.ts --network \"bscTestnet\"",
     "deploy-verify:bscTestnet": "npx hardhat run scripts/deployVerifyAllBscTestnet.ts --network \"bscTestnet\"",
     "deploy:matic": "npx hardhat run scripts/deployAllMatic.ts ",
     "deploy:moonbase": "npx hardhat run scripts/deployAllMoonbase.ts --network \"moonbase\"",
     "about:recompile": "echo 'Sometimes verification doesn't work off the bat and needs a recompile'",
     "recompile": "rm -rf artifacts && rm -rf cache && npx hardhat compile",
-    "call:triggerEpochRewards-maticTestnet": "npx hardhat run scripts/triggerEpochRewards.ts --network \"maticTestnet\"",
-    "call:updateAMMPoolRewards-maticTestnet": "npx hardhat run scripts/updateAMMPoolRewards.ts --network \"maticTestnet\"",
+    "call:triggerEpochRewards-maticTestnet": "npx hardhat run scripts/contractCalls/triggerEpochRewards.ts --network \"maticTestnet\"",
+    "call:updateAMMPoolRewards-maticTestnet": "npx hardhat run scripts/contractCalls/updateAMMPoolRewards.ts --network \"maticTestnet\"",
     "node": "npx hardhat node"
   },
   "devDependencies": {
