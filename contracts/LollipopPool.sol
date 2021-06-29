@@ -6,7 +6,7 @@ import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 
-contract HaloHalo is ERC20('Rainbow Pool', 'xRNBW') {
+contract LollipopPool is ERC20('Lollipop Pool', 'xLPOP') {
   using SafeMath for uint256;
   IERC20 public halo;
   uint256 public constant DECIMALS = 1e18;
@@ -56,7 +56,7 @@ contract HaloHalo is ERC20('Rainbow Pool', 'xRNBW') {
 
   function getCurrentHaloHaloPrice() public view returns (uint256) {
     uint256 totalShares = totalSupply();
-    require(totalShares > 0, 'No HALOHALO supply');
+    require(totalShares > 0, 'No xLPOP supply');
     // convert to decimals to get answer in wei
 
     uint256 haloHaloPrice =
