@@ -37,9 +37,7 @@ module.exports = {
       chainId: 1,
       accounts: {
         mnemonic: MNEMONIC_SEED
-      },
-      gas: 'auto',
-      gasPrice: 'auto'
+      }
     },
     hardhat: {
       chainId: 1337,

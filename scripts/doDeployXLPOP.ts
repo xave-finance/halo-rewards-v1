@@ -2,17 +2,17 @@ import { ethers } from 'hardhat'
 const hre = require('hardhat')
 import sleep from './util/sleep'
 
-const doDeployVesting = async (rnbwTokenAddress, verify) => {
+const doDeployXLPOP = async (haloTokenAddress, verify) => {
   const [deployer] = await ethers.getSigners()
-  console.log('------------- DEPLOY HaloHalo.sol -------------')
+  console.log('------------- DEPLOY LollipopPool.sol -------------')
   console.log('Deploying Vesting contract with account: ', deployer.address)
-  console.log('Passing Halo ERC20 address to ctor: ', rnbwTokenAddress)
+  console.log('Passing LPOP ERC20 address to ctor: ', haloTokenAddress)
 
   /**
    * Deploy Vesting contract
    */
-  const VestingContractFactory = await ethers.getContractFactory('HaloHalo')
-  const VestingContract = await VestingContractFactory.deploy(rnbwTokenAddress)
+  const VestingContractFactory = await ethers.getContractFactory('LollipopPool')
+  const VestingContract = await VestingContractFactory.deploy(haloTokenAddress)
   await VestingContract.deployed()
   console.log('Vesting contract deployed at: ', VestingContract.address)
 
@@ -27,13 +27,15 @@ const doDeployVesting = async (rnbwTokenAddress, verify) => {
     console.log('verifying vesting contract')
     await hre.run('verify:verify', {
       address: VestingContract.address,
-      constructorArguments: [rnbwTokenAddress]
+      constructorArguments: [haloTokenAddress]
     })
   }
 
-  console.log('------------- DONE DEPLOYING Vesting Contract -------------')
+  console.log(
+    '------------- DONE DEPLOYING LollipopPool Contract -------------'
+  )
 
   return VestingContract.address
 }
 
-export default doDeployVesting
+export default doDeployXLPOP

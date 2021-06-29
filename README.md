@@ -11,7 +11,7 @@ yarn install
 
 ### Environment Variables
 
-Refer to our [env example](./.env.example) file in project root. We have dev accounts / mnemonics in our 1Password for each var listed
+Refer to our [env example](./.env.example) file in project root.
 
 ### Running Tests
 
