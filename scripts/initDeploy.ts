@@ -41,6 +41,20 @@ const deployAll = async (network, verify) => {
   let ammLpPools = []
 
   switch (network) {
+    case 'Mainnet':
+      // Current LP Supported
+      ammLpPools = [
+        ['0x3e8e036ddfd310b0838d3cc881a9fa827778845d', 10], // Uniswap RNBW:ETH Pool
+        ['0x309411c77cf68d5662c0d4df68fb60f7e2df3b65', 10] // Balancer - THKD:USDC
+      ]
+      break
+    case 'BSCTestnet':
+      // Hardcode Sushi LP Token
+      ammLpPools = [
+        ['0x71e3c96C21D734bFA64D652EA99611Aa64F7D9F6', 10],
+        ['0x9A0eeceDA5c0203924484F5467cEE4321cf6A189', 10]
+      ]
+      break
     case 'Kovan':
       // Hardcode kovan balancer pools
       ammLpPools = [
@@ -54,16 +68,28 @@ const deployAll = async (network, verify) => {
         ['0x9C303C18397cB5Fa62D9e68a0C7f2Cc6e00F0066', 10]
       ]
       break
-    case 'Matic':
-      // Sushi LP Token
-      ammLpPools = [['0xc4e595acDD7d12feC385E5dA5D43160e8A0bAC0E', 10]]
+    case 'Matic': {
+      const LpToken = await ethers.getContractFactory('LpToken')
+      const lpTokenContract = await LpToken.deploy('SUSHI/xSGD', 'SLP')
+      await lpTokenContract.deployed()
+      console.log(`lptoken deployed at ${lpTokenContract.address}`)
+      await lpTokenContract.mint(
+        deployer.address,
+        ethers.utils.parseEther((100 * INITIAL_MINT).toString())
+      )
+      ammLpPools = [[lpTokenContract.address, 10]]
       break
+    }
     case 'Moonbase':
     case 'Local': {
       const LpToken = await ethers.getContractFactory('LpToken')
       const lpTokenContract = await LpToken.deploy('LpToken', 'LPT')
       await lpTokenContract.deployed()
       console.log('lptoken deployed at ', lpTokenContract.address)
+      await lpTokenContract.mint(
+        deployer.address,
+        ethers.utils.parseEther((100 * INITIAL_MINT).toString())
+      )
       ammLpPools = [[lpTokenContract.address, 10]]
       break
     }

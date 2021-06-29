@@ -1,9 +1,14 @@
+import {
+  AMM_REWARDS_CONTRACT_ADDRESS,
+  HALO_TOKEN_ADDRESS,
+  VESTING_ADDRESS
+} from './constants/addresses'
 import doDeployRewardsManager from './doDeployRewardsManager'
 
 doDeployRewardsManager(
-  process.env.HALO_TOKEN_ADDRESS,
-  process.env.AMM_REWARDS_CONTRACT_ADDRESS,
-  process.env.HALOHALO_CONTRACT_ADDRESS,
+  HALO_TOKEN_ADDRESS,
+  AMM_REWARDS_CONTRACT_ADDRESS,
+  VESTING_ADDRESS,
   true
 )
   .then(() => process.exit(0))

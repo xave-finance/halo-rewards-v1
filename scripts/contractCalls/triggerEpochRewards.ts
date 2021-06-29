@@ -1,26 +1,27 @@
 import { ethers } from 'hardhat'
 import { formatEther, parseEther } from 'ethers/lib/utils'
+import { REWARDS_TO_DEPLOY } from '../constants'
+import {
+  HALO_TOKEN_ADDRESS,
+  REWARDS_MANAGER_CONTRACT_ADDRESS
+} from '../constants/addresses'
 
 const triggerEpochRewards = async () => {
   // We get the contract to deploy
   const [deployer] = await ethers.getSigners()
-  const REWARDS_TO_DEPLOY = 100000
 
   // Deployer information
   console.log('Deployer Address:', deployer.address)
   console.log('Deployer balance:', formatEther(await deployer.getBalance()))
 
-  const rewardsManagerContractAddress =
-    '0xC37ed3A97c99a4fD1f2627d83f5a0b4BC2AF4156'
-
   const haloTokenContract = await ethers.getContractAt(
     'HaloToken',
-    '0x24b773b2ADBa437b9920BD354F6718a77dbc76af'
+    HALO_TOKEN_ADDRESS
   )
 
   const currentHaloBalance = await haloTokenContract.balanceOf(deployer.address)
 
-  console.log('Current Balance: ', formatEther(currentHaloBalance))
+  console.log(`Current Balance:  ${formatEther(currentHaloBalance)}`)
 
   if (+formatEther(currentHaloBalance) < REWARDS_TO_DEPLOY) {
     const mintTxn = await haloTokenContract.mint(
@@ -34,7 +35,7 @@ const triggerEpochRewards = async () => {
 
   // Rewards Manager
   await haloTokenContract.approve(
-    rewardsManagerContractAddress,
+    REWARDS_MANAGER_CONTRACT_ADDRESS,
     ethers.constants.MaxUint256
   )
   console.log('Approved!')
@@ -42,7 +43,7 @@ const triggerEpochRewards = async () => {
   // Rewards constants
   const rewardsManager = await ethers.getContractAt(
     'RewardsManager',
-    rewardsManagerContractAddress
+    REWARDS_MANAGER_CONTRACT_ADDRESS
   )
 
   const txn = await rewardsManager.releaseEpochRewards(

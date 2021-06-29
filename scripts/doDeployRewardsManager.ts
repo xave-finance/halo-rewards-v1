@@ -8,17 +8,22 @@ const sleep = (ms) => new Promise((res) => setTimeout(res, ms))
 
 const doDeployRewardsManager = async (
   rnbwAddress,
-  ammRewardsContract,
+  ammRewardsContractAddress,
   haloHaloAddress,
   verify
 ) => {
   const [deployer] = await ethers.getSigners()
   console.log(`Deploying with account: ${deployer.address}`)
 
+  const ammRewardsContract = await ethers.getContractAt(
+    'AmmRewards',
+    ammRewardsContractAddress
+  )
+
   const RewardsManager = await ethers.getContractFactory('RewardsManager')
   const rewardsManager = await RewardsManager.deploy(
     vestingRewardsRatio,
-    ammRewardsContract,
+    ammRewardsContractAddress,
     haloHaloAddress,
     rnbwAddress
   )
@@ -26,6 +31,9 @@ const doDeployRewardsManager = async (
     'rewardsManager deployed at contract address ',
     rewardsManager.address
   )
+
+  await ammRewardsContract.setRewardsManager(rewardsManager.address)
+  console.log('Rewards manager is set.')
 
   if (verify === true) {
     console.log(
@@ -40,7 +48,7 @@ const doDeployRewardsManager = async (
       address: rewardsManager.address,
       constructorArguments: [
         vestingRewardsRatio,
-        ammRewardsContract,
+        ammRewardsContractAddress,
         haloHaloAddress,
         rnbwAddress
       ]

@@ -1,6 +1,7 @@
+import { NETWORK, VESTING_ADDRESS } from './constants/addresses'
 import { doDeployAmmRewards } from './doDeployAmmRewards'
 
-doDeployAmmRewards(process.env.NETWORK, process.env.HALOHALO_ADDRESS, true)
+doDeployAmmRewards(NETWORK, VESTING_ADDRESS, true)
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)
