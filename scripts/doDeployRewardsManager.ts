@@ -13,7 +13,7 @@ const doDeployRewardsManager = async (
   verify
 ) => {
   const [deployer] = await ethers.getSigners()
-  console.log('Deploying with account: ', deployer.address)
+  console.log(`Deploying with account: ${deployer.address}`)
 
   const RewardsManager = await ethers.getContractFactory('RewardsManager')
   const rewardsManager = await RewardsManager.deploy(
