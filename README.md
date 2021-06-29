@@ -41,7 +41,7 @@ Change the apiKey in hardhat config to ETHERSCAN_API_KEY if etherscan and BSCSCA
 
 ### Rewards and Rewards Management Calling
 
-If chain is not able to support verification like etherscan, you can use `triggerEpochRewards.ts` and `updateAMMPoolRewards.ts`. Make sure to change the contract addresses deployed on your target network. As of writing, only matic testnet scripts are added in `package.json`. Please use the same command format should you add one
+If chain is not able to support verification like etherscan, you can use `triggerEpochRewards.ts` and `updateAMMPoolRewards.ts`. Make sure to change the contract addresses deployed on your target network. As of writing, only matic testnet scripts are added in `package.json`. Please use the same command format should you add one.
 
 - `npm/yarn run call:triggerEpochRewards-maticTestnet` : trigger an epoch in the rewards manager contract
 - `npm/yarn run updateAMMPoolRewards-maticTestnet` : update AMM Pool rewards, usually you do need to trigger this as this is also triggered when staking and unstaking
