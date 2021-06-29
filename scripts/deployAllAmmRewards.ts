@@ -81,7 +81,7 @@ const deployAllAmmRewards = async (network, verify, rnbwTokenAddress) => {
       const LpToken = await ethers.getContractFactory('LpToken')
       const lpTokenContract = await LpToken.deploy('SUSHI/xSGD', 'SLP')
       await lpTokenContract.deployed()
-      console.log('lptoken deployed at ', lpTokenContract.address)
+      console.log(`lptoken deployed at ${lpTokenContract.address}`)
       await lpTokenContract.mint(
         deployer.address,
         ethers.utils.parseEther((100 * INITIAL_MINT).toString())
