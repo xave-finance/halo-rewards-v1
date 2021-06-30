@@ -1,6 +1,7 @@
+import { RNBW_TOKEN_ADDRESS } from './constants/addresses'
 import deployAllAmmRewards from './deployAllAmmRewards'
 
-deployAllAmmRewards('Kovan', true)
+deployAllAmmRewards('Kovan', true, RNBW_TOKEN_ADDRESS['kovan'])
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

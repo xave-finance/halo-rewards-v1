@@ -1,6 +1,5 @@
+import { INITIAL_MINT } from './constants'
 import doDeployHalo from './doDeployHalo'
-
-const INITIAL_MINT = 10 ** 8
 
 doDeployHalo(INITIAL_MINT, true)
   .then(() => process.exit(0))

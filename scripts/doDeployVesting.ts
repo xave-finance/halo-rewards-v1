@@ -2,17 +2,17 @@ import { ethers } from 'hardhat'
 const hre = require('hardhat')
 import sleep from './util/sleep'
 
-const doDeployVesting = async (haloTokenAddress, verify) => {
+const doDeployVesting = async (rnbwTokenAddress, verify) => {
   const [deployer] = await ethers.getSigners()
   console.log('------------- DEPLOY HaloHalo.sol -------------')
   console.log('Deploying Vesting contract with account: ', deployer.address)
-  console.log('Passing Halo ERC20 address to ctor: ', haloTokenAddress)
+  console.log('Passing Halo ERC20 address to ctor: ', rnbwTokenAddress)
 
   /**
    * Deploy Vesting contract
    */
   const VestingContractFactory = await ethers.getContractFactory('HaloHalo')
-  const VestingContract = await VestingContractFactory.deploy(haloTokenAddress)
+  const VestingContract = await VestingContractFactory.deploy(rnbwTokenAddress)
   await VestingContract.deployed()
   console.log('Vesting contract deployed at: ', VestingContract.address)
 
@@ -27,7 +27,7 @@ const doDeployVesting = async (haloTokenAddress, verify) => {
     console.log('verifying vesting contract')
     await hre.run('verify:verify', {
       address: VestingContract.address,
-      constructorArguments: [haloTokenAddress]
+      constructorArguments: [rnbwTokenAddress]
     })
   }
 
