@@ -130,6 +130,9 @@ const deployAllAmmRewards = async (network, verify, rnbwTokenAddress) => {
     rewardsManager.address
   )
 
+  await ammRewardsContract.setRewardsManager(rewardsManager.address)
+  console.log('Rewards manager is set.')
+
   for (var pool of ammLpPools) {
     await ammRewardsContract.add(pool[1], pool[0], zeroAddress)
   }
