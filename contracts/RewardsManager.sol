@@ -99,7 +99,7 @@ contract RewardsManager is Ownable {
 
   function transferToHaloHaloContract(uint256 _amount) internal {
     halo.transfer(haloHaloContract, _amount);
-    SentVestedRewardsEvent(_amount);
+    emit SentVestedRewardsEvent(_amount);
   }
 
   function convertAndTransferToRewardsContract(uint256 _amount) internal {
@@ -110,6 +110,6 @@ contract RewardsManager is Ownable {
     require(currentHaloHaloBalance > 0, 'No HALOHALO in contract');
     AmmRewards(rewardsContract).setRewardTokenPerSecond(currentHaloHaloBalance.div(2592000));
     HaloHalo(haloHaloContract).safeTransfer(rewardsContract, currentHaloHaloBalance);
-    ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
+    emit ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
   }
 }
