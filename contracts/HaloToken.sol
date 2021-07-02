@@ -31,7 +31,7 @@ contract HaloToken is ERC20, ERC20Burnable, Ownable {
     function setCapped() external onlyOwner {
         require(isCappedFuncLocked == false, "Cannot execute setCapped more than once.");
         canMint = false;
-        isCappedFuncLocked = true;   
+        isCappedFuncLocked = true;
     }
 
     /// @notice Creates halo token, increasing total supply.

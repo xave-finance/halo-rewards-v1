@@ -50,7 +50,7 @@ contract HaloHalo is ERC20('Rainbow Pool', 'xRNBW') {
     // Calculates the amount of Halo the HALOHALO is worth
     uint256 haloAmount = _share.mul(halo.balanceOf(address(this))).div(totalShares);
     _burn(msg.sender, _share);
-    halo.transfer(msg.sender, haloHaloAmount);
+    halo.transfer(msg.sender, haloAmount);
   }
 
   function getCurrentHaloHaloPrice() public view returns (uint256) {
