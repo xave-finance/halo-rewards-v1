@@ -122,11 +122,14 @@ describe("Amm Rewards", function () {
 })
 
   describe("Add", function () {
-    it("Should add pool with reward token multiplier", async function () {
+    it("Should add pool with reward token multiplier. Should not add existing lp token", async function () {
       await expect(this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO))
-            .to.emit(this.ammRewards, "LogPoolAddition")
-            .withArgs(0, 10, this.lpt.address, ADDRESS_ZERO)
-      })
+        .to.emit(this.ammRewards, "LogPoolAddition")
+        .withArgs(0, 10, this.lpt.address, ADDRESS_ZERO)
+      await expect(
+        this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO))
+        .to.be.revertedWith('LP token already added')
+    })
   })
 
   describe("UpdatePool", function () {
