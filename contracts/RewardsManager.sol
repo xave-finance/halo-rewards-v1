@@ -15,8 +15,7 @@ contract RewardsManager is Ownable {
   using SafeERC20 for HaloHalo;
 
   IERC20 public halo;
-  HaloHalo halohalo;
-  // in percent
+  // in basis points
   uint256 private vestingRatio;
   address private rewardsContract;
   address private haloHaloContract;
@@ -33,7 +32,6 @@ contract RewardsManager is Ownable {
     vestingRatio = _initialVestingRatio;
     rewardsContract = _rewardsContract;
     haloHaloContract = _haloHaloContract;
-    halohalo = HaloHalo(haloHaloContract);
     halo = _halo;
   }
 
@@ -47,7 +45,6 @@ contract RewardsManager is Ownable {
       transferToHaloHaloContract(currentHaloBalance);
     }
 
-    // halo.approve(address(this), _amount);
     halo.transferFrom(msg.sender, address(this), _amount);
 
     uint256 currentVestedRewards = _amount.mul(vestingRatio).div(BASIS_POINTS);
@@ -79,7 +76,6 @@ contract RewardsManager is Ownable {
       'Halohalo contract cannot be empty!'
     );
     haloHaloContract = _haloHaloContract;
-    halohalo = HaloHalo(haloHaloContract);
   }
 
   /****************************************
@@ -103,17 +99,17 @@ contract RewardsManager is Ownable {
 
   function transferToHaloHaloContract(uint256 _amount) internal {
     halo.transfer(haloHaloContract, _amount);
-    SentVestedRewardsEvent(_amount);
+    emit SentVestedRewardsEvent(_amount);
   }
 
   function convertAndTransferToRewardsContract(uint256 _amount) internal {
     halo.approve(haloHaloContract, _amount);
-    halohalo.enter(_amount);
-    uint256 currentHaloHaloBalance = halohalo.balanceOf(address(this));
+    HaloHalo(haloHaloContract).enter(_amount);
+    uint256 currentHaloHaloBalance = HaloHalo(haloHaloContract).balanceOf(address(this));
 
     require(currentHaloHaloBalance > 0, 'No HALOHALO in contract');
     AmmRewards(rewardsContract).setRewardTokenPerSecond(currentHaloHaloBalance.div(2592000));
-    halohalo.safeTransfer(rewardsContract, currentHaloHaloBalance);
-    ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
+    HaloHalo(haloHaloContract).safeTransfer(rewardsContract, currentHaloHaloBalance);
+    emit ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
   }
 }

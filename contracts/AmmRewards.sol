@@ -43,6 +43,9 @@ contract AmmRewards is ReentrancyGuard, Ownable {
     /// @notice Address of the LP token for each MCV2 pool.
     IERC20[] public lpToken;
 
+    //stores existence of lp tokens to avoid duplicate entries
+    mapping (IERC20 => bool) lpTokenExists;
+
     /// @notice Address of each `IRewarder` contract in MCV2.
     IRewarder[] public rewarder;
 
@@ -84,6 +87,7 @@ contract AmmRewards is ReentrancyGuard, Ownable {
     /// @param _lpToken Address of the LP ERC-20 token.
     /// @param _rewarder Address of the rewarder delegate.
     function add(uint256 allocPoint, IERC20 _lpToken, IRewarder _rewarder) public onlyOwner {
+        require(lpTokenExists[_lpToken] == false, "LP token already added");
         totalAllocPoint = totalAllocPoint.add(allocPoint);
         lpToken.push(_lpToken);
         rewarder.push(_rewarder);
@@ -93,6 +97,7 @@ contract AmmRewards is ReentrancyGuard, Ownable {
             lastRewardTime: block.timestamp,
             accRewardTokenPerShare: 0
         }));
+        lpTokenExists[_lpToken] = true;
         emit LogPoolAddition(lpToken.length.sub(1), allocPoint, _lpToken, _rewarder);
     }
 
