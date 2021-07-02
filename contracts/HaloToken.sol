@@ -12,7 +12,6 @@ contract HaloToken is ERC20, ERC20Burnable, Ownable {
     using SafeMath for uint256;
 
     bool private canMint;
-    bool private isCappedFuncLocked;
 
     /// @notice initiates the contract with predefined params
     /// @dev initiates the contract with predefined params
@@ -23,15 +22,13 @@ contract HaloToken is ERC20, ERC20Burnable, Ownable {
         ERC20(_name, _symbol)
     {
         canMint = true;
-        isCappedFuncLocked = false;
     }
-    
+
     /// @notice Locks the cap and disables mint func.
     /// @dev Should be called only once. Allows owner to lock the cap and disable mint function.
     function setCapped() external onlyOwner {
-        require(isCappedFuncLocked == false, "Cannot execute setCapped more than once.");
+        require(canMint == true, "Cannot execute setCapped more than once.");
         canMint = false;
-        isCappedFuncLocked = true;
     }
 
     /// @notice Creates halo token, increasing total supply.
