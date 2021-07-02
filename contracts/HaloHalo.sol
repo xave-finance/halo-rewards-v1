@@ -33,7 +33,7 @@ contract HaloHalo is ERC20('Rainbow Pool', 'xRNBW') {
     if (totalShares == 0 || totalHalo == 0) {
       _mint(msg.sender, _amount);
     } else {
-      // Calculate and mint the amount of HALOHALO the Halo is worth. The ratio will change overtime, as HALOHALO is burned/minted and Halo deposited from LP rewards.
+      // Calculate and mint the amount of HALOHALO the Halo is worth. The ratio will change overtime, as Halo deposited from LP rewards and protocol fee.
       uint256 haloHaloAmount = _amount.mul(totalShares).div(totalHalo);
       _mint(msg.sender, haloHaloAmount);
     }
