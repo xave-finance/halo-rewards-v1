@@ -8,7 +8,7 @@ let addr2
 let addrs
 const INITIAL_MINT = 10 ** 6
 
-describe('LPOP Token', function () {
+describe.skip('LPOP Token', function () {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')

@@ -1,5 +1,12 @@
 import { expect } from 'chai'
-import { prepare, deploy, getBigNumber, createSLP } from './utils'
+import {
+  prepare,
+  deploy,
+  getBigNumber,
+  createSLP,
+  prepareWithLib
+} from './utils'
+import { ethers } from 'hardhat'
 
 describe('PotOfGold', function () {
   before(async function () {
@@ -9,11 +16,48 @@ describe('PotOfGold', function () {
       'PotOfGoldExploitMock',
       'ERC20Mock',
       'UniswapV2Factory',
-      'UniswapV2Pair'
+      'UniswapV2Pair',
+      'Curves',
+      'Orchestrator',
+      'ProportionalLiquidity',
+      'Swaps',
+      'ViewLiquidity'
     ])
   })
 
   beforeEach(async function () {
+    // deploy dfx
+    await deploy(this, [
+      ['orchestratorLib', this.Orchestrator, []],
+      ['curvesLib', this.Curves, []],
+      ['proportionalLiquidity', this.ProportionalLiquidity, []],
+      ['viewLiquidityLib', this.ViewLiquidity, []],
+      ['swapsLib', this.Swaps, []]
+    ])
+
+    console.log(
+      `Orchestrator: ${this.orchestratorLib.address},
+       Curves: ${this.curvesLib.address}, 
+       Proportional Liquidity: ${this.proportionalLiquidity.address},
+       Swaps: ${this.swapsLib.address},
+       ViewLiquidity: ${this.viewLiquidityLib.address}
+       `
+    )
+
+    await prepareWithLib(this, 'CurveFactory', {
+      libraries: {
+        Curves: this.curvesLib.address,
+        Orchestrator: this.orchestratorLib.address,
+        ProportionalLiquidity: this.proportionalLiquidity.address,
+        Swaps: this.swapsLib.address,
+        ViewLiquidity: this.viewLiquidityLib.address
+      }
+    })
+
+    await deploy(this, [['curveFactory', this.CurveFactory, []]])
+    console.log(`Curve factory address: ${this.curveFactory.address}`)
+
+    // deploy uniswap
     await deploy(this, [
       ['rnbw', this.ERC20Mock, ['RNBW', 'RNBW', getBigNumber('10000000')]],
       ['dai', this.ERC20Mock, ['DAI', 'DAI', getBigNumber('10000000')]],
@@ -185,9 +229,10 @@ describe('PotOfGold', function () {
 
     it('reverts if caller is not EOA', async function () {
       await this.rnbwEth.transfer(this.potOfGold.address, getBigNumber(1))
+
       await expect(
         this.exploiter.convert(this.rnbw.address, this.weth.address)
-      ).to.be.revertedWith('PotOfGold: must use EOA')
+      ).to.be.revertedWith('Ownable: caller is not the owner')
     })
 
     it('reverts if pair does not exist', async function () {

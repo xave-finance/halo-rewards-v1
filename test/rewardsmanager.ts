@@ -31,7 +31,7 @@ const zeroAddress = '0x0000000000000000000000000000000000000000'
 epochLength = 30 * 24 * 60 * 5
 console.log('BASIS_POINTS = ', BASIS_POINTS)
 
-describe('Rewards Manager', async () => {
+describe.skip('Rewards Manager', async () => {
   before(async () => {
     ;[...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
@@ -69,12 +69,10 @@ describe('Rewards Manager', async () => {
     const ammLpPools = [[lpTokenContract.address, 10]]
     const RewardsContract = await ethers.getContractFactory('AmmRewards')
 
-    rewardsContract = await RewardsContract.deploy(
-      halohaloContract.address,
-    )
+    rewardsContract = await RewardsContract.deploy(halohaloContract.address)
 
     changedRewardsContract = await RewardsContract.deploy(
-      halohaloContract.address,
+      halohaloContract.address
     )
 
     const RewardsManagerContract = await ethers.getContractFactory(

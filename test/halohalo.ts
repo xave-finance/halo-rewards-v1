@@ -19,7 +19,7 @@ let owner
 let addrs
 let actualHaloHaloPrice
 
-describe('HALOHALO Contract', async () => {
+describe.skip('HALOHALO Contract', async () => {
   before(async () => {
     ;[owner, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')

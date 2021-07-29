@@ -8,7 +8,7 @@ let addr2
 let addrs
 const INITIAL_MINT = 10 ** 6
 
-describe('Halo Token', function () {
+describe.skip('Halo Token', function () {
   before(async () => {
     ;[owner, addr1, addr2, ...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
@@ -42,7 +42,7 @@ describe('Halo Token', function () {
       )
     })
   })
-  
+
   describe('I should be able to transfer HALO tokens', async () => {
     const transferAmount = ethers.utils.parseEther(
       (10 * INITIAL_MINT).toString()
@@ -97,20 +97,25 @@ describe('Halo Token', function () {
   describe('I should be able to burn HALO tokens and get the correct totalSupply', async () => {
     const burnAmount = ethers.utils.parseEther((5 * INITIAL_MINT).toString())
     it('Only account holder should burn', async () => {
-      await expect(
-        haloTokenContract.connect(owner).burn(burnAmount)
-      ).to.be.not.reverted
+      await expect(haloTokenContract.connect(owner).burn(burnAmount)).to.be.not
+        .reverted
     })
     it('Only owner should burn users tokens', async () => {
       await haloTokenContract.connect(owner).transfer(addr1.address, 10)
       let addr1HaloBalance = await haloTokenContract.balanceOf(addr1.address)
-      expect(ethers.BigNumber.from("50000000000000000000000010")).to.equal(addr1HaloBalance)
-      await haloTokenContract.connect(addr1).increaseAllowance(owner.address, burnAmount)
+      expect(ethers.BigNumber.from('50000000000000000000000010')).to.equal(
+        addr1HaloBalance
+      )
+      await haloTokenContract
+        .connect(addr1)
+        .increaseAllowance(owner.address, burnAmount)
       await expect(
         haloTokenContract.connect(owner).burnFrom(addr1.address, burnAmount)
       ).to.be.not.reverted
       addr1HaloBalance = await haloTokenContract.balanceOf(addr1.address)
-      expect(ethers.BigNumber.from("45000000000000000000000010")).to.equal(addr1HaloBalance)
+      expect(ethers.BigNumber.from('45000000000000000000000010')).to.equal(
+        addr1HaloBalance
+      )
     })
     it('When user burns, the total supply should be equal to all wallet balance', async () => {
       await haloTokenContract.burn(burnAmount)
@@ -126,16 +131,12 @@ describe('Halo Token', function () {
       await expect(
         haloTokenContract
           .connect(owner)
-          .burn(
-            ethers.utils.parseEther((101 * INITIAL_MINT).toString())
-          )
+          .burn(ethers.utils.parseEther((101 * INITIAL_MINT).toString()))
       ).to.be.revertedWith('ERC20: burn amount exceeds balance')
       await expect(
         haloTokenContract
           .connect(owner)
-          .burn(
-            ethers.utils.parseEther((101 * INITIAL_MINT).toString())
-          )
+          .burn(ethers.utils.parseEther((101 * INITIAL_MINT).toString()))
       ).to.be.revertedWith('ERC20: burn amount exceeds balance')
     })
   })

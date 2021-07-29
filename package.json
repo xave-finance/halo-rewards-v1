@@ -36,6 +36,8 @@
     "@openzeppelin/test-helpers": "^0.5.10",
     "@types/chai": "^4.2.16",
     "chai": "^4.3.3",
+    "chalk": "^4.1.1",
+    "ora": "^5.4.0",
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.0.31",
     "hardhat": "^2.1.2",
