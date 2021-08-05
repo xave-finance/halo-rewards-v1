@@ -7,6 +7,8 @@ import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
+import {Curve} from './dfx/Curve.sol';
+import {CurveFactory} from './dfx/CurveFactory.sol';
 import {IUniswapV2ERC20} from './uniswapv2/interfaces/IUniswapV2ERC20.sol';
 import {IUniswapV2Pair} from './uniswapv2/interfaces/IUniswapV2Pair.sol';
 import {IUniswapV2Factory} from './uniswapv2/interfaces/IUniswapV2Factory.sol';
@@ -18,24 +20,20 @@ contract PotOfGold is Ownable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
-  // V1 - V5: OK
+  uint256 private constant DEADLINE = 600;
+
   IUniswapV2Factory public immutable factory;
-  //0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac
-  // V1 - V5: OK
+  CurveFactory public immutable curveFactory;
+
   address public immutable rainbowPool;
-  //0x8798249c2E607446EfB7Ad49eC89dD1865Ff4272
-  // V1 - V5: OK
   address private immutable rnbw;
-  //0x6B3595068778DD592e39A122f4f5a5cF09C90fE2
-  // V1 - V5: OK
-  address private immutable weth;
-  //0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
+  address private immutable usdc;
 
-  // V1 - V5: OK
-  mapping(address => address) internal _bridges;
+  // address private immutable usdc;
+  // TODO: same format?
+  //IERC20 private constant USDC =
+  //  IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
 
-  // E1: OK
-  event LogBridgeSet(address indexed token, address indexed bridge);
   // E1: OK
   event LogConvert(
     address indexed server,
@@ -48,46 +46,20 @@ contract PotOfGold is Ownable {
 
   constructor(
     address _factory,
+    address _curveFactory,
     address _rainbowPool,
     address _rnbw,
-    address _weth
+    //address _weth
+    address _usdc
   ) public {
     factory = IUniswapV2Factory(_factory);
+    curveFactory = CurveFactory(_curveFactory);
     rainbowPool = _rainbowPool;
     rnbw = _rnbw;
-    weth = _weth;
+    usdc = _usdc;
   }
 
-  // F1 - F10: OK
-  // C1 - C24: OK
-  function bridgeFor(address token) public view returns (address bridge) {
-    bridge = _bridges[token];
-    if (bridge == address(0)) {
-      bridge = weth;
-    }
-  }
-
-  // F1 - F10: OK
-  // C1 - C24: OK
-  function setBridge(address token, address bridge) external onlyOwner {
-    // Checks
-    require(
-      token != rnbw && token != weth && token != bridge,
-      'PotOfGold: Invalid bridge'
-    );
-
-    // Effects
-    _bridges[token] = bridge;
-    emit LogBridgeSet(token, bridge);
-  }
-
-  // F1 - F10: OK
-  // F3: _convert is separate to save gas by only checking the 'onlyEOA' modifier once in case of convertMultiple
-  // F6: There is an exploit to add lots of SUSHI to the bar, run convert, then remove the SUSHI again.
-  //     As the size of the SushiBar has grown, this requires large amounts of funds and isn't super profitable anymore
-  //     The onlyEOA modifier prevents this being done with a flash loan.
-  // C1 - C24: OK
-  function convert(address token0, address token1) external onlyOwner() {
+  function convert(address token0, address token1) external onlyOwner {
     _convert(token0, token1);
   }
 
@@ -96,7 +68,7 @@ contract PotOfGold is Ownable {
   // C3: Loop is under control of the caller
   function convertMultiple(address[] calldata token0, address[] calldata token1)
     external
-    onlyOwner()
+    onlyOwner
   {
     // TODO: This can be optimized a fair bit, but this is safer and simpler for now
     uint256 len = token0.length;
@@ -105,30 +77,39 @@ contract PotOfGold is Ownable {
     }
   }
 
-  // F1 - F10: OK
-  // C1- C24: OK
   function _convert(address token0, address token1) internal {
-    // Interactions
-    // S1 - S4: OK
+    //IUniswapV2Pair pair = IUniswapV2Pair(factory.getPair(token0, token1));
+    // 1 - Check if curve exists, else revert
+    // get curve returns address
+    Curve curve = Curve(curveFactory.getCurve(token0, token1));
+    require(address(curve) != address(0), 'PotOfGold: Invalid curve');
 
-    // TODO: Change to dfx
-    IUniswapV2Pair pair = IUniswapV2Pair(factory.getPair(token0, token1));
-    require(address(pair) != address(0), 'PotOfGold: Invalid pair');
-    // balanceOf: S1 - S4: OK
-    // transfer: X1 - X5: OK
-    // TODO: Change to dfx
-    IERC20(address(pair)).safeTransfer(
-      address(pair),
-      // TODO: Change to dfx
-      pair.balanceOf(address(this))
+    // 2 - transfer curves to -- why do i need to transfer?
+    // TODO: Safe transfer in lib?
+    //curve.transfer(address(curve), curve.balanceOf(address(this)));
+
+    // 3 - withdraw curves to get token0 and token 1
+    // deadline in unix?
+    curve.withdraw((curve.balanceOf(address(this))), DEADLINE);
+
+    // 4 - proceed to convert step to deal with the tokens after withdrawal
+    // note: withdrawals returns uint256[]
+    // TODO
+
+    // 5 - assign returned variables as amount variables
+    /*
+    (uint256 amount0, uint256 amount1) = curve.withdraw(
+      curve.balanceOf(address(this)),
+      _deadline
     );
-    // X1 - X5: OK
+    */
     // TODO: Change to dfx
-    (uint256 amount0, uint256 amount1) = pair.burn(address(this));
-    // TODO: Change to dfx
-    if (token0 != pair.token0()) {
-      (amount0, amount1) = (amount1, amount0);
-    }
+
+    // if (token0 != pair.token0()) {
+    //   (amount0, amount1) = (amount1, amount0);
+    // }
+
+    /*
     emit LogConvert(
       msg.sender,
       token0,
@@ -137,84 +118,21 @@ contract PotOfGold is Ownable {
       amount1,
       _convertStep(token0, token1, amount0, amount1)
     );
+    */
   }
 
-  // F1 - F10: OK
-  // C1 - C24: OK
-  // All safeTransfer, _swap, _toSUSHI, _convertStep: X1 - X5: OK
+  // All safeTransfer, _swap, _toRNBW, _convertStep: X1 - X5: OK
   function _convertStep(
     address token0,
     address token1,
     uint256 amount0,
     uint256 amount1
   ) internal returns (uint256 rnbwOut) {
-    // Interactions
-    if (token0 == token1) {
-      uint256 amount = amount0.add(amount1);
-      if (token0 == rnbw) {
-        IERC20(rnbw).safeTransfer(rainbowPool, amount);
-        rnbwOut = amount;
-      } else if (token0 == weth) {
-        rnbwOut = _toRNBW(weth, amount);
-      } else {
-        address bridge = bridgeFor(token0);
-        amount = _swap(token0, bridge, amount, address(this));
-        rnbwOut = _convertStep(bridge, bridge, amount, 0);
-      }
-    } else if (token0 == rnbw) {
-      // eg. RNBW - ETH
-      IERC20(rnbw).safeTransfer(rainbowPool, amount0);
-      rnbwOut = _toRNBW(token1, amount1).add(amount0);
-    } else if (token1 == rnbw) {
-      // eg. USDT - RNBW
-      IERC20(rnbw).safeTransfer(rainbowPool, amount1);
-      rnbwOut = _toRNBW(token0, amount0).add(amount1);
-    } else if (token0 == weth) {
-      // eg. ETH - USDC
-      rnbwOut = _toRNBW(
-        weth,
-        _swap(token1, weth, amount1, address(this)).add(amount0)
-      );
-    } else if (token1 == weth) {
-      // eg. USDT - ETH
-      rnbwOut = _toRNBW(
-        weth,
-        _swap(token0, weth, amount0, address(this)).add(amount1)
-      );
-    } else {
-      // eg. MIC - USDT
-      address bridge0 = bridgeFor(token0);
-      address bridge1 = bridgeFor(token1);
-      if (bridge0 == token1) {
-        // eg. MIC - USDT - and bridgeFor(MIC) = USDT
-        rnbwOut = _convertStep(
-          bridge0,
-          token1,
-          _swap(token0, bridge0, amount0, address(this)),
-          amount1
-        );
-      } else if (bridge1 == token0) {
-        // eg. WBTC - DSD - and bridgeFor(DSD) = WBTC
-        rnbwOut = _convertStep(
-          token0,
-          bridge1,
-          amount0,
-          _swap(token1, bridge1, amount1, address(this))
-        );
-      } else {
-        rnbwOut = _convertStep(
-          bridge0,
-          bridge1, // eg. USDT - DSD - and bridgeFor(DSD) = WBTC
-          _swap(token0, bridge0, amount0, address(this)),
-          _swap(token1, bridge1, amount1, address(this))
-        );
-      }
-    }
+    // 1 - If not usdc, then _toUSDC
+    // 2 - If USDC, then _toRNBW
+    // 3 - Send RNBW to rainbowpool
   }
 
-  // F1 - F10: OK
-  // C1 - C24: OK
-  // All safeTransfer, swap: X1 - X5: OK
   function _swap(
     address fromToken,
     address toToken,

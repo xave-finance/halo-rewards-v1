@@ -7,6 +7,26 @@ import {
   prepareWithLib
 } from './utils'
 import { ethers } from 'hardhat'
+import { formatUnits, parseUnits } from 'ethers/lib/utils'
+import { Curve } from '../typechain/Curve'
+import {
+  ALPHA,
+  BETA,
+  EPSILON,
+  EURS_USDC_ORACLE,
+  LAMBDA,
+  MAX,
+  USD_USDC_ORACLE
+} from './utils/constants'
+import {
+  formatCurrency,
+  getFutureTime,
+  parseCurrency,
+  TOKEN_DECIMAL,
+  TOKEN_NAME
+} from './utils/utils'
+
+let curveAddress, curve: Curve
 
 describe('PotOfGold', function () {
   before(async function () {
@@ -21,7 +41,9 @@ describe('PotOfGold', function () {
       'Orchestrator',
       'ProportionalLiquidity',
       'Swaps',
-      'ViewLiquidity'
+      'ViewLiquidity',
+      'MockAssimilator',
+      'MockOracle'
     ])
   })
 
@@ -32,7 +54,29 @@ describe('PotOfGold', function () {
       ['curvesLib', this.Curves, []],
       ['proportionalLiquidity', this.ProportionalLiquidity, []],
       ['viewLiquidityLib', this.ViewLiquidity, []],
-      ['swapsLib', this.Swaps, []]
+      ['swapsLib', this.Swaps, []],
+      [
+        'mockOracleEURSUSDC',
+        this.MockOracle,
+        [
+          EURS_USDC_ORACLE.roundId_,
+          EURS_USDC_ORACLE.answer_,
+          EURS_USDC_ORACLE.startedAt_,
+          EURS_USDC_ORACLE.updatedAt_,
+          EURS_USDC_ORACLE.answeredInRound_
+        ]
+      ],
+      [
+        'mockOracleUSDUSDC',
+        this.MockOracle,
+        [
+          USD_USDC_ORACLE.roundId_,
+          USD_USDC_ORACLE.answer_,
+          USD_USDC_ORACLE.startedAt_,
+          USD_USDC_ORACLE.updatedAt_,
+          USD_USDC_ORACLE.answeredInRound_
+        ]
+      ]
     ])
 
     console.log(
@@ -40,7 +84,9 @@ describe('PotOfGold', function () {
        Curves: ${this.curvesLib.address}, 
        Proportional Liquidity: ${this.proportionalLiquidity.address},
        Swaps: ${this.swapsLib.address},
-       ViewLiquidity: ${this.viewLiquidityLib.address}
+       ViewLiquidity: ${this.viewLiquidityLib.address},
+       EURS-USDC Oracle: ${this.mockOracleEURSUSDC.address}
+       USD-USDC Oracle:  ${this.mockOracleUSDUSDC.address}
        `
     )
 
@@ -63,10 +109,29 @@ describe('PotOfGold', function () {
       ['dai', this.ERC20Mock, ['DAI', 'DAI', getBigNumber('10000000')]],
       ['mic', this.ERC20Mock, ['MIC', 'MIC', getBigNumber('10000000')]],
       ['usdc', this.ERC20Mock, ['USDC', 'USDC', getBigNumber('10000000')]],
+      ['eurs', this.ERC20Mock, ['EURS', 'EURS', getBigNumber('10000000')]],
       ['weth', this.ERC20Mock, ['WETH', 'ETH', getBigNumber('10000000')]],
       ['strudel', this.ERC20Mock, ['$TRDL', '$TRDL', getBigNumber('10000000')]],
       ['factory', this.UniswapV2Factory, [this.alice.address]]
     ])
+
+    // deploy assimilator after deploying erc tokens and mock oracle
+    await deploy(this, [
+      [
+        'baseAssimilatorMock',
+        this.MockAssimilator,
+        [this.mockOracleEURSUSDC.address, this.eurs.address, this.usdc.address]
+      ],
+      [
+        'quoteAssimilatorMock',
+        this.MockAssimilator,
+        [this.mockOracleUSDUSDC.address, this.usdc.address, this.usdc.address]
+      ]
+    ])
+
+    console.log(
+      `Base assimilator: ${this.baseAssimilatorMock.address}, Quote assimilator: ${this.quoteAssimilatorMock.address}`
+    )
 
     await deploy(this, [['halohalo', this.HaloHalo, [this.rnbw.address]]])
 
@@ -76,9 +141,10 @@ describe('PotOfGold', function () {
         this.PotOfGold,
         [
           this.factory.address,
+          this.curveFactory.address,
           this.halohalo.address,
           this.rnbw.address,
-          this.weth.address
+          this.usdc.address
         ]
       ]
     ])
@@ -101,36 +167,78 @@ describe('PotOfGold', function () {
     await createSLP(this, 'rnbwUSDC', this.rnbw, this.usdc, getBigNumber(10))
     await createSLP(this, 'daiUSDC', this.dai, this.usdc, getBigNumber(10))
     await createSLP(this, 'daiMIC', this.dai, this.mic, getBigNumber(10))
-  })
 
-  describe('setBridge', function () {
-    it('does not allow to set bridge for RNBW', async function () {
-      await expect(
-        this.potOfGold.setBridge(this.rnbw.address, this.weth.address)
-      ).to.be.revertedWith('PotOfGold: Invalid bridge')
-    })
+    await this.curveFactory.newCurve(
+      'HALODAO V1',
+      'HALO-V1',
+      this.eurs.address,
+      this.usdc.address,
+      parseUnits('0.5'),
+      parseUnits('0.5'),
+      this.baseAssimilatorMock.address,
+      this.quoteAssimilatorMock.address
+    )
 
-    it('does not allow to set bridge for WETH', async function () {
-      await expect(
-        this.potOfGold.setBridge(this.weth.address, this.rnbw.address)
-      ).to.be.revertedWith('PotOfGold: Invalid bridge')
-    })
+    curveAddress = await this.curveFactory.getCurve(
+      this.eurs.address,
+      this.usdc.address
+    )
+    curve = (await ethers.getContractAt('Curve', curveAddress)) as Curve
 
-    it('does not allow to set bridge to itself', async function () {
-      await expect(
-        this.potOfGold.setBridge(this.dai.address, this.dai.address)
-      ).to.be.revertedWith('PotOfGold: Invalid bridge')
-    })
+    // turn off whitelisting
+    await curve.turnOffWhitelisting()
+    // set curve params
+    console.log(await curve.setParams(ALPHA, BETA, MAX, EPSILON, LAMBDA))
 
-    it('emits correct event on bridge', async function () {
-      await expect(
-        this.potOfGold.setBridge(this.dai.address, this.rnbw.address)
+    const tokensToMint = parseUnits('500', 8)
+    const curveDeposit = await curve.viewDeposit(tokensToMint)
+
+    console.log('Usdc', formatUnits(curveDeposit[1][0], 8))
+    console.log('Eurs', formatUnits(curveDeposit[1][1], 2))
+
+    await this.usdc.approve(curveAddress, ethers.constants.MaxUint256)
+    await this.eurs.approve(curveAddress, ethers.constants.MaxUint256)
+
+    const depositTxn = await curve.deposit(
+      tokensToMint,
+      await getFutureTime(this.alice.provider)
+    )
+
+    console.log(await depositTxn.wait())
+    const beforeBalance = await this.usdc.balanceOf(this.alice.address)
+
+    const swapTxn = await curve.originSwap(
+      this.eurs.address,
+      this.usdc.address,
+      parseCurrency(TOKEN_NAME.EURS, TOKEN_DECIMAL.EURS, '10'),
+      0,
+      await getFutureTime(this.alice.provider)
+    )
+
+    console.log('Swap txn: ', await swapTxn.wait())
+
+    const afterBalance = await this.usdc.balanceOf(this.alice.address)
+
+    console.log(
+      'Difference after swap:',
+      formatCurrency(
+        TOKEN_NAME.EURS,
+        TOKEN_DECIMAL.EURS,
+        afterBalance.sub(beforeBalance)
       )
-        .to.emit(this.potOfGold, 'LogBridgeSet')
-        .withArgs(this.dai.address, this.rnbw.address)
+    )
+  })
+
+  describe('sketch tests', function () {
+    it('testing array thing', async function () {
+      // Test if curve is valid
+      await expect(
+        this.potOfGold.convert(this.weth.address, this.strudel.address)
+      ).to.be.revertedWith('PotOfGold: Invalid curve')
     })
   })
-  describe('convert', function () {
+
+  describe.skip('convert', function () {
     it('should convert RNBW - ETH', async function () {
       await this.rnbwEth.transfer(this.potOfGold.address, getBigNumber(1))
       await this.potOfGold.convert(this.rnbw.address, this.weth.address)
@@ -254,7 +362,7 @@ describe('PotOfGold', function () {
     })
   })
 
-  describe('convertMultiple', function () {
+  describe.skip('convertMultiple', function () {
     it('should allow to convert multiple', async function () {
       await this.daiEth.transfer(this.potOfGold.address, getBigNumber(1))
       await this.rnbwEth.transfer(this.potOfGold.address, getBigNumber(1))
