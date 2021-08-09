@@ -191,13 +191,13 @@ describe('PotOfGold', function () {
       0,
       await getFutureTime(this.alice.provider)
     )
-
-    // Transfer to pot of gold for processing
-    await curve.transfer(this.potOfGold.address, parseUnits('100'))
   })
 
   describe('convert', function () {
     it('should convert Curve to RNBW ', async function () {
+      // Transfer to pot of gold for processing
+      await curve.transfer(this.potOfGold.address, parseUnits('100'))
+
       expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(0)
       expect(await curve.balanceOf(this.potOfGold.address)).to.not.equal(0)
 
@@ -229,6 +229,20 @@ describe('PotOfGold', function () {
         BigNumber.from(await this.rnbw.balanceOf(this.halohalo.address)),
         'No RNBW is sent to the RNBW pool'
       ).to.not.equal(0)
+    })
+
+    it('should revert if swap in our AMM failed', async function () {
+      // TODO: Check for possible exploit?
+      // Transfer to pot of gold for processing
+      await curve.transfer(this.potOfGold.address, parseUnits('9000000'))
+
+      // args are matched after this call
+      await expect(
+        this.potOfGold.convert(
+          this.eurs.address,
+          await getFutureTime(this.alice.provider)
+        )
+      ).to.be.reverted // revert message depends on the Curve contracts
     })
 
     it('reverts if caller is not owner', async function () {

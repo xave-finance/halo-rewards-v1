@@ -76,7 +76,7 @@ contract PotOfGold is Ownable {
 
     // 4 - withdraw curves to get usdc and token
     curve.withdraw(balance, deadline);
-    uint256 initialUsdcTokenBalance = IERC20(usdc).balanceOf(address(this));
+
     uint256 nonUsdcTokenBalance = IERC20(token).balanceOf(address(this));
 
     // 5 - approve token spend before swap
@@ -90,7 +90,7 @@ contract PotOfGold is Ownable {
       msg.sender,
       usdc,
       address(curve),
-      initialUsdcTokenBalance,
+      IERC20(usdc).balanceOf(address(this)),
       nonUsdcTokenBalance,
       _toRNBW(usdc, IERC20(usdc).balanceOf(address(this))) // returns RNBWOut after converting
     );
