@@ -123,12 +123,12 @@ contract MockAssimilator is IAssimilator {
 
     if (_token1Bal <= 0) return 0;
 
+    // _token1Bal = _token1Bal.mul(1e18).div(_baseWeight);
+
     uint256 _token0Bal = token0.balanceOf(_addr).mul(1e18).div(_quoteWeight);
 
     // Rate is in 1e6
-    uint256 _rate = _token0Bal.mul(1e18).div(
-      _token1Bal.mul(1e18).div(_baseWeight)
-    );
+    uint256 _rate = _token0Bal.mul(1e18).div(_token1Bal);
 
     amount_ = (_amount.mulu(1e18) * 1e6) / _rate;
 
@@ -216,6 +216,8 @@ contract MockAssimilator is IAssimilator {
     uint256 _token1Bal = token1.balanceOf(_addr);
 
     if (_token1Bal <= 0) return 0;
+
+    // _token1Bal = _token1Bal.mul(1e18).div(_baseWeight);
 
     uint256 _token0Bal = token0.balanceOf(_addr).mul(1e18).div(_quoteWeight);
 

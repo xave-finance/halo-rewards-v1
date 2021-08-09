@@ -7,7 +7,7 @@ import {
   prepareWithLib
 } from './utils'
 import { ethers } from 'hardhat'
-import { formatUnits, parseUnits } from 'ethers/lib/utils'
+import { parseUnits } from 'ethers/lib/utils'
 import { Curve } from '../typechain/Curve'
 import {
   ALPHA,
@@ -18,13 +18,8 @@ import {
   MAX,
   USD_USDC_ORACLE
 } from './utils/constants'
-import {
-  formatCurrency,
-  getFutureTime,
-  parseCurrency,
-  TOKEN_DECIMAL,
-  TOKEN_NAME
-} from './utils/utils'
+import { getFutureTime } from './utils/utils'
+import { BigNumber } from 'ethers'
 
 let curveAddress, curve: Curve
 
@@ -43,6 +38,7 @@ describe('PotOfGold', function () {
       'Swaps',
       'ViewLiquidity',
       'MockAssimilator',
+      'MockUsdUsdcAssimilator',
       'MockOracle'
     ])
   })
@@ -79,17 +75,6 @@ describe('PotOfGold', function () {
       ]
     ])
 
-    console.log(
-      `Orchestrator: ${this.orchestratorLib.address},
-       Curves: ${this.curvesLib.address}, 
-       Proportional Liquidity: ${this.proportionalLiquidity.address},
-       Swaps: ${this.swapsLib.address},
-       ViewLiquidity: ${this.viewLiquidityLib.address},
-       EURS-USDC Oracle: ${this.mockOracleEURSUSDC.address}
-       USD-USDC Oracle:  ${this.mockOracleUSDUSDC.address}
-       `
-    )
-
     await prepareWithLib(this, 'CurveFactory', {
       libraries: {
         Curves: this.curvesLib.address,
@@ -101,7 +86,6 @@ describe('PotOfGold', function () {
     })
 
     await deploy(this, [['curveFactory', this.CurveFactory, []]])
-    console.log(`Curve factory address: ${this.curveFactory.address}`)
 
     // deploy uniswap
     await deploy(this, [
@@ -120,18 +104,14 @@ describe('PotOfGold', function () {
       [
         'baseAssimilatorMock',
         this.MockAssimilator,
-        [this.mockOracleEURSUSDC.address, this.eurs.address, this.usdc.address]
+        [this.mockOracleEURSUSDC.address, this.usdc.address, this.eurs.address]
       ],
       [
         'quoteAssimilatorMock',
-        this.MockAssimilator,
-        [this.mockOracleUSDUSDC.address, this.usdc.address, this.usdc.address]
+        this.MockUsdUsdcAssimilator,
+        [this.mockOracleUSDUSDC.address, this.usdc.address]
       ]
     ])
-
-    console.log(
-      `Base assimilator: ${this.baseAssimilatorMock.address}, Quote assimilator: ${this.quoteAssimilatorMock.address}`
-    )
 
     await deploy(this, [['halohalo', this.HaloHalo, [this.rnbw.address]]])
 
@@ -183,19 +163,16 @@ describe('PotOfGold', function () {
       this.eurs.address,
       this.usdc.address
     )
+
+    // TODO: Convert to have uniform implementation with others
     curve = (await ethers.getContractAt('Curve', curveAddress)) as Curve
 
     // turn off whitelisting
     await curve.turnOffWhitelisting()
     // set curve params
-    console.log(await curve.setParams(ALPHA, BETA, MAX, EPSILON, LAMBDA))
+    await curve.setParams(ALPHA, BETA, MAX, EPSILON, LAMBDA)
 
-    const tokensToMint = parseUnits('500', 8)
-    const curveDeposit = await curve.viewDeposit(tokensToMint)
-
-    console.log('Usdc', formatUnits(curveDeposit[1][0], 8))
-    console.log('Eurs', formatUnits(curveDeposit[1][1], 2))
-
+    const tokensToMint = parseUnits('10000000')
     await this.usdc.approve(curveAddress, ethers.constants.MaxUint256)
     await this.eurs.approve(curveAddress, ethers.constants.MaxUint256)
 
@@ -204,177 +181,79 @@ describe('PotOfGold', function () {
       await getFutureTime(this.alice.provider)
     )
 
-    console.log(await depositTxn.wait())
-    const beforeBalance = await this.usdc.balanceOf(this.alice.address)
+    await depositTxn.wait()
 
-    const swapTxn = await curve.originSwap(
+    // swapping for initial balance
+    await curve.originSwap(
       this.eurs.address,
       this.usdc.address,
-      parseCurrency(TOKEN_NAME.EURS, TOKEN_DECIMAL.EURS, '10'),
+      parseUnits('10000'),
       0,
       await getFutureTime(this.alice.provider)
     )
 
-    console.log('Swap txn: ', await swapTxn.wait())
-
-    const afterBalance = await this.usdc.balanceOf(this.alice.address)
-
-    console.log(
-      'Difference after swap:',
-      formatCurrency(
-        TOKEN_NAME.EURS,
-        TOKEN_DECIMAL.EURS,
-        afterBalance.sub(beforeBalance)
-      )
-    )
+    // Transfer to pot of gold for processing
+    await curve.transfer(this.potOfGold.address, parseUnits('100'))
   })
 
-  describe('sketch tests', function () {
-    it('testing array thing', async function () {
+  describe('convert', function () {
+    it('should convert Curve to RNBW ', async function () {
+      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(0)
+      expect(await curve.balanceOf(this.potOfGold.address)).to.not.equal(0)
+
+      // args are matched after this call
+      await expect(
+        this.potOfGold.convert(
+          this.eurs.address,
+          await getFutureTime(this.alice.provider)
+        )
+      ).to.emit(this.potOfGold, 'LogConvert')
+
+      expect(
+        await curve.balanceOf(this.potOfGold.address),
+        'Curves are not converted'
+      ).to.equal(0)
+
+      expect(
+        await this.usdc.balanceOf(this.potOfGold.address),
+        'USDC is not converted or not fully converted to RNBW'
+      ).to.equal(0)
+
+      expect(
+        await this.eurs.balanceOf(this.potOfGold.address),
+        'EURS is not converted or not fully converted to RNBW'
+      ).to.equal(0)
+
+      // TODO: Change?
+      expect(
+        BigNumber.from(await this.rnbw.balanceOf(this.halohalo.address)),
+        'No RNBW is sent to the RNBW pool'
+      ).to.not.equal(0)
+    })
+
+    it('reverts if caller is not owner', async function () {
+      await this.rnbwEth.transfer(this.potOfGold.address, getBigNumber(1))
+
+      await expect(
+        this.exploiter.convert(
+          this.rnbw.address,
+          await getFutureTime(this.alice.provider)
+        )
+      ).to.be.revertedWith('Ownable: caller is not the owner')
+    })
+
+    it('should revert when there are no curve on the given tokens', async function () {
       // Test if curve is valid
       await expect(
-        this.potOfGold.convert(this.weth.address, this.strudel.address)
+        this.potOfGold.convert(
+          this.strudel.address,
+          await getFutureTime(this.alice.provider)
+        )
       ).to.be.revertedWith('PotOfGold: Invalid curve')
     })
   })
 
-  describe.skip('convert', function () {
-    it('should convert RNBW - ETH', async function () {
-      await this.rnbwEth.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.convert(this.rnbw.address, this.weth.address)
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbwEth.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(
-        '1897569270781234370'
-      )
-    })
-
-    it('should convert USDC - ETH', async function () {
-      await this.usdcEth.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.convert(this.usdc.address, this.weth.address)
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.usdcEth.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(
-        '1590898251382934275'
-      )
-    })
-
-    it('should convert $TRDL - ETH', async function () {
-      await this.strudelEth.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.convert(this.strudel.address, this.weth.address)
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.strudelEth.balanceOf(this.potOfGold.address)).to.equal(
-        0
-      )
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(
-        '1590898251382934275'
-      )
-    })
-
-    it('should convert USDC - RNBW', async function () {
-      await this.rnbwUSDC.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.convert(this.usdc.address, this.rnbw.address)
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbwUSDC.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(
-        '1897569270781234370'
-      )
-    })
-
-    it('should convert using standard ETH path', async function () {
-      await this.daiEth.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.convert(this.dai.address, this.weth.address)
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.daiEth.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(
-        '1590898251382934275'
-      )
-    })
-
-    it('converts MIC/USDC using more complex path', async function () {
-      await this.micUSDC.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.setBridge(this.usdc.address, this.rnbw.address)
-      await this.potOfGold.setBridge(this.mic.address, this.usdc.address)
-      await this.potOfGold.convert(this.mic.address, this.usdc.address)
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.micUSDC.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(
-        '1590898251382934275'
-      )
-    })
-
-    it('converts DAI/USDC using more complex path', async function () {
-      await this.daiUSDC.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.setBridge(this.usdc.address, this.rnbw.address)
-      await this.potOfGold.setBridge(this.dai.address, this.usdc.address)
-      await this.potOfGold.convert(this.dai.address, this.usdc.address)
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.daiUSDC.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(
-        '1590898251382934275'
-      )
-    })
-
-    it('converts DAI/MIC using two step path', async function () {
-      await this.daiMIC.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.setBridge(this.dai.address, this.usdc.address)
-      await this.potOfGold.setBridge(this.mic.address, this.dai.address)
-      await this.potOfGold.convert(this.dai.address, this.mic.address)
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.daiMIC.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(
-        '1200963016721363748'
-      )
-    })
-
-    it('reverts if it loops back', async function () {
-      await this.daiMIC.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.setBridge(this.dai.address, this.mic.address)
-      await this.potOfGold.setBridge(this.mic.address, this.dai.address)
-      await expect(this.potOfGold.convert(this.dai.address, this.mic.address))
-        .to.be.reverted
-    })
-
-    it('reverts if caller is not EOA', async function () {
-      await this.rnbwEth.transfer(this.potOfGold.address, getBigNumber(1))
-
-      await expect(
-        this.exploiter.convert(this.rnbw.address, this.weth.address)
-      ).to.be.revertedWith('Ownable: caller is not the owner')
-    })
-
-    it('reverts if pair does not exist', async function () {
-      await expect(
-        this.potOfGold.convert(this.mic.address, this.micUSDC.address)
-      ).to.be.revertedWith('PotOfGold: Invalid pair')
-    })
-
-    it('reverts if no path is available', async function () {
-      await this.micUSDC.transfer(this.potOfGold.address, getBigNumber(1))
-      await expect(
-        this.potOfGold.convert(this.mic.address, this.usdc.address)
-      ).to.be.revertedWith('PotOfGold: Cannot convert')
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.micUSDC.balanceOf(this.potOfGold.address)).to.equal(
-        getBigNumber(1)
-      )
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(0)
-    })
-  })
-
   describe.skip('convertMultiple', function () {
-    it('should allow to convert multiple', async function () {
-      await this.daiEth.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.rnbwEth.transfer(this.potOfGold.address, getBigNumber(1))
-      await this.potOfGold.convertMultiple(
-        [this.dai.address, this.rnbw.address],
-        [this.weth.address, this.weth.address]
-      )
-      expect(await this.rnbw.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.daiEth.balanceOf(this.potOfGold.address)).to.equal(0)
-      expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(
-        '3186583558687783097'
-      )
-    })
+    it('should allow to convert multiple', async function () {})
   })
 })

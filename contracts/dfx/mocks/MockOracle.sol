@@ -22,6 +22,10 @@ contract MockOracle {
     answeredInRound = _answeredInRound;
   }
 
+  function latestAnswer() external view returns (int256) {
+    return answer;
+  }
+
   // check pure
   function latestRoundData()
     external
