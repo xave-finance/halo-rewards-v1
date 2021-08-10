@@ -31,7 +31,7 @@ const zeroAddress = '0x0000000000000000000000000000000000000000'
 epochLength = 30 * 24 * 60 * 5
 console.log('BASIS_POINTS = ', BASIS_POINTS)
 
-describe.skip('Rewards Manager', async () => {
+describe('Rewards Manager', async () => {
   before(async () => {
     ;[...addrs] = await ethers.getSigners()
     console.log('===================Deploying Contracts=====================')
@@ -257,13 +257,11 @@ describe.skip('Rewards Manager', async () => {
 
   describe('Released HALO will be distributed 80% to the rewards contract converted to DESRT and 20% will be vested to the halohalo contract', async () => {
     it('Release rewards in Epoch 0, HALOHALO priced to one at the end', async () => {
-      epoch0VestedRewards = RELEASED_HALO_REWARDS.mul(vestingRewardsRatio).div(
-        BASIS_POINTS
-      )
+      epoch0VestedRewards =
+        RELEASED_HALO_REWARDS.mul(vestingRewardsRatio).div(BASIS_POINTS)
 
-      const expectedHaloHalo = RELEASED_HALO_REWARDS.mul(
-        releasedRewardsRatio
-      ).div(BASIS_POINTS)
+      const expectedHaloHalo =
+        RELEASED_HALO_REWARDS.mul(releasedRewardsRatio).div(BASIS_POINTS)
 
       // Simulate release through minting
       await expect(

@@ -18,7 +18,7 @@ const initialVestingRatio = 0.2 * 10 ** 4
 const rewardTokenPerSecond = '77160493827160493'
 const changedRewardTokenPerSecond = '55160000000000000'
 
-describe.skip('Amm Rewards', function () {
+describe('Amm Rewards', function () {
   before(async function () {
     await prepare(this, [
       'AmmRewards',
@@ -190,7 +190,9 @@ describe.skip('Amm Rewards', function () {
           0,
           BigNumber.from(`${lastRewardTime + timeToAdvance}`),
           await this.lpt.balanceOf(this.ammRewards.address),
-          (await this.ammRewards.poolInfo(0)).accRewardTokenPerShare
+          (
+            await this.ammRewards.poolInfo(0)
+          ).accRewardTokenPerShare
         )
     })
   })
@@ -338,7 +340,8 @@ describe.skip('Amm Rewards', function () {
       ).to.be.reverted
     })
     it('RewardsManager should change rewardTokenPerSecond', async function () {
-      const prevRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
+      const prevRewardTokenPerSecond =
+        await this.ammRewards.rewardTokenPerSecond()
       await this.halo.mint(this.alice.address, getBigNumber(250000))
       await this.rewardsManager.releaseEpochRewards(getBigNumber(250000))
       const vestingContractTotalSupply = await this.rnbw.totalSupply()
@@ -351,7 +354,8 @@ describe.skip('Amm Rewards', function () {
         .mul(vestingContractTotalSupply)
         .div(vestingContractHaloBalance)
         .div(2592000)
-      const updatedRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
+      const updatedRewardTokenPerSecond =
+        await this.ammRewards.rewardTokenPerSecond()
       expect(updatedRewardTokenPerSecond).to.not.be.equal(
         prevRewardTokenPerSecond
       )
@@ -360,9 +364,11 @@ describe.skip('Amm Rewards', function () {
       )
     })
     it('Owner should be able to set rewardTokenPerSecond', async function () {
-      const prevRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
+      const prevRewardTokenPerSecond =
+        await this.ammRewards.rewardTokenPerSecond()
       await this.ammRewards.setRewardTokenPerSecond(changedRewardTokenPerSecond)
-      const updatedRewardTokenPerSecond = await this.ammRewards.rewardTokenPerSecond()
+      const updatedRewardTokenPerSecond =
+        await this.ammRewards.rewardTokenPerSecond()
       expect(prevRewardTokenPerSecond).to.not.be.equal(
         updatedRewardTokenPerSecond
       )

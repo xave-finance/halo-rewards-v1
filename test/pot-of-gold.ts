@@ -274,22 +274,6 @@ describe('PotOfGold', function () {
       ).to.equal(expectedRNBWValues.afterMultipleConvert)
     })
 
-    it('should revert if swap in our AMM failed', async function () {
-      await this.eursUsdcCurve.transfer(
-        this.potOfGold.address,
-        parseUnits('9000000')
-      )
-
-      // Trigger Curve/upper-halt revert
-      // Reference: https://github.com/HaloDAO/dfx-protocol-clone/blob/d52269d65585670df2aae1262e6fb47184d44c73/contracts/CurveMath.sol#L242
-      await expect(
-        this.potOfGold.convert(
-          this.eurs.address,
-          await getFutureTime(this.alice.provider)
-        ).to.be.reverted
-      )
-    })
-
     it('reverts if caller is not owner', async function () {
       await this.rnbwEth.transfer(this.potOfGold.address, getBigNumber(1))
 
@@ -309,6 +293,25 @@ describe('PotOfGold', function () {
           await getFutureTime(this.alice.provider)
         )
       ).to.be.revertedWith('PotOfGold: Invalid curve')
+    })
+
+    it('should revert if swap in our AMM failed', async function () {
+      const testValue = parseUnits('9000000')
+      await this.eursUsdcCurve.transfer(this.potOfGold.address, testValue)
+
+      // Trigger Curve/upper-halt revert
+      // Reference: https://github.com/HaloDAO/dfx-protocol-clone/blob/d52269d65585670df2aae1262e6fb47184d44c73/contracts/CurveMath.sol#L242
+      await expect(
+        this.potOfGold.convert(
+          this.eurs.address,
+          await getFutureTime(this.alice.provider)
+        )
+      ).to.be.reverted
+
+      expect(
+        await this.eursUsdcCurve.balanceOf(this.potOfGold.address),
+        'Curves withdrawal was successful'
+      ).to.equal(testValue)
     })
   })
 })
