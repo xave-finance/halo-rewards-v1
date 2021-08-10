@@ -27,18 +27,26 @@ export const MAX = parseUnits('0.15')
 export const EPSILON = parseUnits('0.0004')
 export const LAMBDA = parseUnits('0.3')
 
-export const EURS_USDC_ORACLE = {
-  roundId_: '73786976294838206758',
-  answer_: '118655000',
-  startedAt_: '1628077547',
-  updatedAt_: '1628077547',
-  answeredInRound_: '73786976294838206758'
-}
-
-export const USD_USDC_ORACLE = {
-  roundId_: '36893488147419103376',
-  answer_: '100000000',
-  startedAt_: '1628098811',
-  updatedAt_: '1628098811',
-  answeredInRound_: '36893488147419103376'
+export const ORACLE_DATA = {
+  EURS_USDC_ORACLE: {
+    roundId_: '73786976294838206758',
+    answer_: '118655000',
+    startedAt_: '1628098811',
+    updatedAt_: '1628098811',
+    answeredInRound_: '73786976294838206758'
+  },
+  CAD_USDC_ORACLE: {
+    roundId_: '36893488147419103625',
+    answer_: '79523500',
+    startedAt_: '1628098811',
+    updatedAt_: '1628098811',
+    answeredInRound_: '36893488147419103625'
+  },
+  USD_USDC_ORACLE: {
+    roundId_: '36893488147419103376',
+    answer_: '100000000',
+    startedAt_: '1628098811',
+    updatedAt_: '1628098811',
+    answeredInRound_: '36893488147419103376'
+  }
 }

@@ -1,8 +1,13 @@
+import { parseUnits } from 'ethers/lib/utils'
 import { ethers } from 'hardhat'
+import { Curve } from '../../typechain/Curve'
 const { BigNumber } = require('ethers')
+import { ALPHA, BETA, EPSILON, LAMBDA, MAX } from './constants'
+import { getFutureTime } from './utils'
 
 export const BASE_TEN = 10
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
+const tokensToMint = parseUnits('10000000')
 
 export function encodeParameters(types, values) {
   const abi = new ethers.utils.AbiCoder()
@@ -68,6 +73,75 @@ export async function createSLP(thisObject, name, tokenA, tokenB, amount) {
   await tokenB.transfer(thisObject[name].address, amount)
 
   await thisObject[name].mint(thisObject.alice.address)
+}
+
+export async function createAndInitializeCurve(
+  thisObject,
+  curveInstance,
+  curveName,
+  curveSymbol,
+  base,
+  quote,
+  baseWeight,
+  quoteWeight,
+  baseAssim,
+  quoteAssim,
+  provider
+) {
+  const newCurveTxn = await thisObject.curveFactory.newCurve(
+    curveName,
+    curveSymbol,
+    base.address,
+    quote.address,
+    baseWeight,
+    quoteWeight,
+    baseAssim.address,
+    quoteAssim.address
+  )
+
+  await newCurveTxn.wait()
+
+  const curveAddress = await thisObject.curveFactory.getCurve(
+    base.address,
+    quote.address
+  )
+
+  // const curve = (await ethers.getContractAt('Curve', curveAddress)) as Curve
+  thisObject[curveInstance] = await ethers.getContractAt('Curve', curveAddress)
+
+  const txn1 = await thisObject[curveInstance].turnOffWhitelisting()
+  await txn1.wait()
+
+  const txn2 = await thisObject[curveInstance].setParams(
+    ALPHA,
+    BETA,
+    MAX,
+    EPSILON,
+    LAMBDA
+  )
+  await txn2.wait()
+  const txn3 = await base.approve(curveAddress, ethers.constants.MaxUint256)
+  await txn3.wait()
+  const txn4 = await quote.approve(curveAddress, ethers.constants.MaxUint256)
+  await txn4.wait()
+
+  const depositTxn = await thisObject[curveInstance].deposit(
+    tokensToMint,
+    await getFutureTime(provider)
+  )
+
+  await depositTxn.wait()
+
+  // swapping for initial balance
+  const originSwapTxn = await thisObject[curveInstance].originSwap(
+    base.address,
+    quote.address,
+    parseUnits('10000'),
+    0,
+    await getFutureTime(provider)
+  )
+
+  await originSwapTxn.wait()
 }
 // Defaults to e18 using amount * 10^18
 export function getBigNumber(amount, decimals = 18) {
