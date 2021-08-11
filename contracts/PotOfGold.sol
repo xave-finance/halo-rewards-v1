@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
 
-// P1 - P3: OK
 pragma solidity 0.6.12;
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
-import {Curve} from './dfx/Curve.sol';
-import {CurveFactory} from './dfx/CurveFactory.sol';
+import {Curve} from './amm/Curve.sol';
+import {CurveFactory} from './amm/CurveFactory.sol';
 import {IUniswapV2ERC20} from './uniswapv2/interfaces/IUniswapV2ERC20.sol';
 import {IUniswapV2Pair} from './uniswapv2/interfaces/IUniswapV2Pair.sol';
 import {IUniswapV2Factory} from './uniswapv2/interfaces/IUniswapV2Factory.sol';
@@ -52,7 +51,6 @@ contract PotOfGold is Ownable {
     _convert(token, deadline);
   }
 
-  // ? -  remove this first
   function convertMultiple(address[] calldata token, uint256 deadline)
     external
     onlyOwner
@@ -76,11 +74,11 @@ contract PotOfGold is Ownable {
 
     // 4 - withdraw curves to get usdc and token
     curve.withdraw(balance, deadline);
-
+    uint256 usdcTokenBalanceBeforeSwap = IERC20(usdc).balanceOf(address(this));
     uint256 nonUsdcTokenBalance = IERC20(token).balanceOf(address(this));
 
     // 5 - approve token spend before swap
-    IERC20(token).approve(address(curve), nonUsdcTokenBalance);
+    IERC20(token).safeApprove(address(curve), nonUsdcTokenBalance);
 
     // 4 - swap non usdc to usdc using our AMM
     curve.originSwap(token, usdc, nonUsdcTokenBalance, 0, deadline);
@@ -89,8 +87,8 @@ contract PotOfGold is Ownable {
     emit LogConvert(
       msg.sender,
       usdc,
-      address(curve),
-      IERC20(usdc).balanceOf(address(this)),
+      token,
+      usdcTokenBalanceBeforeSwap,
       nonUsdcTokenBalance,
       _toRNBW(usdc, IERC20(usdc).balanceOf(address(this))) // returns RNBWOut after converting
     );

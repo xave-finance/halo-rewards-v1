@@ -5,7 +5,8 @@ import {
   getBigNumber,
   createSLP,
   prepareWithLib,
-  createAndInitializeCurve
+  createAndInitializeCurve,
+  checkSushiUSDCToRNBW
 } from './utils'
 import { ethers } from 'hardhat'
 import { parseUnits } from 'ethers/lib/utils'
@@ -13,10 +14,7 @@ import { ORACLE_DATA } from './utils/constants'
 import { getFutureTime } from './utils/utils'
 import { BigNumber } from 'ethers'
 
-const expectedRNBWValues = {
-  afterSingleConvert: 99680059,
-  afterMultipleConvert: 199360118
-}
+const amountToTransfer = parseUnits('100')
 
 describe('PotOfGold', function () {
   before(async function () {
@@ -143,8 +141,11 @@ describe('PotOfGold', function () {
       ['exploiter', this.PotOfGoldExploitMock, [this.potOfGold.address]]
     ])
 
+    await createSLP(this, 'rnbwEth', this.rnbw, this.weth, getBigNumber(10))
+    await createSLP(this, 'rnbwUSDC', this.rnbw, this.usdc, getBigNumber(10))
+
     // Create curves and setup
-    createAndInitializeCurve(
+    await createAndInitializeCurve(
       this,
       'eursUsdcCurve',
       'HALODAO-V1-EURS-USDC',
@@ -157,23 +158,6 @@ describe('PotOfGold', function () {
       this.quoteAssimilatorMock,
       this.alice.provider
     )
-
-    createAndInitializeCurve(
-      this,
-      'cadcUsdcCurve',
-      'HALODAO-V1-CADC-USDC',
-      'HALO-V1',
-      this.cadc,
-      this.usdc,
-      parseUnits('0.5'),
-      parseUnits('0.5'),
-      this.baseAssimilatorMock2,
-      this.quoteAssimilatorMock,
-      this.alice.provider
-    )
-
-    await createSLP(this, 'rnbwEth', this.rnbw, this.weth, getBigNumber(10))
-    await createSLP(this, 'rnbwUSDC', this.rnbw, this.usdc, getBigNumber(10))
   })
 
   describe('convert', function () {
@@ -181,21 +165,49 @@ describe('PotOfGold', function () {
       // Transfer to pot of gold for processing
       await this.eursUsdcCurve.transfer(
         this.potOfGold.address,
-        parseUnits('100')
+        amountToTransfer
       )
+
       expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(0)
 
       expect(
         await this.eursUsdcCurve.balanceOf(this.potOfGold.address)
-      ).to.not.equal(0)
+      ).to.equal(amountToTransfer)
 
-      // args are matched after this call
+      // Calculating expected RNBW values
+      const viewWithdraw = await this.eursUsdcCurve.viewWithdraw(
+        amountToTransfer
+      )
+      const expectedEURSValue = viewWithdraw[0]
+      const expectedUSDCValue = viewWithdraw[1]
+
+      const viewOriginSwapAmount = await this.eursUsdcCurve.viewOriginSwap(
+        this.eurs.address,
+        this.usdc.address,
+        expectedEURSValue
+      )
+
+      await checkSushiUSDCToRNBW(
+        this,
+        'rnbwAfterSingleConvert',
+        viewOriginSwapAmount.add(expectedUSDCValue)
+      )
+
       await expect(
         this.potOfGold.convert(
           this.eurs.address,
           await getFutureTime(this.alice.provider)
         )
-      ).to.emit(this.potOfGold, 'LogConvert')
+      )
+        .to.emit(this.potOfGold, 'LogConvert')
+        .withArgs(
+          this.alice.address,
+          this.usdc.address,
+          this.eurs.address,
+          expectedUSDCValue,
+          expectedEURSValue,
+          this.rnbwAfterSingleConvert
+        )
 
       expect(
         await this.eursUsdcCurve.balanceOf(this.potOfGold.address),
@@ -215,26 +227,79 @@ describe('PotOfGold', function () {
       expect(
         BigNumber.from(await this.rnbw.balanceOf(this.halohalo.address)),
         'No RNBW is sent to the RNBW pool'
-      ).to.equal(expectedRNBWValues.afterSingleConvert)
+      ).to.equal(this.rnbwAfterSingleConvert)
     })
 
     it('should allow to convert multiple Curves LP fees using convertMultiple', async function () {
+      await createAndInitializeCurve(
+        this,
+        'cadcUsdcCurve',
+        'HALODAO-V1-CADC-USDC',
+        'HALO-V1',
+        this.cadc,
+        this.usdc,
+        parseUnits('0.5'),
+        parseUnits('0.5'),
+        this.baseAssimilatorMock2,
+        this.quoteAssimilatorMock,
+        this.alice.provider
+      )
+
+      // Calculating expected RNBW values
+      const viewWithdrawConvertMultipleEURS =
+        await this.eursUsdcCurve.viewWithdraw(amountToTransfer)
+      const expectedEURSValueConvertMultipleEURS =
+        viewWithdrawConvertMultipleEURS[0]
+      const expectedUSDCValueConvertMultipleEURS =
+        viewWithdrawConvertMultipleEURS[1]
+
+      const viewOriginSwapAmountEURS = await this.eursUsdcCurve.viewOriginSwap(
+        this.eurs.address,
+        this.usdc.address,
+        expectedEURSValueConvertMultipleEURS
+      )
+
+      await checkSushiUSDCToRNBW(
+        this,
+        'rnbwAfterMultipleConvertEURS',
+        viewOriginSwapAmountEURS.add(expectedUSDCValueConvertMultipleEURS)
+      )
+
+      const viewWithdrawConvertMultipleCADC =
+        await this.cadcUsdcCurve.viewWithdraw(amountToTransfer)
+      const expectedCADCValueConvertMultipleCADC =
+        viewWithdrawConvertMultipleCADC[0]
+      const expectedUSDCValueConvertMultipleCADC =
+        viewWithdrawConvertMultipleCADC[1]
+
+      const viewOriginSwapAmountCADC = await this.cadcUsdcCurve.viewOriginSwap(
+        this.cadc.address,
+        this.usdc.address,
+        expectedCADCValueConvertMultipleCADC
+      )
+
+      await checkSushiUSDCToRNBW(
+        this,
+        'rnbwAfterMultipleConvertCADC',
+        viewOriginSwapAmountCADC.add(expectedUSDCValueConvertMultipleCADC)
+      )
+
       await this.eursUsdcCurve.transfer(
         this.potOfGold.address,
-        parseUnits('100')
+        amountToTransfer
       )
       await this.cadcUsdcCurve.transfer(
         this.potOfGold.address,
-        parseUnits('100')
+        amountToTransfer
       )
 
       expect(await this.rnbw.balanceOf(this.halohalo.address)).to.equal(0)
       expect(
         await this.eursUsdcCurve.balanceOf(this.potOfGold.address)
-      ).to.not.equal(0)
+      ).to.equal(amountToTransfer)
       expect(
         await this.cadcUsdcCurve.balanceOf(this.potOfGold.address)
-      ).to.not.equal(0)
+      ).to.equal(amountToTransfer)
 
       await expect(
         this.potOfGold.convertMultiple(
@@ -271,7 +336,9 @@ describe('PotOfGold', function () {
       expect(
         BigNumber.from(await this.rnbw.balanceOf(this.halohalo.address)),
         'No RNBW is sent to the RNBW pool'
-      ).to.equal(expectedRNBWValues.afterMultipleConvert)
+      ).to.equal(
+        this.rnbwAfterMultipleConvertEURS + this.rnbwAfterMultipleConvertCADC
+      )
     })
 
     it('reverts if caller is not owner', async function () {
@@ -312,6 +379,19 @@ describe('PotOfGold', function () {
         await this.eursUsdcCurve.balanceOf(this.potOfGold.address),
         'Curves withdrawal was successful'
       ).to.equal(testValue)
+    })
+
+    it('should revert if we do not send curves in the contract', async function () {
+      expect(
+        await this.eursUsdcCurve.balanceOf(this.potOfGold.address)
+      ).to.equal(0)
+
+      await expect(
+        this.potOfGold.convert(
+          this.eurs.address,
+          await getFutureTime(this.alice.provider)
+        )
+      ).to.be.revertedWith('PotOfGold: No curves in contract')
     })
   })
 })
