@@ -21,8 +21,8 @@ contract PotOfGold is Ownable {
   CurveFactory public immutable curveFactory;
 
   address public immutable rainbowPool;
-  address private immutable rnbw;
-  address private immutable usdc;
+  address public immutable rnbw;
+  address public immutable usdc;
 
   event LogConvert(
     address indexed server,
@@ -107,17 +107,17 @@ contract PotOfGold is Ownable {
     uint256 amountInWithFee = amountIn.mul(997);
 
     if (fromToken == pair.token0()) {
-      amountOut =
-        amountInWithFee.mul(reserve1) /
-        reserve0.mul(1000).add(amountInWithFee);
+      amountOut = amountInWithFee.mul(reserve1).div(
+        reserve0.mul(1000).add(amountInWithFee)
+      );
 
       IERC20(fromToken).safeTransfer(address(pair), amountIn);
 
       pair.swap(0, amountOut, to, new bytes(0));
     } else {
-      amountOut =
-        amountInWithFee.mul(reserve0) /
-        reserve1.mul(1000).add(amountInWithFee);
+      amountOut = amountInWithFee.mul(reserve0).div(
+        reserve1.mul(1000).add(amountInWithFee)
+      );
 
       IERC20(fromToken).safeTransfer(address(pair), amountIn);
 
