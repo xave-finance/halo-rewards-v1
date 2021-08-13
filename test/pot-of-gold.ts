@@ -341,12 +341,19 @@ describe('PotOfGold', function () {
       )
     })
 
-    it('reverts if caller is not owner', async function () {
-      await this.rnbwEth.transfer(this.potOfGold.address, getBigNumber(1))
-
+    it('reverts if caller is not owner for convert()', async function () {
       await expect(
         this.exploiter.convert(
-          this.rnbw.address,
+          this.eurs.address,
+          await getFutureTime(this.alice.provider)
+        )
+      ).to.be.revertedWith('Ownable: caller is not the owner')
+    })
+
+    it('reverts if caller is not owner for convertMultiple()', async function () {
+      await expect(
+        this.exploiter.convertMultiple(
+          [this.eurs.address, this.cadc.address],
           await getFutureTime(this.alice.provider)
         )
       ).to.be.revertedWith('Ownable: caller is not the owner')
