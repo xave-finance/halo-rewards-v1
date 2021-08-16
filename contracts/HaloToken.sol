@@ -3,10 +3,10 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
-import {SafeMath} from "@openzeppelin/contracts/math/SafeMath.sol";
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import {ERC20Burnable} from '@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol';
+import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 
 contract HaloToken is ERC20, ERC20Burnable, Ownable {
     using SafeMath for uint256;
@@ -27,7 +27,7 @@ contract HaloToken is ERC20, ERC20Burnable, Ownable {
     /// @notice Locks the cap and disables mint func.
     /// @dev Should be called only once. Allows owner to lock the cap and disable mint function.
     function setCapped() external onlyOwner {
-        require(canMint == true, "Cannot execute setCapped more than once.");
+        require(canMint == true, 'Cannot execute setCapped more than once.');
         canMint = false;
     }
 
@@ -36,7 +36,10 @@ contract HaloToken is ERC20, ERC20Burnable, Ownable {
     /// @param account address of the owner
     /// @param amount amount to mint
     function mint(address account, uint256 amount) external onlyOwner {
-        require(canMint == true, "Total supply is now capped, cannot mint more");
+        require(
+            canMint == true,
+            'Total supply is now capped, cannot mint more'
+        );
         _mint(account, amount);
     }
 }

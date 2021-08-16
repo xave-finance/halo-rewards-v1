@@ -69,12 +69,10 @@ describe('Rewards Manager', async () => {
     const ammLpPools = [[lpTokenContract.address, 10]]
     const RewardsContract = await ethers.getContractFactory('AmmRewards')
 
-    rewardsContract = await RewardsContract.deploy(
-      halohaloContract.address,
-    )
+    rewardsContract = await RewardsContract.deploy(halohaloContract.address)
 
     changedRewardsContract = await RewardsContract.deploy(
-      halohaloContract.address,
+      halohaloContract.address
     )
 
     const RewardsManagerContract = await ethers.getContractFactory(
@@ -259,13 +257,11 @@ describe('Rewards Manager', async () => {
 
   describe('Released HALO will be distributed 80% to the rewards contract converted to DESRT and 20% will be vested to the halohalo contract', async () => {
     it('Release rewards in Epoch 0, HALOHALO priced to one at the end', async () => {
-      epoch0VestedRewards = RELEASED_HALO_REWARDS.mul(vestingRewardsRatio).div(
-        BASIS_POINTS
-      )
+      epoch0VestedRewards =
+        RELEASED_HALO_REWARDS.mul(vestingRewardsRatio).div(BASIS_POINTS)
 
-      const expectedHaloHalo = RELEASED_HALO_REWARDS.mul(
-        releasedRewardsRatio
-      ).div(BASIS_POINTS)
+      const expectedHaloHalo =
+        RELEASED_HALO_REWARDS.mul(releasedRewardsRatio).div(BASIS_POINTS)
 
       // Simulate release through minting
       await expect(

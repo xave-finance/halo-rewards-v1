@@ -1,11 +1,12 @@
 require('dotenv').config()
 
-import { task } from 'hardhat/config'
+import { task, HardhatUserConfig } from 'hardhat/config'
 import '@nomiclabs/hardhat-waffle'
 import 'hardhat-gas-reporter'
 import '@nomiclabs/hardhat-ethers'
 import 'solidity-coverage'
 import '@nomiclabs/hardhat-etherscan'
+import 'hardhat-typechain'
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -25,11 +26,7 @@ const MNEMONIC_SEED = process.env.MNEMONIC_SEED || ''
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || ''
 const BSCSCAN_API_KEY = process.env.BSCSCAN_API_KEY || ''
 
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-
-module.exports = {
+const config: HardhatUserConfig = {
   solidity: '0.6.12',
   networks: {
     mainnet: {
@@ -97,3 +94,5 @@ module.exports = {
     apiKey: ETHERSCAN_API_KEY
   }
 }
+
+export default config
