@@ -81,7 +81,9 @@ contract PotOfGold is Ownable {
     IERC20(token).safeApprove(address(curve), nonUsdcTokenBalance);
 
     // 4 - swap non usdc to usdc using our AMM
-    curve.originSwap(token, usdc, nonUsdcTokenBalance, 0, deadline);
+    // check for the minimum amount
+    uint256 minOriginSwap = curve.viewOriginSwap(token, usdc, nonUsdcTokenBalance);
+    curve.originSwap(token, usdc, nonUsdcTokenBalance, minOriginSwap, deadline);
 
     // 5 - convert usdc to RNBW using sushiswap
     emit LogConvert(
@@ -124,6 +126,5 @@ contract PotOfGold is Ownable {
       pair.swap(amountOut, 0, to, new bytes(0));
     }
   }
-
 
 }
