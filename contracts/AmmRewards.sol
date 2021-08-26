@@ -57,7 +57,7 @@ contract AmmRewards is ReentrancyGuard, Ownable {
 
     uint256 public rewardTokenPerSecond;
 
-    uint256 private constant ACC_REWARD_TOKEN_PRECISION = 1e18;
+    uint256 private constant ACC_REWARD_TOKEN_PRECISION = 1e12;
 
     uint256 private epochRewardAmount;
 
