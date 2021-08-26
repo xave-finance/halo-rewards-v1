@@ -15,6 +15,7 @@ import { getFutureTime } from './utils/utils'
 import { BigNumber } from 'ethers'
 
 const amountToTransfer = parseUnits('100')
+const simulateOracleMultiplier = 2
 
 describe('PotOfGold', function () {
   before(async function () {
@@ -355,7 +356,7 @@ describe('PotOfGold', function () {
       await expect(
         this.potOfGold.convert(
           this.eurs.address,
-          this.rnbwAfterSingleConvert * 2,
+          this.rnbwAfterSingleConvert * simulateOracleMultiplier,
           await getFutureTime(this.alice.provider)
         )
       ).to.be.revertedWith('PotOFGold: rnbwAmount is less than minRNBWAmount')
@@ -380,8 +381,8 @@ describe('PotOfGold', function () {
         this.potOfGold.convertMultiple(
           [this.eurs.address, this.cadc.address],
           [
-            this.rnbwAfterMultipleConvertEURS * 2,
-            this.rnbwAfterMultipleConvertCADC * 2
+            this.rnbwAfterMultipleConvertEURS * simulateOracleMultiplier,
+            this.rnbwAfterMultipleConvertCADC * simulateOracleMultiplier
           ],
           await getFutureTime(this.alice.provider)
         )
