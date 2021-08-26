@@ -347,7 +347,7 @@ describe('PotOfGold', function () {
       )
     })
 
-    it('reverts if minRNBW passed is less than the converted value for convert()', async function () {
+    it('reverts if converted value is less than minRNBWAmount  for convert()', async function () {
       await this.eursUsdcCurve.transfer(
         this.potOfGold.address,
         amountToTransfer
@@ -367,7 +367,7 @@ describe('PotOfGold', function () {
       ).to.equal(amountToTransfer)
     })
 
-    it('reverts if minRNBW passed is less than the converted value for convert()', async function () {
+    it('reverts if converted value is less than minRNBWAmount for convertMultiple()', async function () {
       await this.eursUsdcCurve.transfer(
         this.potOfGold.address,
         amountToTransfer
