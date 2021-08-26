@@ -90,7 +90,7 @@ contract PotOfGold is Ownable {
       token,
       usdcTokenBalanceBeforeSwap,
       nonUsdcTokenBalance,
-      _toRNBW(usdc, IERC20(usdc).balanceOf(address(this))) // returns RNBWOut after converting
+      _swap(usdc, rnbw, IERC20(usdc).balanceOf(address(this)), rainbowPool) // returns RNBWOut after converting
     );
   }
 
@@ -125,10 +125,5 @@ contract PotOfGold is Ownable {
     }
   }
 
-  function _toRNBW(address token, uint256 amountIn)
-    internal
-    returns (uint256 amountOut)
-  {
-    amountOut = _swap(token, rnbw, amountIn, rainbowPool);
-  }
+
 }
