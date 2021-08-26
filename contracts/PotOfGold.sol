@@ -88,7 +88,7 @@ contract PotOfGold is Ownable {
     // 5 - convert usdc to RNBW using sushiswap
 
     uint256 rnbwAmount =  _swap(usdc, rnbw, IERC20(usdc).balanceOf(address(this)), rainbowPool); // returns RNBWOut after converting
-    require(rnbwAmount >= minRNBWAmount, "PotOFGold: rnbwAmount is less than minRNBWAmount");
+    require(rnbwAmount >= minRNBWAmount, "PotOfGold: rnbwAmount is less than minRNBWAmount");
     
     emit LogConvert(
       msg.sender,

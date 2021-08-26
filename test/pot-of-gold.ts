@@ -359,7 +359,7 @@ describe('PotOfGold', function () {
           this.rnbwAfterSingleConvert * simulateOracleMultiplier,
           await getFutureTime(this.alice.provider)
         )
-      ).to.be.revertedWith('PotOFGold: rnbwAmount is less than minRNBWAmount')
+      ).to.be.revertedWith('PotOfGold: rnbwAmount is less than minRNBWAmount')
 
       expect(
         await this.eursUsdcCurve.balanceOf(this.potOfGold.address),
