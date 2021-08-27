@@ -15,6 +15,7 @@ import { getFutureTime } from './utils/utils'
 import { BigNumber } from 'ethers'
 
 const amountToTransfer = parseUnits('100')
+const simulateOracleMultiplier = 2
 
 describe('PotOfGold', function () {
   before(async function () {
@@ -196,6 +197,7 @@ describe('PotOfGold', function () {
       await expect(
         this.potOfGold.convert(
           this.eurs.address,
+          this.rnbwAfterSingleConvert,
           await getFutureTime(this.alice.provider)
         )
       )
@@ -304,6 +306,10 @@ describe('PotOfGold', function () {
       await expect(
         this.potOfGold.convertMultiple(
           [this.eurs.address, this.cadc.address],
+          [
+            this.rnbwAfterMultipleConvertEURS,
+            this.rnbwAfterMultipleConvertCADC
+          ],
           await getFutureTime(this.alice.provider)
         )
       ).to.not.be.reverted
@@ -334,17 +340,70 @@ describe('PotOfGold', function () {
       ).to.equal(0)
 
       expect(
-        BigNumber.from(await this.rnbw.balanceOf(this.halohalo.address)),
+        await this.rnbw.balanceOf(this.halohalo.address),
         'No RNBW is sent to the RNBW pool'
       ).to.equal(
         this.rnbwAfterMultipleConvertEURS + this.rnbwAfterMultipleConvertCADC
       )
     })
 
+    it('reverts if converted value is less than minRNBWAmount for convert()', async function () {
+      await this.eursUsdcCurve.transfer(
+        this.potOfGold.address,
+        amountToTransfer
+      )
+
+      await expect(
+        this.potOfGold.convert(
+          this.eurs.address,
+          this.rnbwAfterSingleConvert * simulateOracleMultiplier,
+          await getFutureTime(this.alice.provider)
+        )
+      ).to.be.revertedWith('PotOfGold: rnbwAmount is less than minRNBWAmount')
+
+      expect(
+        await this.eursUsdcCurve.balanceOf(this.potOfGold.address),
+        'Swap txn was executed'
+      ).to.equal(amountToTransfer)
+    })
+
+    it('reverts if converted value is less than minRNBWAmount for convertMultiple()', async function () {
+      await this.eursUsdcCurve.transfer(
+        this.potOfGold.address,
+        amountToTransfer
+      )
+      await this.cadcUsdcCurve.transfer(
+        this.potOfGold.address,
+        amountToTransfer
+      )
+
+      await expect(
+        this.potOfGold.convertMultiple(
+          [this.eurs.address, this.cadc.address],
+          [
+            this.rnbwAfterMultipleConvertEURS * simulateOracleMultiplier,
+            this.rnbwAfterMultipleConvertCADC * simulateOracleMultiplier
+          ],
+          await getFutureTime(this.alice.provider)
+        )
+      ).to.be.revertedWith('PotOfGold: rnbwAmount is less than minRNBWAmount')
+
+      expect(
+        await this.eursUsdcCurve.balanceOf(this.potOfGold.address),
+        'Swap txn was executed for EURS'
+      ).to.equal(amountToTransfer)
+
+      expect(
+        await this.cadcUsdcCurve.balanceOf(this.potOfGold.address),
+        'Swap txn was executed for CADC'
+      ).to.equal(amountToTransfer)
+    })
+
     it('reverts if caller is not owner for convert()', async function () {
       await expect(
         this.exploiter.convert(
           this.eurs.address,
+          this.rnbwAfterSingleConvert,
           await getFutureTime(this.alice.provider)
         )
       ).to.be.revertedWith('Ownable: caller is not the owner')
@@ -354,6 +413,10 @@ describe('PotOfGold', function () {
       await expect(
         this.exploiter.convertMultiple(
           [this.eurs.address, this.cadc.address],
+          [
+            this.rnbwAfterMultipleConvertEURS,
+            this.rnbwAfterMultipleConvertCADC
+          ],
           await getFutureTime(this.alice.provider)
         )
       ).to.be.revertedWith('Ownable: caller is not the owner')
@@ -364,6 +427,8 @@ describe('PotOfGold', function () {
       await expect(
         this.potOfGold.convert(
           this.strudel.address,
+
+          this.rnbwAfterMultipleConvertEURS,
           await getFutureTime(this.alice.provider)
         )
       ).to.be.revertedWith('PotOfGold: Invalid curve')
@@ -378,6 +443,7 @@ describe('PotOfGold', function () {
       await expect(
         this.potOfGold.convert(
           this.eurs.address,
+          this.rnbwAfterMultipleConvertEURS,
           await getFutureTime(this.alice.provider)
         )
       ).to.be.reverted
@@ -396,6 +462,7 @@ describe('PotOfGold', function () {
       await expect(
         this.potOfGold.convert(
           this.eurs.address,
+          this.rnbwAfterMultipleConvertEURS,
           await getFutureTime(this.alice.provider)
         )
       ).to.be.revertedWith('PotOfGold: No curves in contract')
