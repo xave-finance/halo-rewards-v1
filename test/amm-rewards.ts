@@ -1,9 +1,7 @@
-import { expect, assert } from 'chai'
+import { expect } from 'chai'
 import {
   advanceTime,
-  advanceTimeAndBlock,
   advanceBlockTo,
-  advanceBlock,
   prepare,
   deploy,
   getBigNumber,
@@ -13,10 +11,12 @@ const { BigNumber } = require('ethers')
 import { ethers } from 'hardhat'
 
 const initialVestingRatio = 0.2 * 10 ** 4
-//const rewardTokenPerSecond = "2416666666666666666"
-//const changedRewardTokenPerSecond = "1964750000000000000"
-const rewardTokenPerSecond = '77160493827160493'
+const rewardTokenPerSecond = '77160493827000000'
 const changedRewardTokenPerSecond = '55160000000000000'
+
+// For calculating changed precision points
+const ACC_REWARD_TOKEN_PRECISION = 1e12
+const ACC_REWARD_TO_TOKEN_PRECISION = 1e6
 
 describe('Amm Rewards', function () {
   before(async function () {
@@ -108,14 +108,19 @@ describe('Amm Rewards', function () {
         .timestamp
       const timestamp = (await ethers.provider.getBlock(log.blockNumber))
         .timestamp
-      const expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(
-        timestamp2 - timestamp
-      )
+
+      const expectedRewardToken = (await this.ammRewards.rewardTokenPerSecond())
+        .mul(timestamp2 - timestamp)
+        .mul(ACC_REWARD_TOKEN_PRECISION)
+        .div(await this.lpt.balanceOf(this.ammRewards.address))
+
       const pendingRewardToken = await this.ammRewards.pendingRewardToken(
         0,
         this.alice.address
       )
-      expect(pendingRewardToken).to.be.equal(expectedRewardToken)
+      expect(pendingRewardToken.div(ACC_REWARD_TO_TOKEN_PRECISION)).to.be.equal(
+        expectedRewardToken
+      )
     })
     it('When time is lastRewardTime', async function () {
       await this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO)
@@ -131,14 +136,20 @@ describe('Amm Rewards', function () {
         .timestamp
       const timestamp = (await ethers.provider.getBlock(log.blockNumber))
         .timestamp
-      const expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(
-        timestamp2 - timestamp
-      )
+
+      const expectedRewardToken = (await this.ammRewards.rewardTokenPerSecond())
+        .mul(timestamp2 - timestamp)
+        .mul(ACC_REWARD_TOKEN_PRECISION)
+        .div(await this.lpt.balanceOf(this.ammRewards.address))
+
       const pendingRewardToken = await this.ammRewards.pendingRewardToken(
         0,
         this.alice.address
       )
-      expect(pendingRewardToken).to.be.equal(expectedRewardToken)
+
+      expect(pendingRewardToken.div(ACC_REWARD_TO_TOKEN_PRECISION)).to.be.equal(
+        expectedRewardToken
+      )
     })
   })
 
@@ -243,6 +254,12 @@ describe('Amm Rewards', function () {
         getBigNumber(1),
         this.alice.address
       )
+
+      // store last update pool lp balance
+      const lpTokenBalanceAfterDeposit = await this.lpt.balanceOf(
+        this.ammRewards.address
+      )
+
       await advanceTime(86400)
       const log2 = await this.ammRewards.withdraw(
         0,
@@ -253,16 +270,24 @@ describe('Amm Rewards', function () {
         .timestamp
       const timestamp = (await ethers.provider.getBlock(log.blockNumber))
         .timestamp
-      const expectedRewardToken = BigNumber.from(rewardTokenPerSecond).mul(
-        timestamp2 - timestamp
-      )
+
+      const expectedRewardToken = (await this.ammRewards.rewardTokenPerSecond())
+        .mul(timestamp2 - timestamp)
+        .mul(ACC_REWARD_TOKEN_PRECISION)
+        .div(lpTokenBalanceAfterDeposit)
+
       expect(
-        (await this.ammRewards.userInfo(0, this.alice.address)).rewardDebt
+        (await this.ammRewards.userInfo(0, this.alice.address)).rewardDebt.div(
+          ACC_REWARD_TO_TOKEN_PRECISION
+        )
       ).to.be.equal('-' + expectedRewardToken)
       await this.ammRewards.harvest(0, this.alice.address)
-      expect(await this.rnbw.balanceOf(this.alice.address)).to.be.equal(
-        expectedRewardToken
-      )
+
+      expect(
+        (await this.rnbw.balanceOf(this.alice.address)).div(
+          ACC_REWARD_TO_TOKEN_PRECISION
+        )
+      ).to.be.equal(expectedRewardToken)
     })
     it('Harvest with empty user balance', async function () {
       await this.ammRewards.add(10, this.lpt.address, ADDRESS_ZERO)
@@ -348,12 +373,14 @@ describe('Amm Rewards', function () {
       const vestingContractHaloBalance = await this.halo.balanceOf(
         this.rnbw.address
       )
+
       const expectedUpdatedTokenPerSecond = getBigNumber(250000)
         .mul(8000)
         .div(10000)
         .mul(vestingContractTotalSupply)
         .div(vestingContractHaloBalance)
         .div(2592000)
+
       const updatedRewardTokenPerSecond =
         await this.ammRewards.rewardTokenPerSecond()
       expect(updatedRewardTokenPerSecond).to.not.be.equal(
