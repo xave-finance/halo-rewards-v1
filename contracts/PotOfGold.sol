@@ -47,14 +47,19 @@ contract PotOfGold is Ownable {
     usdc = _usdc;
   }
 
-  function convert(address token, uint256 minRNBWAmount, uint256 deadline) external onlyOwner {
+  function convert(
+    address token,
+    uint256 minRNBWAmount,
+    uint256 deadline
+  ) external onlyOwner {
     _convert(token, minRNBWAmount, deadline);
   }
 
-  function convertMultiple(address[] calldata token, uint256[] calldata minRNBWAmount, uint256 deadline)
-    external
-    onlyOwner
-  {
+  function convertMultiple(
+    address[] calldata token,
+    uint256[] calldata minRNBWAmount,
+    uint256 deadline
+  ) external onlyOwner {
     // TODO: This can be optimized a fair bit, but this is safer and simpler for now
     uint256 len = token.length;
     for (uint256 i = 0; i < len; i++) {
@@ -62,7 +67,11 @@ contract PotOfGold is Ownable {
     }
   }
 
-  function _convert(address token, uint256 minRNBWAmount, uint256 deadline) internal {
+  function _convert(
+    address token,
+    uint256 minRNBWAmount,
+    uint256 deadline
+  ) internal {
     // 1 - get curve returns address
     Curve curve = Curve(curveFactory.getCurve(token, usdc));
     // 2 - check if curve exist
@@ -80,16 +89,22 @@ contract PotOfGold is Ownable {
     // 5 - approve token spend before swap
     IERC20(token).safeApprove(address(curve), nonUsdcTokenBalance);
 
-    // 4 - swap non usdc to usdc using our AMM
-    // check for the minimum amount
-    uint256 minOriginSwap = curve.viewOriginSwap(token, usdc, nonUsdcTokenBalance);
-    curve.originSwap(token, usdc, nonUsdcTokenBalance, minOriginSwap, deadline);
+    // 6 - swap non usdc to usdc using our AMM
+    curve.originSwap(token, usdc, nonUsdcTokenBalance, 0, deadline);
 
-    // 5 - convert usdc to RNBW using sushiswap
+    // 7 - convert usdc to RNBW using sushiswap
+    uint256 rnbwAmount = _swap(
+      usdc,
+      rnbw,
+      IERC20(usdc).balanceOf(address(this)),
+      rainbowPool
+    ); // returns RNBWOut after converting
+      
+    require(
+      rnbwAmount >= minRNBWAmount,
+      'PotOfGold: rnbwAmount is less than minRNBWAmount'
+    );
 
-    uint256 rnbwAmount =  _swap(usdc, rnbw, IERC20(usdc).balanceOf(address(this)), rainbowPool); // returns RNBWOut after converting
-    require(rnbwAmount >= minRNBWAmount, "PotOfGold: rnbwAmount is less than minRNBWAmount");
-    
     emit LogConvert(
       msg.sender,
       usdc,
@@ -128,5 +143,4 @@ contract PotOfGold is Ownable {
       pair.swap(amountOut, 0, to, new bytes(0));
     }
   }
-
 }
