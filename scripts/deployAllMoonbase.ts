@@ -1,6 +1,7 @@
-import deployAll from './initDeploy'
+import { RNBW_TOKEN_ADDRESS } from './constants/addresses'
+import deployAllAmmRewards from './deployAllAmmRewards'
 
-deployAll('Moonbase', false)
+deployAllAmmRewards('Moonbase', false, RNBW_TOKEN_ADDRESS['moonbase'])
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

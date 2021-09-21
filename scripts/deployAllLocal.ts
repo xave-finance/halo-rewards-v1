@@ -1,6 +1,7 @@
-import deployAll from './initDeploy'
+import { RNBW_TOKEN_ADDRESS } from './constants/addresses'
+import deployAllAmmRewards from './deployAllAmmRewards'
 
-deployAll('Local', false)
+deployAllAmmRewards('Local', false, RNBW_TOKEN_ADDRESS['local'])
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error)

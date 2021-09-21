@@ -1,16 +1,21 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.12;
 
 import {SafeMath} from '@openzeppelin/contracts/math/SafeMath.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import {IRewards} from './interfaces/IRewards.sol';
+import {AmmRewards} from './AmmRewards.sol';
 import './HaloHalo.sol';
 
 contract RewardsManager is Ownable {
+  using SafeERC20 for IERC20;
+  using SafeERC20 for HaloHalo;
+
   IERC20 public halo;
-  HaloHalo halohalo;
-  // in percent
+  // in basis points
   uint256 private vestingRatio;
   address private rewardsContract;
   address private haloHaloContract;
@@ -27,7 +32,6 @@ contract RewardsManager is Ownable {
     vestingRatio = _initialVestingRatio;
     rewardsContract = _rewardsContract;
     haloHaloContract = _haloHaloContract;
-    halohalo = HaloHalo(haloHaloContract);
     halo = _halo;
   }
 
@@ -41,7 +45,6 @@ contract RewardsManager is Ownable {
       transferToHaloHaloContract(currentHaloBalance);
     }
 
-    // halo.approve(address(this), _amount);
     halo.transferFrom(msg.sender, address(this), _amount);
 
     uint256 currentVestedRewards = _amount.mul(vestingRatio).div(BASIS_POINTS);
@@ -73,7 +76,6 @@ contract RewardsManager is Ownable {
       'Halohalo contract cannot be empty!'
     );
     haloHaloContract = _haloHaloContract;
-    halohalo = HaloHalo(haloHaloContract);
   }
 
   /****************************************
@@ -97,18 +99,17 @@ contract RewardsManager is Ownable {
 
   function transferToHaloHaloContract(uint256 _amount) internal {
     halo.transfer(haloHaloContract, _amount);
-    SentVestedRewardsEvent(_amount);
+    emit SentVestedRewardsEvent(_amount);
   }
 
   function convertAndTransferToRewardsContract(uint256 _amount) internal {
     halo.approve(haloHaloContract, _amount);
-    halohalo.enter(_amount);
-    uint256 currentHaloHaloBalance = halohalo.balanceOf(address(this));
+    HaloHalo(haloHaloContract).enter(_amount);
+    uint256 currentHaloHaloBalance = HaloHalo(haloHaloContract).balanceOf(address(this));
 
     require(currentHaloHaloBalance > 0, 'No HALOHALO in contract');
-
-    halohalo.approve(rewardsContract, currentHaloHaloBalance);
-    IRewards(rewardsContract).depositEpochRewardAmount(currentHaloHaloBalance);
-    ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
+    AmmRewards(rewardsContract).setRewardTokenPerSecond(currentHaloHaloBalance.div(2592000));
+    HaloHalo(haloHaloContract).safeTransfer(rewardsContract, currentHaloHaloBalance);
+    emit ReleasedRewardsToRewardsContractEvent(currentHaloHaloBalance);
   }
 }

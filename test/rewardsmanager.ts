@@ -25,7 +25,8 @@ const epoch0ExpectedHaloHaloPrice = parseEther('1')
 const epoch1ExpectedHaloHaloPrice = parseEther('1.25')
 const epoch1ExpectedHaloHaloPriceEther = 1.25
 // const RELEASED_HALO_REWARDS = parseEther('10000') // got from the previous contract
-const RELEASED_HALO_REWARDS = parseEther('6264000')
+//const RELEASED_HALO_REWARDS = parseEther('6264000')
+const RELEASED_HALO_REWARDS = parseEther('250000')
 const zeroAddress = '0x0000000000000000000000000000000000000000'
 epochLength = 30 * 24 * 60 * 5
 console.log('BASIS_POINTS = ', BASIS_POINTS)
@@ -66,20 +67,12 @@ describe('Rewards Manager', async () => {
 
     const minterLpPools = [[collateralERC20Contract.address, 10]]
     const ammLpPools = [[lpTokenContract.address, 10]]
-    const RewardsContract = await ethers.getContractFactory('Rewards')
+    const RewardsContract = await ethers.getContractFactory('AmmRewards')
 
-    rewardsContract = await RewardsContract.deploy(
-      halohaloContract.address,
-      ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
-      genesisBlock,
-      ammLpPools
-    )
+    rewardsContract = await RewardsContract.deploy(halohaloContract.address)
 
     changedRewardsContract = await RewardsContract.deploy(
-      halohaloContract.address,
-      ammLpRewardsRatio, //in BASIS_POINTS, multiplied by 10^4
-      genesisBlock,
-      ammLpPools
+      halohaloContract.address
     )
 
     const RewardsManagerContract = await ethers.getContractFactory(
@@ -92,14 +85,15 @@ describe('Rewards Manager', async () => {
       haloTokenContract.address
     )
 
-    await rewardsContract.setRewardsManagerAddress(rewardsManagerContract.address)
+    await rewardsContract.setRewardsManager(rewardsManagerContract.address)
     console.log('Set Rewards Manager contract.')
 
-    console.log(`Deployed Rewards Manager Contract address: ${rewardsManagerContract.address}`)
+    console.log(
+      `Deployed Rewards Manager Contract address: ${rewardsManagerContract.address}`
+    )
     console.log(
       '==========================================================\n\n'
     )
-
   })
 
   describe('Check Contract Deployments', () => {
@@ -109,56 +103,15 @@ describe('Rewards Manager', async () => {
     })
 
     it('Halohalo should be deployed', async () => {
-      expect(await halohaloContract.symbol()).to.equal('HALOHALO')
-      expect(await halohaloContract.name()).to.equal('HaloHalo')
-      expect(await changedHaloHaloContract.symbol()).to.equal('HALOHALO')
-      expect(await changedHaloHaloContract.name()).to.equal('HaloHalo')
+      expect(await halohaloContract.symbol()).to.equal('xRNBW')
+      expect(await halohaloContract.name()).to.equal('Rainbow Pool')
+      expect(await changedHaloHaloContract.symbol()).to.equal('xRNBW')
+      expect(await changedHaloHaloContract.name()).to.equal('Rainbow Pool')
     })
 
     it('Lptoken should be deployed', async () => {
       expect(await lpTokenContract.symbol()).to.equal('LPT')
       expect(await lpTokenContract.name()).to.equal('LpToken')
-    })
-
-    it('Rewards Contract should be deployed', async () => {
-      expect(await rewardsContract.getTotalPoolAllocationPoints()).to.equal(10)
-      expect(await rewardsContract.getTotalMinterLpAllocationPoints()).to.equal(
-        0
-      )
-      expect(
-        await rewardsContract.isValidAmmLp(lpTokenContract.address)
-      ).to.be.true
-      expect(
-        await rewardsContract.isValidAmmLp(collateralERC20Contract.address)
-      ).to.be.false
-      expect(
-        await rewardsContract.isValidMinterLp(collateralERC20Contract.address)
-      ).to.be.false
-      expect(
-        await rewardsContract.isValidMinterLp(lpTokenContract.address)
-      ).to.be.false
-      expect(
-        await changedRewardsContract.getTotalPoolAllocationPoints()
-      ).to.equal(10)
-      expect(
-        await changedRewardsContract.getTotalMinterLpAllocationPoints()
-      ).to.equal(0)
-      expect(
-        await changedRewardsContract.isValidAmmLp(lpTokenContract.address)
-      ).to.be.true
-      expect(
-        await changedRewardsContract.isValidAmmLp(
-          collateralERC20Contract.address
-        )
-      ).to.be.false
-      expect(
-        await changedRewardsContract.isValidMinterLp(
-          collateralERC20Contract.address
-        )
-      ).to.be.false
-      expect(
-        await changedRewardsContract.isValidMinterLp(lpTokenContract.address)
-      ).to.be.false
     })
 
     it('Rewards Management Contract should be deployed', async () => {
@@ -304,13 +257,11 @@ describe('Rewards Manager', async () => {
 
   describe('Released HALO will be distributed 80% to the rewards contract converted to DESRT and 20% will be vested to the halohalo contract', async () => {
     it('Release rewards in Epoch 0, HALOHALO priced to one at the end', async () => {
-      epoch0VestedRewards = RELEASED_HALO_REWARDS.mul(vestingRewardsRatio).div(
-        BASIS_POINTS
-      )
+      epoch0VestedRewards =
+        RELEASED_HALO_REWARDS.mul(vestingRewardsRatio).div(BASIS_POINTS)
 
-      const expectedHaloHalo = RELEASED_HALO_REWARDS.mul(
-        releasedRewardsRatio
-      ).div(BASIS_POINTS)
+      const expectedHaloHalo =
+        RELEASED_HALO_REWARDS.mul(releasedRewardsRatio).div(BASIS_POINTS)
 
       // Simulate release through minting
       await expect(
@@ -321,7 +272,6 @@ describe('Rewards Manager', async () => {
         rewardsManagerContract.address,
         RELEASED_HALO_REWARDS
       )
-
       // Release rewards then check events and their args
       await expect(
         rewardsManagerContract.releaseEpochRewards(RELEASED_HALO_REWARDS),
